@@ -55,6 +55,7 @@ module Kitchen
         end
         # As a consequence of IP weirdness, the OpenStack setup() method is
         # also borked
+        wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
         ssh = Fog::SSH.new(state[:hostname], config[:username],
           {:password => server.password})
         pub_key = open(config[:public_key_path]).read
@@ -63,7 +64,6 @@ module Kitchen
           %{echo "#{pub_key}" >> ~/.ssh/authorized_keys},
           %{passwd -l #{config[:username]}}
         ])
-        wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
       end
