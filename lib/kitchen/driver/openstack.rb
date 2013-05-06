@@ -28,10 +28,10 @@ module Kitchen
     #
     # @author Jonathan Hartman <j@p4nt5.com>
     class Openstack < Kitchen::Driver::SSHBase
-      default_config :name,             nil
-      default_config :public_key_path,  File.expand_path('~/.ssh/id_dsa.pub')
-      default_config :username,         'root'
-      default_config :port,             '22'
+      default_config :name, nil
+      default_config :public_key_path, File.expand_path('~/.ssh/id_dsa.pub')
+      default_config :username, 'root'
+      default_config :port, '22'
 
       def create(state)
         config[:name] ||= generate_name(instance.name)
@@ -64,12 +64,12 @@ module Kitchen
 
       def compute
         Fog::Compute.new(
-                         :provider           => 'OpenStack',
-                         :openstack_username => config[:openstack_username],
-                         :openstack_api_key  => config[:openstack_api_key],
-                         :openstack_auth_url => config[:openstack_auth_url],
-                         :openstack_tenant   => config[:openstack_tenant]
-                         )
+          :provider           => 'OpenStack',
+          :openstack_username => config[:openstack_username],
+          :openstack_api_key  => config[:openstack_api_key],
+          :openstack_auth_url => config[:openstack_auth_url],
+          :openstack_tenant   => config[:openstack_tenant]
+        )
       end
 
       def create_server
@@ -87,8 +87,8 @@ module Kitchen
 
       def generate_name(base)
         # Generate what should be a unique server name
-        "#{base}-#{Etc.getlogin}-#{Socket.gethostname}-" <<
-          "#{Array.new(8){rand(36).to_s(36)}.join}"
+        rand_str = Array.new(8) { rand(36).to_s(36) }.join
+        "#{base}-#{Etc.getlogin}-#{Socket.gethostname}-#{rand_str}"
       end
 
       def get_ip(server)
@@ -102,7 +102,7 @@ module Kitchen
 
       def do_ssh_setup(state, config, server)
         ssh = Fog::SSH.new(state[:hostname], config[:username],
-                           {:password => server.password})
+          { :password => server.password })
         pub_key = open(config[:public_key_path]).read
         ssh.run([
           %{mkdir .ssh},
