@@ -6,7 +6,9 @@ desc 'Run Cane to check quality metrics'
 Cane::RakeTask.new
 
 desc 'Run Tailor to lint check code'
-Tailor::RakeTask.new
+Tailor::RakeTask.new do |task|
+  task.file_set 'lib/**/*.rb'
+end
 
 desc 'Display LOC stats'
 task :loc do
