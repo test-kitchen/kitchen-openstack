@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/RoboticCheese/kitchen-openstack.png?branch=master)](https://travis-ci.org/RoboticCheese/kitchen-openstack)
+[![Build Status](https://travis-ci.org/RoboticCheese/kitchen-openstack.png?branch=master)](https://travis-ci.org/RoboticCheese/kitchen-openstack) [![Code Climate](https://codeclimate.com/github/RoboticCheese/kitchen-openstack.png)](https://codeclimate.com/github/RoboticCheese/kitchen-openstack)
 
 # Kitchen::OpenStack
 
