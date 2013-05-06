@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/RoboticCheese/kitchen-openstack.png?branch=master)](https://travis-ci.org/RoboticCheese/kitchen-openstack)
+
 # Kitchen::OpenStack
 
 An OpenStack Nova driver for Test Kitchen 1.0!
