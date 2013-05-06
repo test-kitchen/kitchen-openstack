@@ -41,6 +41,10 @@ options:
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
     port: [SSH PORT]
+    key_name : [SSH KEY NAME]
+
+If a key_name is provided it will be used instead of any
+public_key_path that is specified
 
 Only disable SSL cert validation if you absolutely know what you are doing,
 but are stuck with an OpenStack deployment without valid SSL certs.

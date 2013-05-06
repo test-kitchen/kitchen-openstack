@@ -55,15 +55,17 @@ module Kitchen
         end
         # As a consequence of IP weirdness, the OpenStack setup() method is
         # also borked
-        ssh = Fog::SSH.new(state[:hostname], config[:username],
-          {:password => server.password})
-        pub_key = open(config[:public_key_path]).read
-        ssh.run([
-          %{mkdir .ssh},
-          %{echo "#{pub_key}" >> ~/.ssh/authorized_keys},
-          %{passwd -l #{config[:username]}}
-        ])
         wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
+        if !config[:key_name]
+          ssh = Fog::SSH.new(state[:hostname], config[:username],
+                             {:password => server.password})
+          pub_key = open(config[:public_key_path]).read
+          ssh.run([
+                   %{mkdir .ssh},
+                   %{echo "#{pub_key}" >> ~/.ssh/authorized_keys},
+                   %{passwd -l #{config[:username]}}
+                  ])
+        end
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
       end
@@ -82,21 +84,19 @@ module Kitchen
 
       def compute
         Fog::Compute.new(
-          :provider           => 'OpenStack',
-          :openstack_username => config[:openstack_username],
-          :openstack_api_key  => config[:openstack_api_key],
-          :openstack_auth_url => config[:openstack_auth_url],
-          :openstack_tenant   => config[:openstack_tenant]
-        )
+                         :provider           => 'OpenStack',
+                         :openstack_username => config[:openstack_username],
+                         :openstack_api_key  => config[:openstack_api_key],
+                         :openstack_auth_url => config[:openstack_auth_url],
+                         :openstack_tenant   => config[:openstack_tenant]
+                         )
       end
 
       def create_server
-        compute.servers.create(
-          :name             => config[:name],
-          :image_ref        => config[:image_ref],
-          :flavor_ref       => config[:flavor_ref],
-          :public_key_path  => config[:public_key_path]
-        )
+        server_def = { :name => config[:name], :image_ref => config[:image_ref], :flavor_ref => config[:flavor_ref]}
+        server_def[:public_key_path] = config[:public_key_path] if config[:public_key_path]
+        server_def[:key_name] = config[:key_name] if config[:key_name]
+        compute.servers.create(server_def)
       end
     end
   end
