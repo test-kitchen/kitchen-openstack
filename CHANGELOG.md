@@ -6,6 +6,7 @@
 
 ### New Features
 
+* PR [#10][] - Support optional `openstack_region` and `openstack_service_name`
 * PR [#2][] - Support `key_name:` option; via [@stevendanna][]
 
 ### Improvements
@@ -17,6 +18,7 @@
 
 * Initial release! Woo!
 
+[#10]: https://github.com/RoboticCheese/kitchen-openstack/pull/10
 [#9]: https://github.com/RoboticCheese/kitchen-openstack/pull/9
 [#7]: https://github.com/RoboticCheese/kitchen-openstack/pull/7
 [#2]: https://github.com/RoboticCheese/kitchen-openstack/pull/2

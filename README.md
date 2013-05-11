@@ -30,7 +30,6 @@ Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
       openstack_username: [YOUR OPENSTACK USERNAME]
       openstack_api_key: [YOUR OPENSTACK API KEY]
       openstack_auth_url: [YOUR OPENSTACK AUTH URL]
-      openstack_tenant: [YOUR OPENSTACK TENANT ID]
       require_chef_omnibus: latest (if you'll be using Chef)
       image_ref: [SERVER IMAGE ID]
       flavor_ref: [SERVER FLAVOR ID]
@@ -43,15 +42,18 @@ options:
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
     port: [SSH PORT]
-    key_name : [SSH KEY NAME]
+    key_name: [SSH KEY NAME]
+    openstack_tenant: [YOUR OPENSTACK TENANT ID]
+    openstack_region: [A VALID OPENSTACK REGION]
+    openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
 
-If a key_name is provided it will be used instead of any
-public_key_path that is specified
+If a key\_name is provided it will be used instead of any
+public\_key\_path that is specified.
+
+    disable_ssl_validation: true
 
 Only disable SSL cert validation if you absolutely know what you are doing,
 but are stuck with an OpenStack deployment without valid SSL certs.
-
-    disable_ssl_validation: true
 
 ## Contributing
 
