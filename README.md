@@ -43,15 +43,16 @@ options:
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
     port: [SSH PORT]
-    key_name : [SSH KEY NAME]
+    key_name: [SSH KEY NAME]
+    openstack_region: [A VALID OPENSTACK REGION]
 
-If a key_name is provided it will be used instead of any
-public_key_path that is specified
+If a key\_name is provided it will be used instead of any
+public\_key\_path that is specified.
+
+    disable_ssl_validation: true
 
 Only disable SSL cert validation if you absolutely know what you are doing,
 but are stuck with an OpenStack deployment without valid SSL certs.
-
-    disable_ssl_validation: true
 
 ## Contributing
 

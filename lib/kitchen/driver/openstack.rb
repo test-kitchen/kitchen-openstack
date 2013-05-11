@@ -32,6 +32,7 @@ module Kitchen
       default_config :public_key_path, File.expand_path('~/.ssh/id_dsa.pub')
       default_config :username, 'root'
       default_config :port, '22'
+      default_config :openstack_region, nil
 
       def create(state)
         config[:name] ||= generate_name(instance.name)
@@ -63,13 +64,17 @@ module Kitchen
       private
 
       def compute
-        Fog::Compute.new(
+        server_def = {
           :provider           => 'OpenStack',
           :openstack_username => config[:openstack_username],
           :openstack_api_key  => config[:openstack_api_key],
           :openstack_auth_url => config[:openstack_auth_url],
           :openstack_tenant   => config[:openstack_tenant]
-        )
+        }
+        if config[:openstack_region]
+          server_def[:openstack_region] = config[:openstack_region]
+        end
+        Fog::Compute.new(server_def)
       end
 
       def create_server

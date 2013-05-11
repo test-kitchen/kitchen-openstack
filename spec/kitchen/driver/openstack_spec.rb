@@ -54,9 +54,9 @@ describe Kitchen::Driver::Openstack do
         expect(driver[:name]).to eq(nil)
       end
 
-#      it 'defaults to no region' do
-#        expect(driver[:openstack_region]).to eq(nil)
-#      end
+      it 'defaults to no region' do
+        expect(driver[:openstack_region]).to eq(nil)
+      end
     end
 
     context 'overridden options' do
@@ -67,8 +67,8 @@ describe Kitchen::Driver::Openstack do
           :public_key_path => '/tmp',
           :username => 'admin',
           :port => '2222',
-          :name => 'puppy'#,
-#          :openstack_region => 'atlantis'
+          :name => 'puppy',
+          :openstack_region => 'atlantis'
         }
       end
 
@@ -213,8 +213,8 @@ describe Kitchen::Driver::Openstack do
         :openstack_username => 'monkey',
         :openstack_api_key => 'potato',
         :openstack_auth_url => 'http:',
-        :openstack_tenant => 'link'#,
-#        :openstack_region => 'ord'
+        :openstack_tenant => 'link',
+        :openstack_region => 'ord'
       }
     end
 
