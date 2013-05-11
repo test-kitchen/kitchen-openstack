@@ -11,12 +11,13 @@
 ### Improvements
 
 * PR [#7][] - Clean up/refactor to pass style checks
-
+* PR [#9][] - Add some (probably overkill) RSpec tests
 
 # 0.1.0 / 2013-03-12
 
 * Initial release! Woo!
 
+[#9]: https://github.com/RoboticCheese/kitchen-openstack/pull/9
 [#7]: https://github.com/RoboticCheese/kitchen-openstack/pull/7
 [#2]: https://github.com/RoboticCheese/kitchen-openstack/pull/2
 
