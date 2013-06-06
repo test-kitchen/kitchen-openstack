@@ -78,7 +78,8 @@ describe Kitchen::Driver::Openstack do
           :name => 'puppy',
           :openstack_tenant => 'that_one',
           :openstack_region => 'atlantis',
-          :openstack_service_name => 'the_service'
+          :openstack_service_name => 'the_service',
+          :ssh_key => '/path/to/id_rsa'
         }
       end
 
@@ -87,6 +88,10 @@ describe Kitchen::Driver::Openstack do
         config.each do |k, v|
           expect(drv[k]).to eq(v)
         end
+      end
+
+      it 'SSH with user-specified private key' do
+        expect(driver[:ssh_key]).to eq('/path/to/id_rsa')
       end
     end
   end
