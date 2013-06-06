@@ -48,7 +48,9 @@ module Kitchen
         # As a consequence of IP weirdness, the OpenStack setup() method is
         # also borked
         wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
-        config[:key_name] or do_ssh_setup(state, config, server)
+        unless config[:ssh_key] or config[:key_name]
+          do_ssh_setup(state, config, server)
+        end
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
       end
