@@ -39,6 +39,7 @@ key will be used, though that behavior can be overridden with additional
 options:
 
     name: [A UNIQUE SERVER NAME]
+    ssh_key: [PATH TO YOUR PRIVATE SSH KEY]
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
     port: [SSH PORT]

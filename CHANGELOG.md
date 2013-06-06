@@ -1,3 +1,10 @@
+# 0.4.0 / 2013-06-06
+
+### New Features
+
+* PR [#12][] - Support `openstack_network_name` option; via [@saketoba][]
+* PR [#11][] - Support `ssh_key` option; via [@saketoba][]
+
 # 0.2.0 / 2013-05-11
 
 ### Bug Fixes
@@ -18,9 +25,12 @@
 
 * Initial release! Woo!
 
+[#12]: https://github.com/RoboticCheese/kitchen-openstack/pull/12
+[#11]: https://github.com/RoboticCheese/kitchen-openstack/pull/11
 [#10]: https://github.com/RoboticCheese/kitchen-openstack/pull/10
 [#9]: https://github.com/RoboticCheese/kitchen-openstack/pull/9
 [#7]: https://github.com/RoboticCheese/kitchen-openstack/pull/7
 [#2]: https://github.com/RoboticCheese/kitchen-openstack/pull/2
 
+[@saketoba]: https://github.com/saketoba
 [@stevendanna]: https://github.com/stevendanna
