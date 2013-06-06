@@ -46,6 +46,7 @@ options:
     openstack_tenant: [YOUR OPENSTACK TENANT ID]
     openstack_region: [A VALID OPENSTACK REGION]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
+    openstack_network_name: [YOUR OPENSTACK NETWORK NAME]
 
 If a key\_name is provided it will be used instead of any
 public\_key\_path that is specified.

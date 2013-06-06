@@ -366,6 +366,21 @@ describe Kitchen::Driver::Openstack do
         expect(driver.send(:get_ip, server)).to eq('5.5.5.5')
       end
     end
+
+    context 'IPs in user-defined network group' do
+      let(:config) { { :openstack_network_name => 'mynetwork' } }
+      let(:addresses) do
+        {
+          'mynetwork' => [
+            { 'addr' => '7.7.7.7' },
+            { 'addr' => '8.8.8.8' }
+          ]
+        }
+      end
+      it 'returns a IP in user-defined network group' do
+        expect(driver.send(:get_ip, server)).to eq('7.7.7.7')
+      end
+    end
   end
 
   describe '#do_ssh_setup' do

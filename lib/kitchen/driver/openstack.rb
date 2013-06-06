@@ -35,6 +35,7 @@ module Kitchen
       default_config :openstack_tenant, nil
       default_config :openstack_region, nil
       default_config :openstack_service_name, nil
+      default_config :openstack_network_name, nil
 
       def create(state)
         config[:name] ||= generate_name(instance.name)
@@ -101,7 +102,9 @@ module Kitchen
       end
 
       def get_ip(server)
-        if server.addresses['public'] and !server.addresses['public'].empty?
+        if config[:openstack_network_name]
+          return server.addresses[config[:openstack_network_name]].first['addr']
+        elsif server.addresses['public'] and !server.addresses['public'].empty?
           # server.public_ip_address stopped working in Fog 1.10.0
           return server.addresses['public'].first['addr']
         else
