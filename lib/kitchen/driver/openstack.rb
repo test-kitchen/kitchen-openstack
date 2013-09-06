@@ -44,6 +44,7 @@ module Kitchen
         state[:server_id] = server.id
         info("OpenStack instance <#{state[:server_id]}> created.")
         server.wait_for { print '.'; ready? } ; puts "\n(server ready)"
+        attach_ip(server) if config[:floating_ip_pool]
         state[:hostname] = get_ip(server)
         # As a consequence of IP weirdness, the OpenStack setup() method is
         # also borked
@@ -101,6 +102,14 @@ module Kitchen
         # Generate what should be a unique server name
         rand_str = Array.new(8) { rand(36).to_s(36) }.join
         "#{base}-#{Etc.getlogin}-#{Socket.gethostname}-#{rand_str}"
+      end
+
+      def attach_ip(server)
+        pool_name = config[:floating_ip_pool]
+        pools = compute.addresses.get_address_pools
+        ip = compute.addresses.create({:pool=>pool_name,
+                                        :server=>server})
+        server.addresses['public']=[{:version=>4,:ip=>ip.ip}]
       end
 
       def get_ip(server)
