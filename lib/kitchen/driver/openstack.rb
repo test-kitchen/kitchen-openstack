@@ -28,8 +28,19 @@ module Kitchen
     #
     # @author Jonathan Hartman <j@p4nt5.com>
     class Openstack < Kitchen::Driver::SSHBase
+      def self.pubkey_path
+        files = ['id_rsa', 'id_dsa']
+        files.each{|file|
+          path = File.expand_path("~/.ssh/#{file}.pub")
+          if File.exists?(path)
+            return path
+          end
+        }
+        File.expand_path('~/.ssh/id_dsa.pub')
+      end
+
       default_config :name, nil
-      default_config :public_key_path, File.expand_path('~/.ssh/id_dsa.pub')
+      default_config :public_key_path, self.pubkey_path()
       default_config :username, 'root'
       default_config :port, '22'
       default_config :openstack_tenant, nil
