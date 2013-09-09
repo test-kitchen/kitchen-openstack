@@ -106,10 +106,29 @@ module Kitchen
 
       def attach_ip(server)
         pool_name = config[:floating_ip_pool]
-        pools = compute.addresses.get_address_pools
-        ip = compute.addresses.create({:pool=>pool_name,
-                                        :server=>server})
-        server.addresses['public']=[{:version=>4,:ip=>ip.ip}]
+        ips = compute.addresses.all
+        free_addresses = ips.delete_if {|p| p.pool != pool_name || p.instance_id}
+        created = false
+        ip = nil
+        while free_addresses.count > 0 and ip.nil?
+          # try to claim an ip
+          begin
+            server.associate_address(free_addresses[0].ip)
+            created = false
+            ip = free_addresses[0]
+            puts "Reusing existing ip #{ip.ip}"
+          rescue
+            free_addresses.shift
+          end
+        end
+        if ip.nil?
+          # allocate a new ip
+          created = true
+          ip = compute.addresses.create({:pool=>pool_name,
+                                         :server=>server})
+          puts "Allocated new ip #{ip.ip}"
+        end
+        server.addresses['public']=[{"raw"=>ip,"version"=>4,"ip"=>ip.ip,"addr"=>ip.ip}]
       end
 
       def get_ip(server)
