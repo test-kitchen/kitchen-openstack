@@ -28,19 +28,20 @@ module Kitchen
     #
     # @author Jonathan Hartman <j@p4nt5.com>
     class Openstack < Kitchen::Driver::SSHBase
-      def self.pubkey_path
+      def self.key_path
         files = ['id_rsa', 'id_dsa']
         files.each{|file|
-          path = File.expand_path("~/.ssh/#{file}.pub")
+          path = File.expand_path("~/.ssh/#{file}")
           if File.exists?(path)
             return path
           end
         }
-        File.expand_path('~/.ssh/id_dsa.pub')
+        File.expand_path('~/.ssh/id_dsa')
       end
 
       default_config :name, nil
-      default_config :public_key_path, self.pubkey_path()
+      default_config :private_key_path, self.key_path()
+      default_config :public_key_path, self.key_path()+'.pub'
       default_config :username, 'root'
       default_config :port, '22'
       default_config :openstack_tenant, nil
@@ -60,7 +61,15 @@ module Kitchen
         # also borked
         wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
         unless config[:ssh_key] or config[:key_name]
-          do_ssh_setup(state, config, server)
+          key_exists = false
+          for i in 0..10
+            key_exists = check_ssh_key(state, config, server, i<10)
+            break if key_exists
+            sleep 1
+          end
+          if not key_exists
+            do_ssh_setup(state, config, server)
+          end
         end
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
@@ -105,6 +114,15 @@ module Kitchen
           server_def[:public_key_path] = config[:public_key_path]
         end
         server_def[:key_name] = config[:key_name] if config[:key_name]
+        if not server_def[:key_name]
+          key_data = IO.read(config[:public_key_path])
+          key_name = key_data.split(' ')[-1]
+          key_name.tr!('^a-zA-Z0-9-_','-')
+          if compute.key_pairs.get(key_name).nil?
+            compute.create_key_pair(key_name, key_data)
+          end
+          server_def[:key_name] = key_name
+        end
         compute.servers.create(server_def)
       end
 
@@ -122,6 +140,25 @@ module Kitchen
           return server.addresses['public'].first['addr']
         else
           return server.addresses['private'].first['addr']
+        end
+      end
+
+      def check_ssh_key(state, config, server, ignore_errors)
+        agent = Net::SSH::Authentication::Agent.connect() rescue nil
+        if agent
+          ssh = Fog::SSH.new(state[:hostname], config[:username], {})
+        else
+          ssh = Fog::SSH.new(state[:hostname], config[:username],
+            { :key_data => open(config[:private_key_path]).read })
+        end
+        begin
+          ssh.run('true')
+          return true
+        rescue
+          if not ignore_errors
+            raise
+          end
+          return false
         end
       end
 
