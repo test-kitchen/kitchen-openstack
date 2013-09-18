@@ -29,7 +29,7 @@ describe Kitchen::Driver::Openstack do
   let(:state) { Hash.new }
 
   let(:instance) do
-    stub(:name => 'potatoes', :logger => logger, :to_str => 'instance')
+    double(:name => 'potatoes', :logger => logger, :to_str => 'instance')
   end
 
   let(:driver) do
@@ -98,8 +98,8 @@ describe Kitchen::Driver::Openstack do
 
   describe '#create' do
     let(:server) do
-      stub(:id => 'test123', :wait_for => true,
-        :public_ip_address => '1.2.3.4')
+      double(:id => 'test123', :wait_for => true,
+        :public_ip_addresses => %w{1.2.3.4})
     end
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
@@ -157,9 +157,9 @@ describe Kitchen::Driver::Openstack do
     let(:server_id) { '12345' }
     let(:hostname) { 'example.com' }
     let(:state) { { :server_id => server_id, :hostname => hostname } }
-    let(:server) { stub(:nil? => false, :destroy => true) }
-    let(:servers) { stub(:get => server) }
-    let(:compute) { stub(:servers => servers) }
+    let(:server) { double(:nil? => false, :destroy => true) }
+    let(:servers) { double(:get => server) }
+    let(:compute) { double(:servers => servers) }
 
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
@@ -198,7 +198,7 @@ describe Kitchen::Driver::Openstack do
         s.stub(:get).with('12345').and_return(nil)
         s
       end
-      let(:compute) { stub(:servers => servers) }
+      let(:compute) { double(:servers => servers) }
       let(:driver) do
         d = Kitchen::Driver::Openstack.new(config)
         d.instance = instance
@@ -273,7 +273,7 @@ describe Kitchen::Driver::Openstack do
       s.stub(:create) { |arg| arg }
       s
     end
-    let(:compute) { stub(:servers => servers) }
+    let(:compute) { double(:servers => servers) }
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
       d.instance = instance
@@ -336,38 +336,46 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#get_ip' do
-    let(:addresses) { { 'public' => [], 'private' => [] } }
-    let(:server) { stub(:addresses => addresses) }
+    let(:addresses) { nil }
+    let(:public_ip_addresses) { nil }
+    let(:private_ip_addresses) { nil }
+    let(:parsed_ips) { [[], []] }
+    let(:driver) do
+      d = Kitchen::Driver::Openstack.new(config)
+      d.instance = instance
+      d.stub(:parse_ips).and_return(parsed_ips)
+      d
+    end
+    let(:server) do
+      double(:addresses => addresses,
+        :public_ip_addresses => public_ip_addresses,
+        :private_ip_addresses => private_ip_addresses)
+    end
 
     context 'both public and private IPs' do
-      let(:addresses) do
-        {
-          'public' => [
-            { 'addr' => '1.2.3.4' },
-            { 'addr' => '1.2.3.5' }
-          ],
-          'private' => [
-            { 'addr' => '5.5.5.5' },
-            { 'addr' => '6.6.6.6' }
-          ]
-        }
-      end
+      let(:public_ip_addresses) { %w{1::1 1.2.3.4} }
+      let(:private_ip_addresses) { %w{5.5.5.5} }
+      let(:parsed_ips) { [%w{1.2.3.4}, %w{5.5.5.5}] }
 
-      it 'returns a public IP' do
+      it 'returns a public IPv4 address' do
         expect(driver.send(:get_ip, server)).to eq('1.2.3.4')
       end
     end
 
-    context 'only private IPs' do
-      let(:addresses) do
-        {
-          'private' => [
-            { 'addr' => '5.5.5.5' },
-            { 'addr' => '6.6.6.6' }
-          ]
-        }
+    context 'only public IPs' do
+      let(:public_ip_addresses) { %w{4.3.2.1 2::1} }
+      let(:parsed_ips) { [%w{4.3.2.1}, []] }
+
+      it 'returns a public IPv4 address' do
+        expect(driver.send(:get_ip, server)).to eq('4.3.2.1')
       end
-      it 'returns a private IP' do
+    end
+
+    context 'only private IPs' do
+      let(:private_ip_addresses) { %w{3::1 5.5.5.5} }
+      let(:parsed_ips) { [[], %w{5.5.5.5}] }
+
+      it 'returns a private IPv4 address' do
         expect(driver.send(:get_ip, server)).to eq('5.5.5.5')
       end
     end
@@ -378,20 +386,155 @@ describe Kitchen::Driver::Openstack do
         {
           'mynetwork' => [
             { 'addr' => '7.7.7.7' },
-            { 'addr' => '8.8.8.8' }
+            { 'addr' => '4::1' }
           ]
         }
       end
-      it 'returns a IP in user-defined network group' do
+
+      it 'returns a IPv4 address in user-defined network group' do
         expect(driver.send(:get_ip, server)).to eq('7.7.7.7')
+      end
+    end
+
+    context 'an OpenStack deployment without the floating IP extension' do
+      let(:server) do
+        s = double('server')
+        s.stub(:addresses).and_return(addresses)
+        s.stub(:public_ip_addresses).and_raise(
+          Fog::Compute::OpenStack::NotFound)
+        s.stub(:private_ip_addresses).and_raise(
+          Fog::Compute::OpenStack::NotFound)
+        s
+      end
+
+      context 'both public and private IPs in the addresses hash' do
+        let(:addresses) do
+          {
+            'public' => [{ 'addr' => '6.6.6.6' }, { 'addr' => '7.7.7.7' }],
+            'private' => [{ 'addr' => '8.8.8.8' }, { 'addr' => '9.9.9.9' }]
+          }
+        end
+        let(:parsed_ips) { [%w{6.6.6.6 7.7.7.7}, %w{8.8.8.8 9.9.9.9}] }
+
+        it 'selects the first public IP' do
+          expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
+        end
+      end
+
+      context 'only public IPs in the address hash' do
+        let(:addresses) do
+          { 'public' => [{ 'addr' => '6.6.6.6' }, { 'addr' => '7.7.7.7' }] }
+        end
+        let(:parsed_ips) { [%w{6.6.6.6 7.7.7.7}, []] }
+
+        it 'selects the first public IP' do
+          expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
+        end
+      end
+
+      context 'only private IPs in the address hash' do
+        let(:addresses) do
+          { 'private' => [{ 'addr' => '8.8.8.8' }, { 'addr' => '9.9.9.9' }] }
+        end
+        let(:parsed_ips) { [[], %w{8.8.8.8 9.9.9.9}] }
+
+        it 'selects the first private IP' do
+          expect(driver.send(:get_ip, server)).to eq('8.8.8.8')
+        end
+      end
+    end
+
+    context 'no IP addresses whatsoever' do
+      it 'raises an exception' do
+        expect { driver.send(:get_ip, server) }.to raise_error
+      end
+    end
+  end
+
+  describe '#parse_ips' do
+    let(:pub_v4) { %w{1.1.1.1 2.2.2.2} }
+    let(:pub_v6) { %w{1::1 2::2} }
+    let(:priv_v4) { %w{3.3.3.3 4.4.4.4} }
+    let(:priv_v6) { %w{3::3 4::4} }
+    let(:pub) { pub_v4 + pub_v6 }
+    let(:priv) { priv_v4 + priv_v6 }
+
+    context 'both public and private IPs' do
+      context 'IPv4 (default)' do
+        it 'returns only the v4 IPs' do
+          expect(driver.send(:parse_ips, pub, priv)).to eq([pub_v4, priv_v4])
+        end
+      end
+
+      context 'IPv6' do
+        let(:config) { { :use_ipv6 => true } }
+
+        it 'returns only the v6 IPs' do
+          expect(driver.send(:parse_ips, pub, priv)).to eq([pub_v6, priv_v6])
+        end
+      end
+    end
+
+    context 'only public IPs' do
+      let(:priv) { nil }
+
+      context 'IPv4 (default)' do
+        it 'returns only the v4 IPs' do
+          expect(driver.send(:parse_ips, pub, priv)).to eq([pub_v4, []])
+        end
+      end
+
+      context 'IPv6' do
+        let(:config) { { :use_ipv6 => true } }
+
+        it 'returns only the v6 IPs' do
+          expect(driver.send(:parse_ips, pub, priv)).to eq([pub_v6, []])
+        end
+      end
+    end
+
+    context 'only private IPs' do
+      let(:pub) { nil }
+
+      context 'IPv4 (default)' do
+        it 'returns only the v4 IPs' do
+          expect(driver.send(:parse_ips, pub, priv)).to eq([[], priv_v4])
+        end
+      end
+
+      context 'IPv6' do
+        let(:config) { { :use_ipv6 => true } }
+
+        it 'returns only the v6 IPs' do
+          expect(driver.send(:parse_ips, pub, priv)).to eq([[], priv_v6])
+        end
+      end
+    end
+
+    context 'no IPs whatsoever' do
+      let(:pub) { nil }
+      let(:priv) { nil }
+
+      context 'IPv4 (default)' do
+        it 'returns empty lists' do
+          expect(driver.send(:parse_ips, pub, priv)).to eq([[], []])
+        end
+      end
+
+      context 'IPv6' do
+        let(:config) { { :use_ipv6 => true } }
+
+        it 'returns empty lists' do
+          expect(driver.send(:parse_ips, nil, nil)).to eq([[], []])
+        end
       end
     end
   end
 
   describe '#do_ssh_setup' do
-    let(:server) { stub(:password => 'aloha') }
+    let(:server) { double(:password => 'aloha') }
     let(:state) { { :hostname => 'host' } }
-    let(:read) { stub(:read => 'a_key') }
+    let(:read) { double(:read => 'a_key') }
     let(:ssh) do
       s = double('ssh')
       s.stub(:run) { |args| args }

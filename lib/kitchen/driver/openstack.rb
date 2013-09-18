@@ -20,6 +20,7 @@ require 'benchmark'
 require 'fog'
 require 'kitchen'
 require 'etc'
+require 'ipaddr'
 require 'socket'
 
 module Kitchen
@@ -32,6 +33,7 @@ module Kitchen
       default_config :public_key_path, File.expand_path('~/.ssh/id_dsa.pub')
       default_config :username, 'root'
       default_config :port, '22'
+      default_config :use_ipv6, false
       default_config :openstack_tenant, nil
       default_config :openstack_region, nil
       default_config :openstack_service_name, nil
@@ -42,11 +44,9 @@ module Kitchen
         config[:disable_ssl_validation] and disable_ssl_validation
         server = create_server
         state[:server_id] = server.id
-        info("OpenStack instance <#{state[:server_id]}> created.")
+        info "OpenStack instance <#{state[:server_id]}> created."
         server.wait_for { print '.'; ready? } ; puts "\n(server ready)"
         state[:hostname] = get_ip(server)
-        # As a consequence of IP weirdness, the OpenStack setup() method is
-        # also borked
         wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
         unless config[:ssh_key] or config[:key_name]
           do_ssh_setup(state, config, server)
@@ -61,7 +61,7 @@ module Kitchen
         config[:disable_ssl_validation] and disable_ssl_validation
         server = compute.servers.get(state[:server_id])
         server.destroy unless server.nil?
-        info("OpenStack instance <#{state[:server_id]}> destroyed.")
+        info "OpenStack instance <#{state[:server_id]}> destroyed."
         state.delete(:server_id)
         state.delete(:hostname)
       end
@@ -94,6 +94,9 @@ module Kitchen
           server_def[:public_key_path] = config[:public_key_path]
         end
         server_def[:key_name] = config[:key_name] if config[:key_name]
+        # Can't use the Fog bootstrap and/or setup methods here; they require a
+        # public IP address that can't be guaranteed to exist across all
+        # OpenStack deployments (e.g. TryStack ARM only has private IPs).
         compute.servers.create(server_def)
       end
 
@@ -105,13 +108,29 @@ module Kitchen
 
       def get_ip(server)
         if config[:openstack_network_name]
+          debug "Using configured network: #{config[:openstack_network_name]}"
           return server.addresses[config[:openstack_network_name]].first['addr']
-        elsif server.addresses['public'] and !server.addresses['public'].empty?
-          # server.public_ip_address stopped working in Fog 1.10.0
-          return server.addresses['public'].first['addr']
-        else
-          return server.addresses['private'].first['addr']
         end
+        begin
+          pub, priv = server.public_ip_addresses, server.private_ip_addresses
+        rescue Fog::Compute::OpenStack::NotFound
+          # See Fog issue: https://github.com/fog/fog/issues/2160
+          addrs = server.addresses
+          addrs['public'] and pub = addrs['public'].map { |i| i['addr'] }
+          addrs['private'] and priv = addrs['private'].map { |i| i['addr'] }
+        end
+        pub, priv = parse_ips(pub, priv)
+        pub.first || priv.first || raise(ActionFailed, 'Could not find an IP')
+      end
+
+      def parse_ips(pub, priv)
+        pub, priv = Array(pub), Array(priv)
+        if config[:use_ipv6]
+          [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv6? } }
+        else
+          [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv4? } }
+        end
+        return pub, priv
       end
 
       def do_ssh_setup(state, config, server)
