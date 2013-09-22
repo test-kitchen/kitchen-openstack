@@ -1,5 +1,10 @@
 # ?.?.? / ????-??-??
 
+### Improvements
+
+* PR [#19][] - Don't assume `public` and `private` network names exist
+* PR [#19][] - Make IPv4 or IPv6 configurable instead of relying on Fog to pick
+
 # 0.4.0 / 2013-06-06
 
 ### New Features
@@ -27,6 +32,7 @@
 
 * Initial release! Woo!
 
+[#19]: https://github.com/RoboticCheese/kitchen-openstack/pull/19
 [#12]: https://github.com/RoboticCheese/kitchen-openstack/pull/12
 [#11]: https://github.com/RoboticCheese/kitchen-openstack/pull/11
 [#10]: https://github.com/RoboticCheese/kitchen-openstack/pull/10
