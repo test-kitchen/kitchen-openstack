@@ -333,6 +333,17 @@ describe Kitchen::Driver::Openstack do
       expect(driver.send(:generate_name, 'monkey')).to match(
         /^monkey-user-host-/)
     end
+
+    context 'local node with a long hostname' do
+      before(:each) do
+        Socket.unstub(:gethostname)
+        Socket.stub(:gethostname).and_return('ab.c' * 20)
+      end
+
+      it 'limits the generated name to 64-characters' do
+        expect(driver.send(:generate_name, 'long').length).to eq(64)
+      end
+    end
   end
 
   describe '#get_ip' do

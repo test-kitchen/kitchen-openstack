@@ -5,6 +5,10 @@
 * PR [#19][] - Don't assume `public` and `private` network names exist
 * PR [#19][] - Make IPv4 or IPv6 configurable instead of relying on Fog to pick
 
+### Bug Fixes
+
+* PR [#20][] - Limit generated hostnames to 64 characters
+
 # 0.4.0 / 2013-06-06
 
 ### New Features
@@ -32,6 +36,7 @@
 
 * Initial release! Woo!
 
+[#20]: https://github.com/RoboticCheese/kitchen-openstack/pull/20
 [#19]: https://github.com/RoboticCheese/kitchen-openstack/pull/19
 [#12]: https://github.com/RoboticCheese/kitchen-openstack/pull/12
 [#11]: https://github.com/RoboticCheese/kitchen-openstack/pull/11
