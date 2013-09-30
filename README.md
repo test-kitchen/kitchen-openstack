@@ -57,6 +57,10 @@ public\_key\_path that is specified.
 Only disable SSL cert validation if you absolutely know what you are doing,
 but are stuck with an OpenStack deployment without valid SSL certs.
 
+    floating_ip_pool: name
+
+An optional name of an IP pool to automatically associate an IP to any test VMs, in case the default private IP doesn't support SSH
+
 ## Contributing
 
 1. Fork it
