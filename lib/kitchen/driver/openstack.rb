@@ -136,6 +136,9 @@ module Kitchen
 
       def check_ssh_key(state, config, server, ignore_errors)
         opts = {}
+        if server.password
+          opts[:password] = server.password
+        end
         if File.exists?(config[:private_key_path])
           opts = { :key_data => open(config[:private_key_path]).read }
         end
