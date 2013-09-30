@@ -120,9 +120,9 @@ module Kitchen
           end
         end
         server.addresses['public']=[{
-	  "raw"=>ip, "version"=>4,
-	  "ip"=>ip.ip, "addr"=>ip.ip
-	}]
+          "raw"=>ip, "version"=>4,
+          "ip"=>ip.ip, "addr"=>ip.ip
+        }]
       end
 
       def get_ip(server)
