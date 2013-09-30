@@ -30,7 +30,7 @@ module Kitchen
     class Openstack < Kitchen::Driver::SSHBase
       def self.key_path
         files = ['id_rsa', 'id_dsa']
-        files.each{|file|
+        files.each { |file|
           path = File.expand_path("~/.ssh/#{file}")
           if File.exists?(path)
             return path
@@ -117,7 +117,7 @@ module Kitchen
         if not server_def[:key_name]
           key_data = IO.read(config[:public_key_path])
           key_name = key_data.split(' ')[-1]
-          key_name.tr!('^a-zA-Z0-9-_','-')
+          key_name.tr!('^a-zA-Z0-9-_', '-')
           if compute.key_pairs.get(key_name).nil?
             compute.create_key_pair(key_name, key_data)
           end
