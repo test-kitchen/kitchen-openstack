@@ -107,7 +107,7 @@ module Kitchen
       def attach_ip(server)
         pool_name = config[:floating_ip_pool]
         ips = compute.addresses.all
-        free_addresses = ips.delete_if {|p| p.pool != pool_name || p.instance_id}
+        free_addresses = ips.delete_if {|p| p.pool!=pool_name || p.instance_id}
         created = false
         ip = nil
         while free_addresses.count > 0 and ip.nil?
@@ -128,7 +128,10 @@ module Kitchen
                                          :server=>server})
           puts "Allocated new ip #{ip.ip}"
         end
-        server.addresses['public']=[{"raw"=>ip,"version"=>4,"ip"=>ip.ip,"addr"=>ip.ip}]
+        server.addresses['public']=[{
+	  "raw"=>ip, "version"=>4,
+	  "ip"=>ip.ip, "addr"=>ip.ip
+	}]
       end
 
       def get_ip(server)
