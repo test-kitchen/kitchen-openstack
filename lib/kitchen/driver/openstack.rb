@@ -135,13 +135,11 @@ module Kitchen
       end
 
       def check_ssh_key(state, config, server, ignore_errors)
-        agent = Net::SSH::Authentication::Agent.connect() rescue nil
-        if agent
-          ssh = Fog::SSH.new(state[:hostname], config[:username], {})
-        else
-          ssh = Fog::SSH.new(state[:hostname], config[:username],
-            { :key_data => open(config[:private_key_path]).read })
+        opts = {}
+        if File.exists?(config[:private_key_path])
+          opts = { :key_data => open(config[:private_key_path]).read }
         end
+        ssh = Fog::SSH.new(state[:hostname], config[:username], opts)
         begin
           ssh.run('true')
           return true
