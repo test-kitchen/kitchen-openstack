@@ -114,15 +114,6 @@ module Kitchen
           server_def[:public_key_path] = config[:public_key_path]
         end
         server_def[:key_name] = config[:key_name] if config[:key_name]
-        if not server_def[:key_name]
-          key_data = IO.read(config[:public_key_path])
-          key_name = key_data.split(' ')[-1]
-          key_name.tr!('^a-zA-Z0-9-_', '-')
-          if compute.key_pairs.get(key_name).nil?
-            compute.create_key_pair(key_name, key_data)
-          end
-          server_def[:key_name] = key_name
-        end
         compute.servers.create(server_def)
       end
 
