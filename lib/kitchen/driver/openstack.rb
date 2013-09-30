@@ -119,12 +119,6 @@ module Kitchen
             free_addresses.shift
           end
         end
-        if ip.nil?
-          # allocate a new ip
-          ip = compute.addresses.create({:pool=>pool_name,
-                                         :server=>server})
-          puts "Allocated new ip #{ip.ip}"
-        end
         server.addresses['public']=[{
 	  "raw"=>ip, "version"=>4,
 	  "ip"=>ip.ip, "addr"=>ip.ip
