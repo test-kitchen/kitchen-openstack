@@ -46,6 +46,7 @@ module Kitchen
         state[:server_id] = server.id
         info "OpenStack instance <#{state[:server_id]}> created."
         server.wait_for { print '.'; ready? } ; puts "\n(server ready)"
+        attach_ip(server) if config[:floating_ip_pool]
         state[:hostname] = get_ip(server)
         wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
         unless config[:ssh_key] or config[:key_name]
@@ -119,6 +120,27 @@ module Kitchen
           end
         end
         pieces.join sep
+      end
+
+      def attach_ip(server)
+        pool_name = config[:floating_ip_pool]
+        ips = compute.addresses.all
+        free_addresses = ips.delete_if {|p| p.pool!=pool_name || p.instance_id}
+        ip = nil
+        while free_addresses.count > 0 and ip.nil?
+          # try to claim an ip
+          begin
+            server.associate_address(free_addresses[0].ip)
+            ip = free_addresses[0]
+            puts "Reusing existing ip #{ip.ip}"
+          rescue
+            free_addresses.shift
+          end
+        end
+        server.addresses['public']=[{
+          "raw"=>ip, "version"=>4,
+          "ip"=>ip.ip, "addr"=>ip.ip
+        }]
       end
 
       def get_ip(server)
