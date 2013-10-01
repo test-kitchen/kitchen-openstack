@@ -29,20 +29,18 @@ module Kitchen
     #
     # @author Jonathan Hartman <j@p4nt5.com>
     class Openstack < Kitchen::Driver::SSHBase
-      def self.key_path
-        files = ['id_rsa', 'id_dsa']
-        files.each { |file|
-          path = File.expand_path("~/.ssh/#{file}")
-          if File.exists?(path)
-            return path
-          end
-        }
-        File.expand_path('~/.ssh/id_dsa')
-      end
 
       default_config :name, nil
-      default_config :private_key_path, self.key_path()
-      default_config :public_key_path, self.key_path()+'.pub'
+      default_config :key_name, nil
+      default_config :private_key_path do |driver|
+        %w{id_rsa id_dsa}.collect do |k|
+          f = File.expand_path "~/.ssh/#{k}"
+          f if File.exists? f
+        end.compact.first
+      end
+      default_config :public_key_path do |driver|
+        driver[:private_key_path] + '.pub'
+      end
       default_config :username, 'root'
       default_config :port, '22'
       default_config :use_ipv6, false
@@ -50,6 +48,8 @@ module Kitchen
       default_config :openstack_region, nil
       default_config :openstack_service_name, nil
       default_config :openstack_network_name, nil
+      default_config :floating_ip_pool, nil
+      default_config :floating_ip, nil
 
       def create(state)
         config[:name] ||= generate_name(instance.name)
@@ -57,20 +57,22 @@ module Kitchen
         server = create_server
         state[:server_id] = server.id
         info "OpenStack instance <#{state[:server_id]}> created."
-        server.wait_for { print '.'; ready? } ; puts "\n(server ready)"
-        attach_ip(server) if config[:floating_ip_pool]
+        server.wait_for { print '.'; ready? } ; info "\n(server ready)"
+        if config[:floating_ip_pool]
+          attach_ip_from_pool(server, config[:floating_ip_pool])
+        elsif config[:floating_ip]
+          attach_ip(server, config[:floating_ip])
+        end
         state[:hostname] = get_ip(server)
-        wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
-        unless config[:ssh_key] or config[:key_name]
-          key_exists = false
-          for i in 0..10
-            key_exists = check_ssh_key(state, config, server, i<10)
-            break if key_exists
-            sleep 1
-          end
-          if not key_exists
-            do_ssh_setup(state, config, server)
-          end
+        state[:ssh_key] = config[:private_key_path]
+        wait_for_sshd(state[:hostname]) ; info '(ssh ready)'
+        if config[:key_name]
+          info "Using OpenStack keypair <#{config[:key_name]}>"
+        end
+        info "Using public SSH key <#{config[:public_key_path]}>"
+        info "Using private SSH key <#{config[:private_key_path]}>"
+        unless config[:key_name]
+          do_ssh_setup(state, config, server)
         end
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
@@ -142,25 +144,21 @@ module Kitchen
         pieces.join sep
       end
 
-      def attach_ip(server)
-        pool_name = config[:floating_ip_pool]
-        ips = compute.addresses.all
-        free_addresses = ips.delete_if {|p| p.pool!=pool_name || p.instance_id}
-        ip = nil
-        while free_addresses.count > 0 and ip.nil?
-          # try to claim an ip
-          begin
-            server.associate_address(free_addresses[0].ip)
-            ip = free_addresses[0]
-            puts "Reusing existing ip #{ip.ip}"
-          rescue
-            free_addresses.shift
-          end
+      def attach_ip_from_pool(server, pool)
+        info "Attaching floating IP from <#{pool}> pool"
+        free_addrs = compute.addresses.collect do |i|
+          i.ip if i.fixed_ip.nil? and i.instance_id.nil? and i.pool == pool
+        end.compact
+        if free_addrs.empty?
+          raise ActionFailed, "No available IPs in pool <#{pool}>"
         end
-        server.addresses['public']=[{
-          "raw"=>ip, "version"=>4,
-          "ip"=>ip.ip, "addr"=>ip.ip
-        }]
+        attach_ip(server, free_addrs[0])
+      end
+
+      def attach_ip(server, ip)
+        info "Attaching floating IP <#{ip}>"
+        server.associate_address ip
+        (server.addresses['public'] ||= []) << { 'version' => 4, 'addr' => ip }
       end
 
       def get_ip(server)
@@ -190,27 +188,8 @@ module Kitchen
         return pub, priv
       end
 
-      def check_ssh_key(state, config, server, ignore_errors)
-        opts = {}
-        if server.password
-          opts[:password] = server.password
-        end
-        if File.exists?(config[:private_key_path])
-          opts = { :key_data => open(config[:private_key_path]).read }
-        end
-        ssh = Fog::SSH.new(state[:hostname], config[:username], opts)
-        begin
-          ssh.run('true')
-          return true
-        rescue
-          if not ignore_errors
-            raise
-          end
-          return false
-        end
-      end
-
       def do_ssh_setup(state, config, server)
+        info "Setting up SSH access for key <#{config[:public_key_path]}>"
         ssh = Fog::SSH.new(state[:hostname], config[:username],
           { :password => server.password })
         pub_key = open(config[:public_key_path]).read
