@@ -27,6 +27,8 @@ describe Kitchen::Driver::Openstack do
   let(:logger) { Logger.new(logged_output) }
   let(:config) { Hash.new }
   let(:state) { Hash.new }
+  let(:dsa) { File.expand_path('~/.ssh/id_dsa') }
+  let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
 
   let(:instance) do
     double(:name => 'potatoes', :logger => logger, :to_str => 'instance')
@@ -38,15 +40,13 @@ describe Kitchen::Driver::Openstack do
     d
   end
 
+  before(:each) do
+    File.stub(:exists?).and_call_original
+    File.stub(:exists?).with(dsa).and_return(true)
+    File.stub(:exists?).with(rsa).and_return(true)
+  end
+
   describe '#initialize'do
-    let(:dsa) { File.expand_path('~/.ssh/id_dsa') }
-    let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
-
-    before(:each) do
-      File.stub(:exists?).with(dsa).and_return(true)
-      File.stub(:exists?).with(rsa).and_return(true)
-    end
-
     context 'default options' do
       context 'both DSA and RSA SSH keys available for the user' do
         it 'prefers the local user\'s RSA private key' do
