@@ -1,5 +1,16 @@
 # ?.?.? / ????-??-??
 
+### New Features
+
+* PR [#25][] - Support specific floating IPs, in addition to named pools
+* PR [#14][] - Add support for floating IP pools; via [@hufman][]
+
+### Improvements
+
+* PR [#15][] - Improved SSH key support, support RSA and DSA; via [@hufman][]
+
+# 0.5.0 / 2013-09-23
+
 ### Improvements
 
 * PR [#19][] - Don't assume `public` and `private` network names exist
@@ -36,8 +47,11 @@
 
 * Initial release! Woo!
 
+[#25]: https://github.com/RoboticCheese/kitchen-openstack/pull/25
 [#20]: https://github.com/RoboticCheese/kitchen-openstack/pull/20
 [#19]: https://github.com/RoboticCheese/kitchen-openstack/pull/19
+[#15]: https://github.com/RoboticCheese/kitchen-openstack/pull/15
+[#14]: https://github.com/RoboticCheese/kitchen-openstack/pull/14
 [#12]: https://github.com/RoboticCheese/kitchen-openstack/pull/12
 [#11]: https://github.com/RoboticCheese/kitchen-openstack/pull/11
 [#10]: https://github.com/RoboticCheese/kitchen-openstack/pull/10
@@ -45,5 +59,6 @@
 [#7]: https://github.com/RoboticCheese/kitchen-openstack/pull/7
 [#2]: https://github.com/RoboticCheese/kitchen-openstack/pull/2
 
+[@hufman]: https://github.com/hufman
 [@saketoba]: https://github.com/saketoba
 [@stevendanna]: https://github.com/stevendanna

@@ -39,10 +39,55 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#initialize'do
+    let(:dsa) { File.expand_path('~/.ssh/id_dsa') }
+    let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
+
+    before(:each) do
+      File.stub(:exists?).with(dsa).and_return(true)
+      File.stub(:exists?).with(rsa).and_return(true)
+    end
+
     context 'default options' do
-      it 'defaults to local user\'s SSH public key' do
-        expect(driver[:public_key_path]).to eq(File.expand_path(
-          '~/.ssh/id_dsa.pub'))
+      context 'both DSA and RSA SSH keys available for the user' do
+        it 'prefers the local user\'s RSA private key' do
+          expect(driver[:private_key_path]).to eq(rsa)
+        end
+
+        it 'prefers the local user\'s RSA public key' do
+          expect(driver[:public_key_path]).to eq(rsa + '.pub')
+        end
+      end
+
+      context 'only a DSA SSH key available for the user' do
+        before(:each) do
+          File.unstub(:exists?)
+          File.stub(:exists?).and_return(false)
+          File.stub(:exists?).with(dsa).and_return(true)
+        end
+
+        it 'uses the local user\'s DSA private key' do
+          expect(driver[:private_key_path]).to eq(dsa)
+        end
+
+        it 'uses the local user\'s DSA public key' do
+          expect(driver[:public_key_path]).to eq(dsa + '.pub')
+        end
+      end
+
+      context 'only a RSA SSH key available for the user' do
+        before(:each) do
+          File.unstub(:exists?)
+          File.stub(:exists?).and_return(false)
+          File.stub(:exists?).with(rsa).and_return(true)
+        end
+
+        it 'uses the local user\'s RSA private key' do
+          expect(driver[:private_key_path]).to eq(rsa)
+        end
+
+        it 'uses the local user\'s RSA public key' do
+          expect(driver[:public_key_path]).to eq(rsa + '.pub')
+        end
       end
 
       it 'defaults to SSH with root user on port 22' do
@@ -50,20 +95,18 @@ describe Kitchen::Driver::Openstack do
         expect(driver[:port]).to eq('22')
       end
 
-      it 'defaults to no server name' do
-        expect(driver[:name]).to eq(nil)
-      end
-
-      it 'defaults to no tenant' do
-        expect(driver[:openstack_tenant]).to eq(nil)
-      end
-
-      it 'defaults to no region' do
-        expect(driver[:openstack_region]).to eq(nil)
-      end
-
-      it 'defaults to no service name' do
-        expect(driver[:openstack_service_name]).to eq(nil)
+      nils = [
+        :name,
+        :openstack_tenant,
+        :openstack_region,
+        :openstack_service_name,
+        :floating_ip_pool,
+        :floating_ip
+      ]
+      nils.each do |i|
+        it "defaults to no #{i}" do
+          expect(driver[i]).to eq(nil)
+        end
       end
     end
 
@@ -79,7 +122,9 @@ describe Kitchen::Driver::Openstack do
           :openstack_tenant => 'that_one',
           :openstack_region => 'atlantis',
           :openstack_service_name => 'the_service',
-          :ssh_key => '/path/to/id_rsa'
+          :private_key_path => '/path/to/id_rsa',
+          :floating_ip_pool => 'swimmers',
+          :floating_ip => '11111'
         }
       end
 
@@ -88,10 +133,6 @@ describe Kitchen::Driver::Openstack do
         config.each do |k, v|
           expect(drv[k]).to eq(v)
         end
-      end
-
-      it 'SSH with user-specified private key' do
-        expect(driver[:ssh_key]).to eq('/path/to/id_rsa')
       end
     end
   end
@@ -346,6 +387,50 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe '#attach_ip_from_pool' do
+    let(:server) { nil }
+    let(:pool) { 'swimmers' }
+    let(:ip) { '1.1.1.1' }
+    let(:address) { double(:ip => ip, :fixed_ip => nil, :instance_id => nil,
+      :pool => pool) }
+    let(:compute) { double(:addresses => [address]) }
+
+    before(:each) do
+      driver.stub(:attach_ip).with(server, ip).and_return('bing!')
+      driver.stub(:compute).and_return(compute)
+    end
+
+    it 'determines an IP to attempt to attach' do
+      expect(driver.send(:attach_ip_from_pool, server, pool)).to eq('bing!')
+    end
+
+    context 'no free addresses in the specified pool' do
+      let(:address) { double(:ip => ip, :fixed_ip => nil, :instance_id => nil,
+        :pool => 'some_other_pool') }
+
+      it 'raises an exception' do
+        expect { driver.send(:attach_ip_from_pool, server, pool) }.to \
+          raise_error
+      end
+    end
+  end
+
+  describe '#attach_ip' do
+    let(:ip) { '1.1.1.1' }
+    let(:addresses) { {} }
+    let(:server) do
+      s = double('server')
+      s.should_receive(:associate_address).with(ip).and_return(true)
+      s.stub(:addresses).and_return(addresses)
+      s
+    end
+
+    it 'associates the IP address with the server' do
+      expect(driver.send(:attach_ip, server, ip)).to eq(
+        [{ 'version' => 4, 'addr' => ip }])
+    end
+  end
+
   describe '#get_ip' do
     let(:addresses) { nil }
     let(:public_ip_addresses) { nil }
@@ -543,6 +628,7 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#do_ssh_setup' do
+    let(:config) { { :public_key_path => '/pub_key' } }
     let(:server) { double(:password => 'aloha') }
     let(:state) { { :hostname => 'host' } }
     let(:read) { double(:read => 'a_key') }
@@ -555,8 +641,7 @@ describe Kitchen::Driver::Openstack do
     it 'opens an SSH session to the server' do
       Fog::SSH.stub(:new).with('host', 'root',
         { :password => 'aloha' }).and_return(ssh)
-      driver.stub(:open).with(File.expand_path(
-        '~/.ssh/id_dsa.pub')).and_return(read)
+      driver.stub(:open).with('/pub_key').and_return(read)
       read.stub(:read).and_return('a_key')
       res = driver.send(:do_ssh_setup, state, config, server)
       expected = [
