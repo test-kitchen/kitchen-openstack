@@ -29,8 +29,20 @@ module Kitchen
     #
     # @author Jonathan Hartman <j@p4nt5.com>
     class Openstack < Kitchen::Driver::SSHBase
+      def self.key_path
+        files = ['id_rsa', 'id_dsa']
+        files.each { |file|
+          path = File.expand_path("~/.ssh/#{file}")
+          if File.exists?(path)
+            return path
+          end
+        }
+        File.expand_path('~/.ssh/id_dsa')
+      end
+
       default_config :name, nil
-      default_config :public_key_path, File.expand_path('~/.ssh/id_dsa.pub')
+      default_config :private_key_path, self.key_path()
+      default_config :public_key_path, self.key_path()+'.pub'
       default_config :username, 'root'
       default_config :port, '22'
       default_config :use_ipv6, false
@@ -50,7 +62,15 @@ module Kitchen
         state[:hostname] = get_ip(server)
         wait_for_sshd(state[:hostname]) ; puts '(ssh ready)'
         unless config[:ssh_key] or config[:key_name]
-          do_ssh_setup(state, config, server)
+          key_exists = false
+          for i in 0..10
+            key_exists = check_ssh_key(state, config, server, i<10)
+            break if key_exists
+            sleep 1
+          end
+          if not key_exists
+            do_ssh_setup(state, config, server)
+          end
         end
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
@@ -168,6 +188,26 @@ module Kitchen
           [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv4? } }
         end
         return pub, priv
+      end
+
+      def check_ssh_key(state, config, server, ignore_errors)
+        opts = {}
+        if server.password
+          opts[:password] = server.password
+        end
+        if File.exists?(config[:private_key_path])
+          opts = { :key_data => open(config[:private_key_path]).read }
+        end
+        ssh = Fog::SSH.new(state[:hostname], config[:username], opts)
+        begin
+          ssh.run('true')
+          return true
+        rescue
+          if not ignore_errors
+            raise
+          end
+          return false
+        end
       end
 
       def do_ssh_setup(state, config, server)
