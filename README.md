@@ -35,11 +35,11 @@ Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
       flavor_ref: [SERVER FLAVOR ID]
 
 By default, a unique server name will be generated and the current user's SSH
-key will be used, though that behavior can be overridden with additional
-options:
+key will be used (with an RSA key taking precedence over a DSA), though that
+behavior can be overridden with additional options:
 
     name: [A UNIQUE SERVER NAME]
-    ssh_key: [PATH TO YOUR PRIVATE SSH KEY]
+    private_key_path: [PATH TO YOUR PRIVATE SSH KEY]
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
     port: [SSH PORT]
@@ -48,18 +48,20 @@ options:
     openstack_region: [A VALID OPENSTACK REGION]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
     openstack_network_name: [YOUR OPENSTACK NETWORK NAME]
+    floating_ip: [A SPECIFIC FLOATING IP TO ASSIGN]
+    floating_ip_pool: [AN OPENSTACK POOL NAME TO ASSIGN THE NEXT IP FROM]
 
-If a key\_name is provided it will be used instead of any
-public\_key\_path that is specified.
+If a `key_name` is provided it will be used instead of any
+`public_key_path` that is specified.
+
+If a `key_name` is provided without any `private_key_path`, unexpected
+behavior may result if your local RSA/DSA private key doesn't match that
+OpenStack key.
 
     disable_ssl_validation: true
 
 Only disable SSL cert validation if you absolutely know what you are doing,
 but are stuck with an OpenStack deployment without valid SSL certs.
-
-    floating_ip_pool: name
-
-An optional name of an IP pool to automatically associate an IP to any test VMs, in case the default private IP doesn't support SSH
 
 ## Contributing
 
