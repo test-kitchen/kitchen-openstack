@@ -108,10 +108,18 @@ module Kitchen
       end
 
       def create_server
+        image = find_matching(compute.images, config[:image_ref])
+        raise ActionFailed, "Image not found" if !image
+        debug "Selected image: #{image.id} #{image.name}"
+
+        flavor = find_matching(compute.flavors, config[:flavor_ref])
+        raise ActionFailed, "Flavor not found" if !flavor
+        debug "Selected flavor: #{flavor.id} #{flavor.name}"
+
         server_def = {
           :name => config[:name],
-          :image_ref => config[:image_ref],
-          :flavor_ref => config[:flavor_ref]
+          :image_ref => image.id,
+          :flavor_ref => flavor.id
         }
         if config[:public_key_path]
           server_def[:public_key_path] = config[:public_key_path]
@@ -204,6 +212,28 @@ module Kitchen
         require 'excon'
         Excon.defaults[:ssl_verify_peer] = false
       end
+
+      def find_matching(collection, name)
+        name = name.to_s
+        if name.start_with?('/')
+          regex = eval(name)
+          # check for regex name match
+          collection.each do |single|
+            return single if regex =~ single.name
+          end
+        else
+          # check for exact id match
+          collection.each do |single|
+            return single if single.id == name
+          end
+          # check for exact name match
+          collection.each do |single|
+            return single if single.name == name
+          end
+        end
+        nil
+      end
+
     end
   end
 end

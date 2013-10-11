@@ -34,6 +34,9 @@ Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
       image_ref: [SERVER IMAGE ID]
       flavor_ref: [SERVER FLAVOR ID]
 
+The `image_ref` and `flavor_ref` options can be specified as an exact id,
+an exact name, or as a regular expression matching the name of the image or flavor.
+
 By default, a unique server name will be generated and the current user's SSH
 key will be used (with an RSA key taking precedence over a DSA), though that
 behavior can be overridden with additional options:
