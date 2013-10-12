@@ -314,7 +314,9 @@ describe Kitchen::Driver::Openstack do
       s.stub(:create) { |arg| arg }
       s
     end
-    let(:compute) { double(:servers => servers) }
+    let(:image) { double(:id => 'there', :name => nil) }
+    let(:flavor) { double(:id => 'captain', :name => nil) }
+    let(:compute) { double(:servers => servers, :images => [image], :flavors => [flavor]) }
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
       d.instance = instance
