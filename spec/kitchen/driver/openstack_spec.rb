@@ -304,8 +304,8 @@ describe Kitchen::Driver::Openstack do
     let(:config) do
       {
         :name => 'hello',
-        :image_ref => 'there',
-        :flavor_ref => 'captain',
+        :image_ref => '111',
+        :flavor_ref => '1',
         :public_key_path => 'tarpals'
       }
     end
@@ -314,9 +314,13 @@ describe Kitchen::Driver::Openstack do
       s.stub(:create) { |arg| arg }
       s
     end
-    let(:image) { double(:id => 'there', :name => nil) }
-    let(:flavor) { double(:id => 'captain', :name => nil) }
-    let(:compute) { double(:servers => servers, :images => [image], :flavors => [flavor]) }
+    let(:ubuntu_image) { double(:id => '111', :name => 'ubuntu') }
+    let(:fedora_image) { double(:id => '222', :name => 'fedora') }
+    let(:tiny_flavor) { double(:id => '1', :name => 'tiny') }
+    let(:small_flavor) { double(:id => '2', :name => 'small') }
+    let(:compute) { double(:servers => servers, 
+                           :images => [ubuntu_image, fedora_image], 
+                           :flavors => [tiny_flavor, small_flavor]) }
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
       d.instance = instance
@@ -336,8 +340,8 @@ describe Kitchen::Driver::Openstack do
       let(:config) do
         {
           :name => 'hello',
-          :image_ref => 'there',
-          :flavor_ref => 'captain',
+          :image_ref => '111',
+          :flavor_ref => '1',
           :public_key_path => 'tarpals'
         }
       end
@@ -352,8 +356,8 @@ describe Kitchen::Driver::Openstack do
       let(:config) do
         {
           :name => 'hello',
-          :image_ref => 'there',
-          :flavor_ref => 'captain',
+          :image_ref => '111',
+          :flavor_ref => '1',
           :public_key_path => 'montgomery',
           :key_name => 'tarpals'
         }
@@ -362,6 +366,64 @@ describe Kitchen::Driver::Openstack do
 
       it 'passes that key name to Fog' do
         expect(driver.send(:create_server)).to eq(@config)
+      end
+    end
+
+    context 'image/flavor specifies id' do
+      let(:config) do
+        {
+          :name => 'hello',
+          :image_ref => '111',
+          :flavor_ref => '1',
+          :public_key_path => 'tarpals'
+        }
+      end
+
+      it 'exact id match' do
+        servers.should_receive(:create).with(:name => 'hello', 
+                                             :image_ref => '111', 
+                                             :flavor_ref => '1',
+                                             :public_key_path => 'tarpals')
+        driver.send(:create_server)
+      end
+    end
+
+    context 'image/flavor specifies name' do
+      let(:config) do
+        {
+          :name => 'hello',
+          :image_ref => 'fedora',
+          :flavor_ref => 'small',
+          :public_key_path => 'tarpals'
+        }
+      end
+
+      it 'exact name match' do
+        servers.should_receive(:create).with(:name => 'hello', 
+                                             :image_ref => '222', 
+                                             :flavor_ref => '2',
+                                             :public_key_path => 'tarpals')
+        driver.send(:create_server)
+      end
+    end
+
+    context 'image/flavor specifies regex' do
+      let(:config) do
+        {
+          :name => 'hello',
+          # pass regex as string as yml returns string values
+          :image_ref => '/edo/', 
+          :flavor_ref => '/in/',
+          :public_key_path => 'tarpals'
+        }
+      end
+
+      it 'regex name match' do
+        servers.should_receive(:create).with(:name => 'hello', 
+                                             :image_ref => '222', 
+                                             :flavor_ref => '1',
+                                             :public_key_path => 'tarpals')
+        driver.send(:create_server)
       end
     end
   end
