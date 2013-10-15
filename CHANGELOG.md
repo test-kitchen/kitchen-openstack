@@ -2,6 +2,7 @@
 
 ### New Features
 
+* PR [#26][] - Support image and flavor names and regexes; via [@jgawor][]
 * PR [#25][] - Support specific floating IPs, in addition to named pools
 * PR [#14][] - Add support for floating IP pools; via [@hufman][]
 
@@ -47,6 +48,7 @@
 
 * Initial release! Woo!
 
+[#26]: https://github.com/RoboticCheese/kitchen-openstack/pull/26
 [#25]: https://github.com/RoboticCheese/kitchen-openstack/pull/25
 [#20]: https://github.com/RoboticCheese/kitchen-openstack/pull/20
 [#19]: https://github.com/RoboticCheese/kitchen-openstack/pull/19
@@ -59,6 +61,7 @@
 [#7]: https://github.com/RoboticCheese/kitchen-openstack/pull/7
 [#2]: https://github.com/RoboticCheese/kitchen-openstack/pull/2
 
+[@jgawor]: https://github.com/jgawor
 [@hufman]: https://github.com/hufman
 [@saketoba]: https://github.com/saketoba
 [@stevendanna]: https://github.com/stevendanna
