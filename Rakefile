@@ -8,7 +8,7 @@ Cane::RakeTask.new
 
 desc 'Run Tailor to lint check code'
 Tailor::RakeTask.new do |task|
-  task.file_set '**/**/*.rb'
+  task.file_set '**/*.rb'
 end
 
 desc 'Display LOC stats'

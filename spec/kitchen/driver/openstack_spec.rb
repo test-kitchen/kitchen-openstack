@@ -318,9 +318,10 @@ describe Kitchen::Driver::Openstack do
     let(:fedora_image) { double(:id => '222', :name => 'fedora') }
     let(:tiny_flavor) { double(:id => '1', :name => 'tiny') }
     let(:small_flavor) { double(:id => '2', :name => 'small') }
-    let(:compute) { double(:servers => servers, 
-                           :images => [ubuntu_image, fedora_image], 
-                           :flavors => [tiny_flavor, small_flavor]) }
+    let(:compute) do
+      double(:servers => servers, :images => [ubuntu_image, fedora_image],
+        :flavors => [tiny_flavor, small_flavor])
+    end
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
       d.instance = instance
@@ -380,10 +381,9 @@ describe Kitchen::Driver::Openstack do
       end
 
       it 'exact id match' do
-        servers.should_receive(:create).with(:name => 'hello', 
-                                             :image_ref => '111', 
-                                             :flavor_ref => '1',
-                                             :public_key_path => 'tarpals')
+        servers.should_receive(:create).with(:name => 'hello',
+          :image_ref => '111', :flavor_ref => '1',
+          :public_key_path => 'tarpals')
         driver.send(:create_server)
       end
     end
@@ -399,10 +399,9 @@ describe Kitchen::Driver::Openstack do
       end
 
       it 'exact name match' do
-        servers.should_receive(:create).with(:name => 'hello', 
-                                             :image_ref => '222', 
-                                             :flavor_ref => '2',
-                                             :public_key_path => 'tarpals')
+        servers.should_receive(:create).with(:name => 'hello',
+          :image_ref => '222', :flavor_ref => '2',
+          :public_key_path => 'tarpals')
         driver.send(:create_server)
       end
     end
@@ -412,17 +411,16 @@ describe Kitchen::Driver::Openstack do
         {
           :name => 'hello',
           # pass regex as string as yml returns string values
-          :image_ref => '/edo/', 
+          :image_ref => '/edo/',
           :flavor_ref => '/in/',
           :public_key_path => 'tarpals'
         }
       end
 
       it 'regex name match' do
-        servers.should_receive(:create).with(:name => 'hello', 
-                                             :image_ref => '222', 
-                                             :flavor_ref => '1',
-                                             :public_key_path => 'tarpals')
+        servers.should_receive(:create).with(:name => 'hello',
+          :image_ref => '222', :flavor_ref => '1',
+          :public_key_path => 'tarpals')
         driver.send(:create_server)
       end
     end
