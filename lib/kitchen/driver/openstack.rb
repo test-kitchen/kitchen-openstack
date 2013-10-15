@@ -29,6 +29,7 @@ module Kitchen
     #
     # @author Jonathan Hartman <j@p4nt5.com>
     class Openstack < Kitchen::Driver::SSHBase
+      @@ip_pool_lock = Mutex.new
 
       default_config :name, nil
       default_config :key_name, nil
@@ -153,14 +154,16 @@ module Kitchen
       end
 
       def attach_ip_from_pool(server, pool)
-        info "Attaching floating IP from <#{pool}> pool"
-        free_addrs = compute.addresses.collect do |i|
-          i.ip if i.fixed_ip.nil? and i.instance_id.nil? and i.pool == pool
-        end.compact
-        if free_addrs.empty?
-          raise ActionFailed, "No available IPs in pool <#{pool}>"
+        @@ip_pool_lock.synchronize do
+          info "Attaching floating IP from <#{pool}> pool"
+          free_addrs = compute.addresses.collect do |i|
+            i.ip if i.fixed_ip.nil? and i.instance_id.nil? and i.pool == pool
+          end.compact
+          if free_addrs.empty?
+            raise ActionFailed, "No available IPs in pool <#{pool}>"
+          end
+          attach_ip(server, free_addrs[0])
         end
-        attach_ip(server, free_addrs[0])
       end
 
       def attach_ip(server, ip)
