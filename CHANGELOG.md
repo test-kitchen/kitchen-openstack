@@ -1,4 +1,4 @@
-# ?.?.? / ????-??-??
+# 1.0.0 / 2013-10-16
 
 ### New Features
 
@@ -9,6 +9,10 @@
 ### Improvements
 
 * PR [#15][] - Improved SSH key support, support RSA and DSA; via [@hufman][]
+
+### Bug Fixes
+
+* PR [#27][] - Prevent IP contention in TK parallel mode; via [@jgawor][]
 
 # 0.5.0 / 2013-09-23
 
@@ -48,6 +52,7 @@
 
 * Initial release! Woo!
 
+[#27]: https://github.com/RoboticCheese/kitchen-openstack/pull/27
 [#26]: https://github.com/RoboticCheese/kitchen-openstack/pull/26
 [#25]: https://github.com/RoboticCheese/kitchen-openstack/pull/25
 [#20]: https://github.com/RoboticCheese/kitchen-openstack/pull/20
