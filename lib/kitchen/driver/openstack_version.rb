@@ -19,7 +19,7 @@
 module Kitchen
   module Driver
     # Version string for OpenStack Kitchen driver
-    OPENSTACK_VERSION = '1.0.1'
+    OPENSTACK_VERSION = '1.0.1.dev'
   end
 end
 
