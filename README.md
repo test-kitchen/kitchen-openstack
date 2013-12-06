@@ -28,8 +28,8 @@ Or install it yourself as:
 
 Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
 
-    driver_plugin: openstack
-    driver_config:
+    driver:
+      name: openstack
       openstack_username: [YOUR OPENSTACK USERNAME]
       openstack_api_key: [YOUR OPENSTACK API KEY]
       openstack_auth_url: [YOUR OPENSTACK AUTH URL]
