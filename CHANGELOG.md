@@ -1,3 +1,9 @@
+# ?.?.? / 2013-??-??
+
+### Bug Fixes
+
+* PR [#31][] - Fix collision with TK 1.x; change `name` option to `server_name`
+
 # 1.0.0 / 2013-10-16
 
 ### New Features
@@ -52,6 +58,7 @@
 
 * Initial release! Woo!
 
+[#31]: https://github.com/RoboticCheese/kitchen-openstack/pull/31
 [#27]: https://github.com/RoboticCheese/kitchen-openstack/pull/27
 [#26]: https://github.com/RoboticCheese/kitchen-openstack/pull/26
 [#25]: https://github.com/RoboticCheese/kitchen-openstack/pull/25
