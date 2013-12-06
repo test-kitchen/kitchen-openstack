@@ -44,7 +44,7 @@ By default, a unique server name will be generated and the current user's SSH
 key will be used (with an RSA key taking precedence over a DSA), though that
 behavior can be overridden with additional options:
 
-    name: [A UNIQUE SERVER NAME]
+    server_name: [A UNIQUE SERVER NAME]
     private_key_path: [PATH TO YOUR PRIVATE SSH KEY]
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
