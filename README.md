@@ -1,4 +1,7 @@
-[![Gem Version](https://badge.fury.io/rb/kitchen-openstack.png)](http://badge.fury.io/rb/kitchen-openstack) [![Dependency Status](https://gemnasium.com/RoboticCheese/kitchen-openstack.png)](https://gemnasium.com/RoboticCheese/kitchen-openstack) [![Build Status](https://travis-ci.org/RoboticCheese/kitchen-openstack.png?branch=master)](https://travis-ci.org/RoboticCheese/kitchen-openstack) [![Code Climate](https://codeclimate.com/github/RoboticCheese/kitchen-openstack.png)](https://codeclimate.com/github/RoboticCheese/kitchen-openstack)
+[![Gem Version](https://badge.fury.io/rb/kitchen-openstack.png)](http://badge.fury.io/rb/kitchen-openstack)
+[![Build Status](https://travis-ci.org/RoboticCheese/kitchen-openstack.png?branch=master)](https://travis-ci.org/RoboticCheese/kitchen-openstack)
+[![Code Climate](https://codeclimate.com/github/RoboticCheese/kitchen-openstack.png)](https://codeclimate.com/github/RoboticCheese/kitchen-openstack)
+[![Dependency Status](https://gemnasium.com/RoboticCheese/kitchen-openstack.png)](https://gemnasium.com/RoboticCheese/kitchen-openstack)
 
 # Kitchen::OpenStack
 
@@ -25,8 +28,8 @@ Or install it yourself as:
 
 Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
 
-    driver_plugin: openstack
-    driver_config:
+    driver:
+      name: openstack
       openstack_username: [YOUR OPENSTACK USERNAME]
       openstack_api_key: [YOUR OPENSTACK API KEY]
       openstack_auth_url: [YOUR OPENSTACK AUTH URL]
@@ -41,7 +44,7 @@ By default, a unique server name will be generated and the current user's SSH
 key will be used (with an RSA key taking precedence over a DSA), though that
 behavior can be overridden with additional options:
 
-    name: [A UNIQUE SERVER NAME]
+    server_name: [A UNIQUE SERVER NAME]
     private_key_path: [PATH TO YOUR PRIVATE SSH KEY]
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]

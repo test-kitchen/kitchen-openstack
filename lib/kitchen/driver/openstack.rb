@@ -31,7 +31,7 @@ module Kitchen
     class Openstack < Kitchen::Driver::SSHBase
       @@ip_pool_lock = Mutex.new
 
-      default_config :name, nil
+      default_config :server_name, nil
       default_config :key_name, nil
       default_config :private_key_path do |driver|
         %w{id_rsa id_dsa}.collect do |k|
@@ -53,7 +53,7 @@ module Kitchen
       default_config :floating_ip, nil
 
       def create(state)
-        config[:name] ||= generate_name(instance.name)
+        config[:server_name] ||= generate_name(instance.name)
         config[:disable_ssl_validation] and disable_ssl_validation
         server = create_server
         state[:server_id] = server.id
@@ -118,7 +118,7 @@ module Kitchen
         debug "Selected flavor: #{flavor.id} #{flavor.name}"
 
         server_def = {
-          :name => config[:name],
+          :name => config[:server_name],
           :image_ref => image.id,
           :flavor_ref => flavor.id
         }

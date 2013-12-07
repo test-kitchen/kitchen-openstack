@@ -31,7 +31,9 @@ describe Kitchen::Driver::Openstack do
   let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
 
   let(:instance) do
-    double(:name => 'potatoes', :logger => logger, :to_str => 'instance')
+    double(
+      :name => 'potatoes', :logger => logger, :to_str => 'instance'
+    )
   end
 
   let(:driver) do
@@ -96,7 +98,7 @@ describe Kitchen::Driver::Openstack do
       end
 
       nils = [
-        :name,
+        :server_name,
         :openstack_tenant,
         :openstack_region,
         :openstack_service_name,
@@ -118,7 +120,7 @@ describe Kitchen::Driver::Openstack do
           :public_key_path => '/tmp',
           :username => 'admin',
           :port => '2222',
-          :name => 'puppy',
+          :server_name => 'puppy',
           :openstack_tenant => 'that_one',
           :openstack_region => 'atlantis',
           :openstack_service_name => 'the_service',
@@ -165,7 +167,7 @@ describe Kitchen::Driver::Openstack do
 
       it 'generates a server name in the absence of one' do
         driver.create(state)
-        expect(driver[:name]).to eq('a_monkey!')
+        expect(driver[:server_name]).to eq('a_monkey!')
       end
 
       it 'gets a proper server ID' do
@@ -303,7 +305,7 @@ describe Kitchen::Driver::Openstack do
   describe '#create_server' do
     let(:config) do
       {
-        :name => 'hello',
+        :server_name => 'hello',
         :image_ref => '111',
         :flavor_ref => '1',
         :public_key_path => 'tarpals'
@@ -330,50 +332,66 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'a default config' do
-      before(:each) { @config = config.dup }
+      before(:each) do
+        @expected = config.merge(:name => config[:server_name])
+        @expected.delete_if do |k, v|
+          k == :server_name
+        end
+      end
 
       it 'creates the server using a compute connection' do
-        expect(driver.send(:create_server)).to eq(@config)
+        expect(driver.send(:create_server)).to eq(@expected)
       end
     end
 
     context 'a provided public key path' do
       let(:config) do
         {
-          :name => 'hello',
+          :server_name => 'hello',
           :image_ref => '111',
           :flavor_ref => '1',
           :public_key_path => 'tarpals'
         }
       end
-      before(:each) { @config = config.dup }
+      before(:each) do
+        @expected = config.merge(:name => config[:server_name])
+        @expected.delete_if do |k, v|
+          k == :server_name
+        end
+      end
 
       it 'passes that public key path to Fog' do
-        expect(driver.send(:create_server)).to eq(@config)
+        expect(driver.send(:create_server)).to eq(@expected)
       end
     end
 
     context 'a provided key name' do
       let(:config) do
         {
-          :name => 'hello',
+          :server_name => 'hello',
           :image_ref => '111',
           :flavor_ref => '1',
           :public_key_path => 'montgomery',
           :key_name => 'tarpals'
         }
       end
-      before(:each) { @config = config.dup }
+
+      before(:each) do
+        @expected = config.merge(:name => config[:server_name])
+        @expected.delete_if do |k, v|
+          k == :server_name
+        end
+      end
 
       it 'passes that key name to Fog' do
-        expect(driver.send(:create_server)).to eq(@config)
+        expect(driver.send(:create_server)).to eq(@expected)
       end
     end
 
     context 'image/flavor specifies id' do
       let(:config) do
         {
-          :name => 'hello',
+          :server_name => 'hello',
           :image_ref => '111',
           :flavor_ref => '1',
           :public_key_path => 'tarpals'
@@ -391,7 +409,7 @@ describe Kitchen::Driver::Openstack do
     context 'image/flavor specifies name' do
       let(:config) do
         {
-          :name => 'hello',
+          :server_name => 'hello',
           :image_ref => 'fedora',
           :flavor_ref => 'small',
           :public_key_path => 'tarpals'
@@ -409,7 +427,7 @@ describe Kitchen::Driver::Openstack do
     context 'image/flavor specifies regex' do
       let(:config) do
         {
-          :name => 'hello',
+          :server_name => 'hello',
           # pass regex as string as yml returns string values
           :image_ref => '/edo/',
           :flavor_ref => '/in/',
