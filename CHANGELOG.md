@@ -1,4 +1,8 @@
-# ?.?.? / 2013-??-??
+# 1.1.0 / 2013-12-07
+
+### Improvements
+
+* Tested against, and working with, Test Kitchen 1.1.0
 
 ### Bug Fixes
 
