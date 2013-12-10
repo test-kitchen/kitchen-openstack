@@ -29,6 +29,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'cane'
   spec.add_development_dependency 'countloc'
   spec.add_development_dependency 'rspec'
+  spec.add_development_dependency 'simplecov'
+  spec.add_development_dependency 'simplecov-console'
+  spec.add_development_dependency 'coveralls'
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby
