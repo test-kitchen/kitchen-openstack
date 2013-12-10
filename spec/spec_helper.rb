@@ -15,8 +15,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
 require 'rspec'
+require 'simplecov'
+require 'simplecov-console'
+require 'coveralls'
+
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
+  Coveralls::SimpleCov::Formatter,
+  SimpleCov::Formatter::HTMLFormatter,
+  SimpleCov::Formatter::Console
+]
+SimpleCov.minimum_coverage 90
+SimpleCov.start
+
 require_relative '../lib/kitchen/driver/openstack'
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby
