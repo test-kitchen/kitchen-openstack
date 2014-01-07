@@ -66,6 +66,10 @@ module Kitchen
         end
         state[:hostname] = get_ip(server)
         state[:ssh_key] = config[:private_key_path]
+
+        # if there is a ssh_key config we are overriding the private_key_path         
+        state[:ssh_key] = config[:ssh_key] if config[:ssh_key]
+        
         wait_for_sshd(state[:hostname]) ; info '(ssh ready)'
         if config[:key_name]
           info "Using OpenStack keypair <#{config[:key_name]}>"
@@ -90,7 +94,67 @@ module Kitchen
         state.delete(:hostname)
       end
 
+      protected 
+
+      # override of the original method in order to use non-blocking tcp connection check 
+      def wait_for_sshd(hostname, username = nil, options = {})
+        sleep 3 while (not tcp_test(hostname, 22))        
+        SSH.new(hostname, username, { :logger => logger }.merge(options)).wait
+      end
+
       private
+
+      # non-blocking tcp connection checker
+      def tcp_test(hostname, port)
+        require 'socket'
+        sleep 3
+        timeout = 2
+        addr = Socket.getaddrinfo(hostname, nil)
+        sockaddr = Socket.pack_sockaddr_in(port, addr[0][3])
+
+        Socket.new(Socket.const_get(addr[0][0]), Socket::SOCK_STREAM, 0).tap do |socket|
+          socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
+          begin
+            socket.connect_nonblock(sockaddr)
+
+          rescue IO::WaitWritable
+            if IO.select(nil, [socket], nil, timeout)
+              begin
+                socket.connect_nonblock(sockaddr)
+              rescue Errno::EISCONN
+                socket.close
+                return true
+              rescue
+                socket.close
+                return false
+              end
+            else
+              socket.close
+              return false
+            end
+          end
+        end
+        false
+      end
+
+      # Fog::Network connection
+      # used for mapping the network name to network id 
+      def network 
+        server_def = {
+          :provider           => 'OpenStack',
+          :openstack_username => config[:openstack_username],
+          :openstack_api_key  => config[:openstack_api_key],
+          :openstack_auth_url => config[:openstack_auth_url]
+        }
+        optional = [
+          :openstack_tenant, :openstack_region, :openstack_service_name
+        ]
+        optional.each do |o|
+          config[o] and server_def[o] = config[o]
+        end
+        Fog::Network.new(server_def)
+
+      end
 
       def compute
         server_def = {
@@ -122,6 +186,12 @@ module Kitchen
           :image_ref => image.id,
           :flavor_ref => flavor.id
         }
+        
+        if config[:openstack_network_name]       
+          net = network.list_networks.data[:body]["networks"].find { |n| n["name"] == config[:openstack_network_name] }
+          server_def[:nics] = [{'net_id' => net["id"]}]
+        end
+
         if config[:public_key_path]
           server_def[:public_key_path] = config[:public_key_path]
         end
