@@ -67,9 +67,9 @@ module Kitchen
         state[:hostname] = get_ip(server)
         state[:ssh_key] = config[:private_key_path]
 
-        # if there is a ssh_key config we are overriding the private_key_path         
+        # if there is a ssh_key config we are overriding the private_key_path
         state[:ssh_key] = config[:ssh_key] if config[:ssh_key]
-        
+
         wait_for_sshd(state[:hostname]) ; info '(ssh ready)'
         if config[:key_name]
           info "Using OpenStack keypair <#{config[:key_name]}>"
@@ -94,11 +94,11 @@ module Kitchen
         state.delete(:hostname)
       end
 
-      protected 
+      protected
 
-      # override of the original method in order to use non-blocking tcp connection check 
+      # override of the original method in order to use non-blocking tcp connection check
       def wait_for_sshd(hostname, username = nil, options = {})
-        sleep 3 while (not tcp_test(hostname, 22))        
+        sleep 3 while (not tcp_test(hostname, 22))
         SSH.new(hostname, username, { :logger => logger }.merge(options)).wait
       end
 
@@ -112,24 +112,24 @@ module Kitchen
         addr = Socket.getaddrinfo(hostname, nil)
         sockaddr = Socket.pack_sockaddr_in(port, addr[0][3])
 
-        Socket.new(Socket.const_get(addr[0][0]), Socket::SOCK_STREAM, 0).tap do |socket|
-          socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
+        Socket.new(Socket.const_get(addr[0][0]), Socket::SOCK_STREAM, 0).tap do |s|
+          s.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
           begin
-            socket.connect_nonblock(sockaddr)
+            s.connect_nonblock(sockaddr)
 
           rescue IO::WaitWritable
-            if IO.select(nil, [socket], nil, timeout)
+            if IO.select(nil, [s], nil, timeout)
               begin
-                socket.connect_nonblock(sockaddr)
+                s.connect_nonblock(sockaddr)
               rescue Errno::EISCONN
-                socket.close
+                s.close
                 return true
               rescue
-                socket.close
+                s.close
                 return false
               end
             else
-              socket.close
+              s.close
               return false
             end
           end
@@ -138,8 +138,8 @@ module Kitchen
       end
 
       # Fog::Network connection
-      # used for mapping the network name to network id 
-      def network 
+      # used for mapping the network name to network id
+      def network
         server_def = {
           :provider           => 'OpenStack',
           :openstack_username => config[:openstack_username],
@@ -186,9 +186,11 @@ module Kitchen
           :image_ref => image.id,
           :flavor_ref => flavor.id
         }
-        
-        if config[:openstack_network_name]       
-          net = network.list_networks.data[:body]["networks"].find { |n| n["name"] == config[:openstack_network_name] }
+
+        if config[:openstack_network_name]
+          net = network.list_networks.data[:body]["networks"].find do |n| 
+            n["name"] == config[:openstack_network_name] 
+          end
           server_def[:nics] = [{'net_id' => net["id"]}]
         end
 
