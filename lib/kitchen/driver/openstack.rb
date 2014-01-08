@@ -96,7 +96,8 @@ module Kitchen
 
       protected
 
-      # override of the original method in order to use non-blocking tcp connection check
+      # override of the original method in order to use non-blocking
+      # tcp connection check
       def wait_for_sshd(hostname, username = nil, options = {})
         sleep 3 while (not tcp_test(hostname, 22))
         SSH.new(hostname, username, { :logger => logger }.merge(options)).wait
@@ -109,14 +110,13 @@ module Kitchen
         require 'socket'
         sleep 3
         timeout = 2
-        addr = Socket.getaddrinfo(hostname, nil)
-        sockaddr = Socket.pack_sockaddr_in(port, addr[0][3])
+        a = Socket.getaddrinfo(hostname, nil)
+        sockaddr = Socket.pack_sockaddr_in(port, a[0][3])
 
-        Socket.new(Socket.const_get(addr[0][0]), Socket::SOCK_STREAM, 0).tap do |s|
+        Socket.new(Socket.const_get(a[0][0]), Socket::SOCK_STREAM, 0).tap do |s|
           s.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
           begin
             s.connect_nonblock(sockaddr)
-
           rescue IO::WaitWritable
             if IO.select(nil, [s], nil, timeout)
               begin
@@ -172,6 +172,12 @@ module Kitchen
         Fog::Compute.new(server_def)
       end
 
+      def find_network_id_by_name(network_name)
+        network.list_networks.data[:body]["networks"].find do |n|
+          n["name"] == network_name
+        end["id"]
+      end
+
       def create_server
         image = find_matching(compute.images, config[:image_ref])
         raise ActionFailed, "Image not found" if !image
@@ -188,10 +194,8 @@ module Kitchen
         }
 
         if config[:openstack_network_name]
-          net = network.list_networks.data[:body]["networks"].find do |n| 
-            n["name"] == config[:openstack_network_name] 
-          end
-          server_def[:nics] = [{'net_id' => net["id"]}]
+          server_def[:nics] = [{ 'net_id' =>
+            find_network_by_name(config[:openstack_network_name]) }]
         end
 
         if config[:public_key_path]
