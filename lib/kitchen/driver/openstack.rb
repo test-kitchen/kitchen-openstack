@@ -195,7 +195,7 @@ module Kitchen
 
         if config[:openstack_network_name]
           server_def[:nics] = [{ 'net_id' =>
-            find_network_by_name(config[:openstack_network_name]) }]
+            find_network_id_by_name(config[:openstack_network_name]) }]
         end
 
         if config[:public_key_path]
