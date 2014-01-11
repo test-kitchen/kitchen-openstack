@@ -108,31 +108,31 @@ module Kitchen
       # non-blocking tcp connection checker
       def tcp_test(hostname, port)
         require 'socket'
-        sleep 3
         timeout = 2
-        a = Socket.getaddrinfo(hostname, nil)
-        sockaddr = Socket.pack_sockaddr_in(port, a[0][3])
-
-        Socket.new(Socket.const_get(a[0][0]), Socket::SOCK_STREAM, 0).tap do |s|
-          s.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
-          begin
-            s.connect_nonblock(sockaddr)
-          rescue IO::WaitWritable
-            if IO.select(nil, [s], nil, timeout)
+        begin
+          a = Socket.getaddrinfo(hostname, nil)
+          sockaddr = Socket.pack_sockaddr_in(port, a[0][3])
+          Socket.new(Socket.const_get(a[0][0]),
+            Socket::SOCK_STREAM, 0).tap do |s|
+              s.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1)
               begin
                 s.connect_nonblock(sockaddr)
-              rescue Errno::EISCONN
-                s.close
-                return true
-              rescue
-                s.close
-                return false
+              rescue IO::WaitWritable
+                if IO.select(nil, [s], nil, timeout)
+                  begin
+                    s.connect_nonblock(sockaddr)
+                  rescue Errno::EISCONN
+                    s.close
+                    return true
+                  rescue
+                    s.close
+                  end
+                else
+                  s.close
+                end
               end
-            else
-              s.close
-              return false
             end
-          end
+        rescue SocketError
         end
         false
       end

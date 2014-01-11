@@ -735,10 +735,10 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#tcp_test' do
-    let(:hostname) { 'www.google.com' }
-    let(:port) { 80 }
-    it 'check if on www.google.com port 80 is open' do
-      expect(driver.send(:tcp_test, hostname, port)).to eq(true)
+    let(:hostname) { 'host' }
+    let(:port) { 81 }
+    it 'check if on host port 81 is open' do
+      expect(driver.send(:tcp_test, hostname, port)).to eq(false)
     end
   end
 
