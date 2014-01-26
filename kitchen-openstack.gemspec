@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['j@p4nt5.com']
   spec.description   = %q{A Test Kitchen OpenStack Nova driver}
   spec.summary       = spec.description
-  spec.homepage      = 'https://github.com/RoboticCheese/kitchen-openstack'
+  spec.homepage      = 'https://github.com/test-kitchen/kitchen-openstack'
   spec.license       = 'Apache'
 
   spec.files         = `git ls-files`.split($/)

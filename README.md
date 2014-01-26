@@ -1,8 +1,8 @@
 [![Gem Version](https://badge.fury.io/rb/kitchen-openstack.png)](http://badge.fury.io/rb/kitchen-openstack)
-[![Build Status](https://travis-ci.org/RoboticCheese/kitchen-openstack.png?branch=master)](https://travis-ci.org/RoboticCheese/kitchen-openstack)
-[![Code Climate](https://codeclimate.com/github/RoboticCheese/kitchen-openstack.png)](https://codeclimate.com/github/RoboticCheese/kitchen-openstack)
-[![Coverage Status](https://coveralls.io/repos/RoboticCheese/kitchen-openstack/badge.png)](https://coveralls.io/r/RoboticCheese/kitchen-openstack)
-[![Dependency Status](https://gemnasium.com/RoboticCheese/kitchen-openstack.png)](https://gemnasium.com/RoboticCheese/kitchen-openstack)
+[![Build Status](https://travis-ci.org/test-kitchen/kitchen-openstack.png?branch=master)](https://travis-ci.org/test-kitchen/kitchen-openstack)
+[![Code Climate](https://codeclimate.com/github/test-kitchen/kitchen-openstack.png)](https://codeclimate.com/github/test-kitchen/kitchen-openstack)
+[![Coverage Status](https://coveralls.io/repos/test-kitchen/kitchen-openstack/badge.png)](https://coveralls.io/r/test-kitchen/kitchen-openstack)
+[![Dependency Status](https://gemnasium.com/test-kitchen/kitchen-openstack.png)](https://gemnasium.com/test-kitchen/kitchen-openstack)
 
 # Kitchen::OpenStack
 
