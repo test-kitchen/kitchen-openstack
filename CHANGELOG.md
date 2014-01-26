@@ -64,20 +64,20 @@
 
 * Initial release! Woo!
 
-[#31]: https://github.com/RoboticCheese/kitchen-openstack/pull/31
-[#27]: https://github.com/RoboticCheese/kitchen-openstack/pull/27
-[#26]: https://github.com/RoboticCheese/kitchen-openstack/pull/26
-[#25]: https://github.com/RoboticCheese/kitchen-openstack/pull/25
-[#20]: https://github.com/RoboticCheese/kitchen-openstack/pull/20
-[#19]: https://github.com/RoboticCheese/kitchen-openstack/pull/19
-[#15]: https://github.com/RoboticCheese/kitchen-openstack/pull/15
-[#14]: https://github.com/RoboticCheese/kitchen-openstack/pull/14
-[#12]: https://github.com/RoboticCheese/kitchen-openstack/pull/12
-[#11]: https://github.com/RoboticCheese/kitchen-openstack/pull/11
-[#10]: https://github.com/RoboticCheese/kitchen-openstack/pull/10
-[#9]: https://github.com/RoboticCheese/kitchen-openstack/pull/9
-[#7]: https://github.com/RoboticCheese/kitchen-openstack/pull/7
-[#2]: https://github.com/RoboticCheese/kitchen-openstack/pull/2
+[#31]: https://github.com/test-kitchen/kitchen-openstack/pull/31
+[#27]: https://github.com/test-kitchen/kitchen-openstack/pull/27
+[#26]: https://github.com/test-kitchen/kitchen-openstack/pull/26
+[#25]: https://github.com/test-kitchen/kitchen-openstack/pull/25
+[#20]: https://github.com/test-kitchen/kitchen-openstack/pull/20
+[#19]: https://github.com/test-kitchen/kitchen-openstack/pull/19
+[#15]: https://github.com/test-kitchen/kitchen-openstack/pull/15
+[#14]: https://github.com/test-kitchen/kitchen-openstack/pull/14
+[#12]: https://github.com/test-kitchen/kitchen-openstack/pull/12
+[#11]: https://github.com/test-kitchen/kitchen-openstack/pull/11
+[#10]: https://github.com/test-kitchen/kitchen-openstack/pull/10
+[#9]: https://github.com/test-kitchen/kitchen-openstack/pull/9
+[#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
+[#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
 [@jgawor]: https://github.com/jgawor
 [@hufman]: https://github.com/hufman
