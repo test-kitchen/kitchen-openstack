@@ -734,6 +734,51 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe '#tcp_test' do
+    let(:hostname) { 'host' }
+    let(:port) { 81 }
+    it 'check if on host port 81 is open' do
+      expect(driver.send(:tcp_test, hostname, port)).to eq(false)
+    end
+  end
+
+  describe '#compute' do
+    let(:config) do
+      {
+        :openstack_username => 'monkey',
+        :openstack_api_key => 'potato',
+        :openstack_auth_url => 'http:',
+        :openstack_tenant => 'link',
+        :openstack_region => 'ord',
+        :openstack_service_name => 'the_service'
+      }
+    end
+
+    context 'all requirements provided' do
+      it 'creates a new compute connection' do
+        Fog::Network.stub(:new) { |arg| arg }
+        res = config.merge({ :provider => 'OpenStack' })
+        expect(driver.send(:network)).to eq(res)
+      end
+    end
+
+    context 'only an API key provided' do
+      let(:config) { { :openstack_api_key => '1234' } }
+
+      it 'raises an error' do
+        expect { driver.send(:network) }.to raise_error(ArgumentError)
+      end
+    end
+
+    context 'only a username provided' do
+      let(:config) { { :openstack_username => 'monkey' } }
+
+      it 'raises an error' do
+        expect { driver.send(:network) }.to raise_error(ArgumentError)
+      end
+    end
+  end
+
   describe '#disable_ssl_validation' do
     it 'turns off Excon SSL cert validation' do
       expect(driver.send(:disable_ssl_validation)).to eq(false)
