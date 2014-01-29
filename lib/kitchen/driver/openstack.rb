@@ -51,6 +51,7 @@ module Kitchen
       default_config :openstack_network_name, nil
       default_config :floating_ip_pool, nil
       default_config :floating_ip, nil
+      default_config :security_groups, []
 
       def create(state)
         config[:server_name] ||= generate_name(instance.name)
@@ -117,10 +118,22 @@ module Kitchen
         raise ActionFailed, "Flavor not found" if !flavor
         debug "Selected flavor: #{flavor.id} #{flavor.name}"
 
+        security_groups = []
+        config[:security_groups].each do |sg|
+          security_group = find_matching(compute.security_groups, sg)
+          if security_group
+            security_groups << security_group.name
+          else
+            raise ActionFailed, "Security Group not found"
+            debug "Selected security group: #{security_group.id} #{security_group.name}"
+          end
+        end
+
         server_def = {
           :name => config[:server_name],
           :image_ref => image.id,
-          :flavor_ref => flavor.id
+          :flavor_ref => flavor.id,
+          :security_groups => security_groups
         }
         if config[:public_key_path]
           server_def[:public_key_path] = config[:public_key_path]
