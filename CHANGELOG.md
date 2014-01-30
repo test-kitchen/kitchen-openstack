@@ -1,4 +1,8 @@
-# ?.?.? / ????-??-??
+# 1.2.0 / 2014-01-30
+
+### New Features
+
+* PR [#37][] - Support configurable security groups; via [@bears4barrett][]
 
 # 1.1.0 / 2013-12-07
 
@@ -64,6 +68,7 @@
 
 * Initial release! Woo!
 
+[#37]: https://github.com/test-kitchen/kitchen-openstack/pull/37
 [#31]: https://github.com/test-kitchen/kitchen-openstack/pull/31
 [#27]: https://github.com/test-kitchen/kitchen-openstack/pull/27
 [#26]: https://github.com/test-kitchen/kitchen-openstack/pull/26
@@ -79,6 +84,7 @@
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@bears4barrett]: https://github.com/bears4barrett
 [@jgawor]: https://github.com/jgawor
 [@hufman]: https://github.com/hufman
 [@saketoba]: https://github.com/saketoba

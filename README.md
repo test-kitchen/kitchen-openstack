@@ -57,6 +57,9 @@ behavior can be overridden with additional options:
     openstack_network_name: [YOUR OPENSTACK NETWORK NAME]
     floating_ip: [A SPECIFIC FLOATING IP TO ASSIGN]
     floating_ip_pool: [AN OPENSTACK POOL NAME TO ASSIGN THE NEXT IP FROM]
+    security_groups:
+      - [A LIST OF...]
+      - [...SECURITY GROUPS TO JOIN]
 
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
