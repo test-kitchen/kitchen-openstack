@@ -51,6 +51,7 @@ module Kitchen
       default_config :openstack_network_name, nil
       default_config :floating_ip_pool, nil
       default_config :floating_ip, nil
+      default_config :security_groups, nil
 
       def create(state)
         config[:server_name] ||= generate_name(instance.name)
@@ -120,8 +121,11 @@ module Kitchen
         server_def = {
           :name => config[:server_name],
           :image_ref => image.id,
-          :flavor_ref => flavor.id
+          :flavor_ref => flavor.id,
         }
+        if config[:security_groups] && config[:security_groups].kind_of?(Array)
+          server_def[:security_groups] = config[:security_groups]
+        end
         if config[:public_key_path]
           server_def[:public_key_path] = config[:public_key_path]
         end

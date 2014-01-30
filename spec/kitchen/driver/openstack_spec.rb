@@ -389,6 +389,30 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
+    context 'a provided security group' do
+      let(:config) do
+        {
+          :server_name => 'hello',
+          :image_ref => '111',
+          :flavor_ref => '1',
+          :public_key_path => 'montgomery',
+          :key_name => 'tarpals',
+          :security_groups => ['ping-and-ssh']
+        }
+      end
+
+      before(:each) do
+        @expected = config.merge(:name => config[:server_name])
+        @expected.delete_if do |k, v|
+          k == :server_name
+        end
+      end
+
+      it 'passes that security group to Fog' do
+        expect(driver.send(:create_server)).to eq(@expected)
+      end
+    end
+
     context 'image/flavor specifies id' do
       let(:config) do
         {
