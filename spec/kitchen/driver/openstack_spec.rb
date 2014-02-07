@@ -325,10 +325,12 @@ describe Kitchen::Driver::Openstack do
     let(:tiny_flavor) { double(:id => '1', :name => 'tiny') }
     let(:small_flavor) { double(:id => '2', :name => 'small') }
     let(:compute) do
-      double(:servers  => servers,
-             :images   => [ubuntu_image, fedora_image],
-             :flavors  => [tiny_flavor, small_flavor],
-             :networks => [vlan333_net])
+      double(
+        :servers  => servers,
+        :images   => [ubuntu_image, fedora_image],
+        :flavors  => [tiny_flavor, small_flavor],
+        :networks => [vlan333_net]
+      )
     end
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
@@ -488,11 +490,13 @@ describe Kitchen::Driver::Openstack do
         networks = [
           { 'net_id' => '1' }
         ]
-        servers.should_receive(:create).with(:name => 'hello',
-                                             :image_ref => '111',
-                                             :flavor_ref => '1',
-                                             :public_key_path => 'tarpals',
-                                             :nics => networks)
+        servers.should_receive(:create).with(
+          :name => 'hello',
+          :image_ref => '111',
+          :flavor_ref => '1',
+          :public_key_path => 'tarpals',
+          :nics => networks
+        )
         driver.send(:create_server)
       end
     end
@@ -512,11 +516,13 @@ describe Kitchen::Driver::Openstack do
         networks = [
           { 'net_id' => '1' }
         ]
-        servers.should_receive(:create).with(:name => 'hello',
-                                             :image_ref => '111',
-                                             :flavor_ref => '1',
-                                             :public_key_path => 'tarpals',
-                                             :nics => networks)
+        servers.should_receive(:create).with(
+          :name => 'hello',
+          :image_ref => '111',
+          :flavor_ref => '1',
+          :public_key_path => 'tarpals',
+          :nics => networks
+        )
         driver.send(:create_server)
       end
     end
