@@ -319,23 +319,31 @@ describe Kitchen::Driver::Openstack do
       s.stub(:create) { |arg| arg }
       s
     end
-    let(:vlan333_net) { double(:id => '1', :name => 'vlan333') }
+    let(:vlan1_net) { double(:id => '1', :name => 'vlan1') }
+    let(:vlan2_net) { double(:id => '2', :name => 'vlan2') }
     let(:ubuntu_image) { double(:id => '111', :name => 'ubuntu') }
     let(:fedora_image) { double(:id => '222', :name => 'fedora') }
     let(:tiny_flavor) { double(:id => '1', :name => 'tiny') }
     let(:small_flavor) { double(:id => '2', :name => 'small') }
     let(:compute) do
       double(
-        :servers  => servers,
-        :images   => [ubuntu_image, fedora_image],
-        :flavors  => [tiny_flavor, small_flavor],
-        :networks => [vlan333_net]
+        :servers       => servers,
+        :images        => [ubuntu_image, fedora_image],
+        :flavors       => [tiny_flavor, small_flavor],
+      )
+    end
+    let(:network) do
+      double(
+        :networks => double(
+          :all => [vlan1_net, vlan2_net]
+        )
       )
     end
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
       d.instance = instance
       d.stub(:compute).and_return(compute)
+      d.stub(:network).and_return(network)
       d
     end
 
@@ -508,13 +516,40 @@ describe Kitchen::Driver::Openstack do
           :image_ref => '111',
           :flavor_ref => '1',
           :public_key_path => 'tarpals',
-          :network_ref => 'vlan333'
+          :network_ref => 'vlan1'
         }
       end
 
       it 'exact id match' do
         networks = [
           { 'net_id' => '1' }
+        ]
+        servers.should_receive(:create).with(
+          :name => 'hello',
+          :image_ref => '111',
+          :flavor_ref => '1',
+          :public_key_path => 'tarpals',
+          :nics => networks
+        )
+        driver.send(:create_server)
+      end
+    end
+
+    context 'multiple networks specifies id' do
+      let(:config) do
+        {
+          :server_name => 'hello',
+          :image_ref => '111',
+          :flavor_ref => '1',
+          :public_key_path => 'tarpals',
+          :network_ref => %w(1 2)
+        }
+      end
+
+      it 'exact id match' do
+        networks = [
+          { 'net_id' => '1' },
+          { 'net_id' => '2' },
         ]
         servers.should_receive(:create).with(
           :name => 'hello',

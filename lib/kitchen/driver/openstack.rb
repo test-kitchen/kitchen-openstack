@@ -94,7 +94,7 @@ module Kitchen
 
       private
 
-      def compute
+      def openstack_server
         server_def = {
           :provider           => 'OpenStack',
           :openstack_username => config[:openstack_username],
@@ -107,7 +107,15 @@ module Kitchen
         optional.each do |o|
           config[o] and server_def[o] = config[o]
         end
-        Fog::Compute.new(server_def)
+        server_def
+      end
+
+      def network
+        Fog::Network.new(openstack_server)
+      end
+
+      def compute
+        Fog::Compute.new(openstack_server)
       end
 
       def create_server
@@ -118,9 +126,10 @@ module Kitchen
         }
 
         if config[:network_ref]
-          server_def[:nics] = [
-            { 'net_id' => find_network(config[:network_ref]).id }
-          ]
+          networks = [].concat([config[:network_ref]])
+          server_def[:nics] = networks.flatten.map do |net|
+            { 'net_id' => find_network(net).id }
+          end
         end
 
         if config[:security_groups] && config[:security_groups].kind_of?(Array)
@@ -156,10 +165,10 @@ module Kitchen
       end
 
       def find_network(network_ref)
-        network = find_matching(compute.networks, network_ref)
-        raise ActionFailed, 'Network not found' if !network
-        debug "Selected network: #{network.id} #{network.name}"
-        network
+        net = find_matching(network.networks.all, network_ref)
+        raise ActionFailed, 'Network not found' if !net
+        debug "Selected net: #{net.id} #{net.name}"
+        net
       end
 
       def generate_name(base)
@@ -204,7 +213,7 @@ module Kitchen
 
       def get_ip(server)
         if config[:openstack_network_name]
-          debug "Using configured network: #{config[:openstack_network_name]}"
+          debug "Using configured net: #{config[:openstack_network_name]}"
           return server.addresses[config[:openstack_network_name]].first['addr']
         end
         begin
