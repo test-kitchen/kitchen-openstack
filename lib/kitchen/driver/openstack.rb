@@ -52,6 +52,7 @@ module Kitchen
       default_config :floating_ip_pool, nil
       default_config :floating_ip, nil
       default_config :security_groups, nil
+      default_config :nics, nil
 
       def create(state)
         config[:server_name] ||= generate_name(instance.name)
@@ -128,6 +129,9 @@ module Kitchen
         end
         if config[:public_key_path]
           server_def[:public_key_path] = config[:public_key_path]
+        end
+        if config[:nics] && config[:nics].kind_of?(Array)
+          server_def[:nics] = config[:nics]
         end
         server_def[:key_name] = config[:key_name] if config[:key_name]
         # Can't use the Fog bootstrap and/or setup methods here; they require a
