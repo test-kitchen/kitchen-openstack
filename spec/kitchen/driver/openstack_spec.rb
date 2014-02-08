@@ -286,6 +286,12 @@ describe Kitchen::Driver::Openstack do
         res = config.merge({ :provider => 'OpenStack' })
         expect(driver.send(:compute)).to eq(res)
       end
+
+      it 'creates a new network connection' do
+        Fog::Network.stub(:new) { |arg| arg }
+        res = config.merge({ :provider => 'OpenStack' })
+        expect(driver.send(:network)).to eq(res)
+      end
     end
 
     context 'only an API key provided' do
