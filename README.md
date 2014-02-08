@@ -67,6 +67,10 @@ behavior can be overridden with additional options:
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
 
+If a `key_name` is provided without any `private_key_path`, unexpected
+behavior may result if your local RSA/DSA private key doesn't match that
+OpenStack key.
+
 The `network_ref` option can be specified as an exact id, an exact name,
 or as a regular expression matching the name of the network. You can pass one
 
@@ -84,10 +88,6 @@ instance to provide more control over network connectivity.
 
 Please note that `network_ref` relies on Network Services (`Fog::Network`) and
 it can be unavailable in your OpenStack installation.
-
-If a `key_name` is provided without any `private_key_path`, unexpected
-behavior may result if your local RSA/DSA private key doesn't match that
-OpenStack key.
 
     disable_ssl_validation: true
 
