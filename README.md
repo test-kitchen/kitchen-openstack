@@ -82,6 +82,9 @@ The `openstack_network_name` is used to select IP address for SSH connection.
 It's recommended to specify this option in case of multiple networks used for
 instance to provide more control over network connectivity.
 
+Please note that `network_ref` relies on Network Services (`Fog::Network`) and
+it can be unavailable in your OpenStack installation.
+
 If a `key_name` is provided without any `private_key_path`, unexpected
 behavior may result if your local RSA/DSA private key doesn't match that
 OpenStack key.
