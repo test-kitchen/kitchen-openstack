@@ -1,3 +1,10 @@
+# ?.?.? / ????-??-??
+
+### New Features
+
+* PR [#39][] - New `network_ref` option to only provision a server with
+certain specified NICs; via [@monsterzz][]
+
 # 1.2.0 / 2014-01-30
 
 ### New Features
@@ -68,6 +75,7 @@
 
 * Initial release! Woo!
 
+[#39]: https://github.com/test-kitchen/kitchen-openstack/pull/39
 [#37]: https://github.com/test-kitchen/kitchen-openstack/pull/37
 [#31]: https://github.com/test-kitchen/kitchen-openstack/pull/31
 [#27]: https://github.com/test-kitchen/kitchen-openstack/pull/27
@@ -84,6 +92,7 @@
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@monsterzz]: https://github.com/monsterzz
 [@bears4barrett]: https://github.com/bears4barrett
 [@jgawor]: https://github.com/jgawor
 [@hufman]: https://github.com/hufman
