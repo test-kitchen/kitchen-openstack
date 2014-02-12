@@ -52,6 +52,7 @@ module Kitchen
       default_config :floating_ip_pool, nil
       default_config :floating_ip, nil
       default_config :security_groups, nil
+      default_config :network_ref, nil
 
       def create(state)
         config[:server_name] ||= generate_name(instance.name)
@@ -93,7 +94,7 @@ module Kitchen
 
       private
 
-      def compute
+      def openstack_server
         server_def = {
           :provider           => 'OpenStack',
           :openstack_username => config[:openstack_username],
@@ -106,34 +107,68 @@ module Kitchen
         optional.each do |o|
           config[o] and server_def[o] = config[o]
         end
-        Fog::Compute.new(server_def)
+        server_def
+      end
+
+      def network
+        Fog::Network.new(openstack_server)
+      end
+
+      def compute
+        Fog::Compute.new(openstack_server)
       end
 
       def create_server
-        image = find_matching(compute.images, config[:image_ref])
-        raise ActionFailed, "Image not found" if !image
-        debug "Selected image: #{image.id} #{image.name}"
-
-        flavor = find_matching(compute.flavors, config[:flavor_ref])
-        raise ActionFailed, "Flavor not found" if !flavor
-        debug "Selected flavor: #{flavor.id} #{flavor.name}"
-
         server_def = {
-          :name => config[:server_name],
-          :image_ref => image.id,
-          :flavor_ref => flavor.id,
+          :name       => config[:server_name],
+          :image_ref  => find_image(config[:image_ref]).id,
+          :flavor_ref => find_flavor(config[:flavor_ref]).id,
         }
+
+        if config[:network_ref]
+          networks = [].concat([config[:network_ref]])
+          server_def[:nics] = networks.flatten.map do |net|
+            { 'net_id' => find_network(net).id }
+          end
+        end
+
         if config[:security_groups] && config[:security_groups].kind_of?(Array)
           server_def[:security_groups] = config[:security_groups]
         end
+
         if config[:public_key_path]
           server_def[:public_key_path] = config[:public_key_path]
         end
-        server_def[:key_name] = config[:key_name] if config[:key_name]
+
+        if config[:key_name]
+          server_def[:key_name] = config[:key_name]
+        end
+
         # Can't use the Fog bootstrap and/or setup methods here; they require a
         # public IP address that can't be guaranteed to exist across all
         # OpenStack deployments (e.g. TryStack ARM only has private IPs).
         compute.servers.create(server_def)
+      end
+
+      def find_image(image_ref)
+        image = find_matching(compute.images, image_ref)
+        raise ActionFailed, 'Image not found' if !image
+        debug "Selected image: #{image.id} #{image.name}"
+        image
+      end
+
+      def find_flavor(flavor_ref)
+        flavor = find_matching(compute.flavors, flavor_ref)
+        raise ActionFailed, 'Flavor not found' if !flavor
+        debug "Selected flavor: #{flavor.id} #{flavor.name}"
+        flavor
+      end
+
+      def find_network(network_ref)
+        net = find_matching(network.networks.all, network_ref)
+        raise ActionFailed, 'Network not found' if !net
+        debug "Selected net: #{net.id} #{net.name}"
+        net
       end
 
       def generate_name(base)
@@ -178,7 +213,7 @@ module Kitchen
 
       def get_ip(server)
         if config[:openstack_network_name]
-          debug "Using configured network: #{config[:openstack_network_name]}"
+          debug "Using configured net: #{config[:openstack_network_name]}"
           return server.addresses[config[:openstack_network_name]].first['addr']
         end
         begin

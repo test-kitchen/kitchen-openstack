@@ -54,12 +54,15 @@ behavior can be overridden with additional options:
     openstack_tenant: [YOUR OPENSTACK TENANT ID]
     openstack_region: [A VALID OPENSTACK REGION]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
-    openstack_network_name: [YOUR OPENSTACK NETWORK NAME]
+    openstack_network_name: [YOUR OPENSTACK NETWORK NAME USED TO CONNECT]
     floating_ip: [A SPECIFIC FLOATING IP TO ASSIGN]
     floating_ip_pool: [AN OPENSTACK POOL NAME TO ASSIGN THE NEXT IP FROM]
     security_groups:
       - [A LIST OF...]
       - [...SECURITY GROUPS TO JOIN]
+    network_ref:
+      - [OPENSTACK NETWORK NAMES OR...]
+      - [...ID TO CREATE INSTANCE WITH]
 
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
@@ -67,6 +70,24 @@ If a `key_name` is provided it will be used instead of any
 If a `key_name` is provided without any `private_key_path`, unexpected
 behavior may result if your local RSA/DSA private key doesn't match that
 OpenStack key.
+
+The `network_ref` option can be specified as an exact id, an exact name,
+or as a regular expression matching the name of the network. You can pass one
+
+    network_ref: MYNET1
+
+or many networks
+
+    network_ref:
+      - MYNET1
+      - MYNET2
+
+The `openstack_network_name` is used to select IP address for SSH connection.
+It's recommended to specify this option in case of multiple networks used for
+instance to provide more control over network connectivity.
+
+Please note that `network_ref` relies on Network Services (`Fog::Network`) and
+it can be unavailable in your OpenStack installation.
 
     disable_ssl_validation: true
 
@@ -77,6 +98,7 @@ but are stuck with an OpenStack deployment without valid SSL certs.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+3. Run style checks and RSpec tests (`bundle exec rake`)
+4. Commit your changes (`git commit -am 'Add some feature'`)
+5. Push to the branch (`git push origin my-new-feature`)
+6. Create new Pull Request
