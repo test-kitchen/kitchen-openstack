@@ -152,7 +152,10 @@ describe Kitchen::Driver::Openstack do
       d.instance = instance
       d.stub(:generate_name).with('potatoes').and_return('a_monkey!')
       d.stub(:create_server).and_return(server)
-      d.stub(:wait_for_sshd).with('1.2.3.4').and_return(true)
+      d.stub(:wait_for_sshd).with(
+        '1.2.3.4',
+        'root',
+        { :port => '22' }).and_return(true)
       d.stub(:get_ip).and_return('1.2.3.4')
       d.stub(:do_ssh_setup).and_return(true)
       d
