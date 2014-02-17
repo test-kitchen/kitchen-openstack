@@ -144,6 +144,10 @@ module Kitchen
           server_def[:key_name] = config[:key_name]
         end
 
+        if config[:user_data] && File.exist?(config[:user_data])
+          server_def[:user_data] = open(config[:user_data]) { |f| f.read }
+        end
+
         # Can't use the Fog bootstrap and/or setup methods here; they require a
         # public IP address that can't be guaranteed to exist across all
         # OpenStack deployments (e.g. TryStack ARM only has private IPs).
