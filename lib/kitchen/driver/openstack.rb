@@ -68,7 +68,8 @@ module Kitchen
         end
         state[:hostname] = get_ip(server)
         state[:ssh_key] = config[:private_key_path]
-        wait_for_sshd(state[:hostname]) ; info '(ssh ready)'
+        wait_for_sshd(state[:hostname], config[:username],
+          { :port => config[:port] }) ; info '(ssh ready)'
         if config[:key_name]
           info "Using OpenStack keypair <#{config[:key_name]}>"
         end
