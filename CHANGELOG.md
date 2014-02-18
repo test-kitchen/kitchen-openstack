@@ -5,6 +5,11 @@
 * PR [#39][] - New `network_ref` option to only provision a server with
 certain specified NICs; via [@monsterzz][]
 
+### Bug Fixes
+
+* PR [#41][] - Fix issue creating servers with custom SSH ports; via
+[@tenforward][]
+
 # 1.2.0 / 2014-01-30
 
 ### New Features
@@ -75,6 +80,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#41]: https://github.com/test-kitchen/kitchen-openstack/pull/41
 [#39]: https://github.com/test-kitchen/kitchen-openstack/pull/39
 [#37]: https://github.com/test-kitchen/kitchen-openstack/pull/37
 [#31]: https://github.com/test-kitchen/kitchen-openstack/pull/31
@@ -92,6 +98,7 @@ certain specified NICs; via [@monsterzz][]
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@tenforward]: https://github.com/tenforward
 [@monsterzz]: https://github.com/monsterzz
 [@bears4barrett]: https://github.com/bears4barrett
 [@jgawor]: https://github.com/jgawor
