@@ -159,7 +159,7 @@ module Kitchen
           end
         when :user_data
           if File.exist?(config[c])
-            open(config[c]) { |f| f.read }
+            File.open(config[c]) { |f| f.read }
           end
         else
           config[c]
