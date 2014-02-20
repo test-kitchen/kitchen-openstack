@@ -567,6 +567,34 @@ describe Kitchen::Driver::Openstack do
         driver.send(:create_server)
       end
     end
+
+    context 'user_data specified' do
+      let(:config) do
+        {
+          :server_name => 'hello',
+          :image_ref => '111',
+          :flavor_ref => '1',
+          :public_key_path => 'tarpals',
+          :user_data => 'cloud-init.txt'
+        }
+      end
+      let(:data) { "#cloud-config\n" }
+
+      before(:each) do
+        File.stub(:exist?).and_return(true)
+        File.stub(:open).and_return(data)
+      end
+
+      it 'should pass file contents' do
+        servers.should_receive(:create).with(
+          :name => 'hello',
+          :image_ref => '111',
+          :flavor_ref => '1',
+          :public_key_path => 'tarpals',
+          :user_data => data)
+        driver.send(:create_server)
+      end
+    end
   end
 
   describe '#generate_name' do
