@@ -120,11 +120,7 @@ module Kitchen
       end
 
       def create_server
-        server_def = {
-          :name       => config[:server_name],
-          :image_ref  => find_image(config[:image_ref]).id,
-          :flavor_ref => find_flavor(config[:flavor_ref]).id,
-        }
+        server_def = init_config
 
         if config[:network_ref]
           networks = [].concat([config[:network_ref]])
@@ -133,22 +129,42 @@ module Kitchen
           end
         end
 
-        if config[:security_groups] && config[:security_groups].kind_of?(Array)
-          server_def[:security_groups] = config[:security_groups]
-        end
-
-        if config[:public_key_path]
-          server_def[:public_key_path] = config[:public_key_path]
-        end
-
-        if config[:key_name]
-          server_def[:key_name] = config[:key_name]
+        [
+          :security_groups,
+          :public_key_path,
+          :key_name,
+          :user_data
+        ].each do |c|
+          server_def[c] = optional_config(c) if config[c]
         end
 
         # Can't use the Fog bootstrap and/or setup methods here; they require a
         # public IP address that can't be guaranteed to exist across all
         # OpenStack deployments (e.g. TryStack ARM only has private IPs).
         compute.servers.create(server_def)
+      end
+
+      def init_config
+        {
+          :name       => config[:server_name],
+          :image_ref  => find_image(config[:image_ref]).id,
+          :flavor_ref => find_flavor(config[:flavor_ref]).id,
+        }
+      end
+
+      def optional_config(c)
+        case c
+        when :security_groups
+          if config[c].kind_of?(Array)
+            config[c]
+          end
+        when :user_data
+          if File.exist?(config[c])
+            File.open(config[c]) { |f| f.read }
+          end
+        else
+          config[c]
+        end
       end
 
       def find_image(image_ref)
