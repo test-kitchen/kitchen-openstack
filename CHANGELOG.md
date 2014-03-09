@@ -1,7 +1,8 @@
-# ?.?.? / ????-??-??
+# 1.3.0 / 2014-03-09
 
 ### New Features
 
+* PR [#40][] - New `user_data` option; via [@wilreichert][]
 * PR [#39][] - New `network_ref` option to only provision a server with
 certain specified NICs; via [@monsterzz][]
 
@@ -81,6 +82,7 @@ certain specified NICs; via [@monsterzz][]
 * Initial release! Woo!
 
 [#41]: https://github.com/test-kitchen/kitchen-openstack/pull/41
+[#40]: https://github.com/test-kitchen/kitchen-openstack/pull/40
 [#39]: https://github.com/test-kitchen/kitchen-openstack/pull/39
 [#37]: https://github.com/test-kitchen/kitchen-openstack/pull/37
 [#31]: https://github.com/test-kitchen/kitchen-openstack/pull/31
@@ -98,6 +100,7 @@ certain specified NICs; via [@monsterzz][]
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@wilreichert]: https://github.com/wilreichert
 [@tenforward]: https://github.com/tenforward
 [@monsterzz]: https://github.com/monsterzz
 [@bears4barrett]: https://github.com/bears4barrett
