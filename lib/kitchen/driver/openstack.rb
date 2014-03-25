@@ -67,7 +67,9 @@ module Kitchen
           attach_ip(server, config[:floating_ip])
         end
         state[:hostname] = get_ip(server)
+        info "Selected <#{state[:hostname]} for ssh connection>"
         state[:ssh_key] = config[:private_key_path]
+        info "Wait for ssh"
         wait_for_sshd(state[:hostname], config[:username],
           { :port => config[:port] }) ; info '(ssh ready)'
         if config[:key_name]
@@ -234,15 +236,16 @@ module Kitchen
           return server.addresses[config[:openstack_network_name]].first['addr']
         end
         begin
-          pub, priv = server.public_ip_addresses, server.private_ip_addresses
+          float, pub, priv = server.addresses, server.public_ip_addresses, server.private_ip_addresses
         rescue Fog::Compute::OpenStack::NotFound
           # See Fog issue: https://github.com/fog/fog/issues/2160
           addrs = server.addresses
           addrs['public'] and pub = addrs['public'].map { |i| i['addr'] }
           addrs['private'] and priv = addrs['private'].map { |i| i['addr'] }
         end
+        float = server.addresses['public'].map { |i| i['addr'] }
         pub, priv = parse_ips(pub, priv)
-        pub.first || priv.first || raise(ActionFailed, 'Could not find an IP')
+        float.first || pub.first || priv.first || raise(ActionFailed, 'Could not find an IP')
       end
 
       def parse_ips(pub, priv)
