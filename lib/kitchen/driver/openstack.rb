@@ -218,8 +218,8 @@ module Kitchen
           if free_addrs.empty?
             raise ActionFailed, "No available IPs in pool <#{pool}>"
           end
-          attach_ip(server, free_addrs[0])
           config[:floating_ip] = free_addrs[0]
+          attach_ip(server, free_addrs[0])
         end
       end
 
