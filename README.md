@@ -55,8 +55,6 @@ behavior can be overridden with additional options:
     openstack_region: [A VALID OPENSTACK REGION]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
     openstack_network_name: [YOUR OPENSTACK NETWORK NAME USED TO CONNECT]
-    floating_ip: [A SPECIFIC FLOATING IP TO ASSIGN]
-    floating_ip_pool: [AN OPENSTACK POOL NAME TO ASSIGN THE NEXT IP FROM]
     security_groups:
       - [A LIST OF...]
       - [...SECURITY GROUPS TO JOIN]
@@ -70,6 +68,13 @@ If a `key_name` is provided it will be used instead of any
 If a `key_name` is provided without any `private_key_path`, unexpected
 behavior may result if your local RSA/DSA private key doesn't match that
 OpenStack key.
+
+A specific `floating_ip` or the ID of a `floating_ip_pool` can be provided to
+bind a floating IP to the node. Any floating IP will be the IP used for
+Test Kitchen's SSH calls to the node.
+
+    floating_ip: [A SPECIFIC FLOATING IP TO ASSIGN]
+    floating_ip_pool: [AN OPENSTACK POOL NAME TO ASSIGN THE NEXT IP FROM]
 
 The `network_ref` option can be specified as an exact id, an exact name,
 or as a regular expression matching the name of the network. You can pass one

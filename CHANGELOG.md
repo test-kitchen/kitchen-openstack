@@ -1,4 +1,8 @@
-# ?.?.? / ????-??-??
+# 1.4.0 / 2014-04-09
+
+### Improvements
+
+* PR [#46][] - Use a configured floating IP for SSH; via [@dschlenk][]
 
 # 1.3.0 / 2014-03-09
 
@@ -83,6 +87,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#46]: https://github.com/test-kitchen/kitchen-openstack/pull/46
 [#41]: https://github.com/test-kitchen/kitchen-openstack/pull/41
 [#40]: https://github.com/test-kitchen/kitchen-openstack/pull/40
 [#39]: https://github.com/test-kitchen/kitchen-openstack/pull/39
@@ -102,6 +107,7 @@ certain specified NICs; via [@monsterzz][]
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@dschlenk]: https://github.com/dschlenk
 [@wilreichert]: https://github.com/wilreichert
 [@tenforward]: https://github.com/tenforward
 [@monsterzz]: https://github.com/monsterzz
