@@ -218,6 +218,7 @@ module Kitchen
           if free_addrs.empty?
             raise ActionFailed, "No available IPs in pool <#{pool}>"
           end
+          config[:floating_ip] = free_addrs[0]
           attach_ip(server, free_addrs[0])
         end
       end
@@ -229,6 +230,10 @@ module Kitchen
       end
 
       def get_ip(server)
+        unless config[:floating_ip].nil?
+          debug "Using floating ip: #{config[:floating_ip]}"
+          return config[:floating_ip]
+        end
         if config[:openstack_network_name]
           debug "Using configured net: #{config[:openstack_network_name]}"
           return server.addresses[config[:openstack_network_name]].first['addr']
