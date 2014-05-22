@@ -157,6 +157,7 @@ describe Kitchen::Driver::Openstack do
         'root',
         { :port => '22' }).and_return(true)
       d.stub(:get_ip).and_return('1.2.3.4')
+      d.stub(:add_ohai_hint).and_return(true)
       d.stub(:do_ssh_setup).and_return(true)
       d
     end
