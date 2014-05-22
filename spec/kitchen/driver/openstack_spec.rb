@@ -901,11 +901,11 @@ describe Kitchen::Driver::Openstack do
     end
     it 'opens an SSH session to the server' do
       Fog::SSH.stub(:new).with('host', 'root',
-        { :password => 'aloha' }).and_return(ssh)
+        anything()).and_return(ssh)
       res = driver.send(:add_ohai_hint, state, config, server)
       expected = [
-        'mkdir -p /etc/chef/ohai/hints',
-        'touch /etc/chef/ohai/hints/openstack.json'
+        'sudo mkdir -p /etc/chef/ohai/hints',
+        'sudo touch /etc/chef/ohai/hints/openstack.json'
       ]
       expect(res).to eq(expected)
     end

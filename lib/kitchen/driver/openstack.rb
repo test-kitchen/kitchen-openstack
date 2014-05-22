@@ -263,11 +263,10 @@ module Kitchen
 
       def add_ohai_hint(state, config, server)
         info 'Adding OpenStack hint for ohai'
-        ssh = Fog::SSH.new(state[:hostname], config[:username],
-          { :password => server.password })
+        ssh = Fog::SSH.new(*build_ssh_args(state))
         ssh.run([
-          %{mkdir -p /etc/chef/ohai/hints},
-          %{touch /etc/chef/ohai/hints/openstack.json}
+          %{sudo mkdir -p /etc/chef/ohai/hints},
+          %{sudo touch /etc/chef/ohai/hints/openstack.json}
         ])
       end
 
