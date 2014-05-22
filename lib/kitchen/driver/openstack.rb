@@ -22,6 +22,7 @@ require 'kitchen'
 require 'etc'
 require 'ipaddr'
 require 'socket'
+require 'ohai'
 
 module Kitchen
   module Driver
@@ -265,8 +266,8 @@ module Kitchen
         info 'Adding OpenStack hint for ohai'
         ssh = Fog::SSH.new(*build_ssh_args(state))
         ssh.run([
-          %{sudo mkdir -p /etc/chef/ohai/hints},
-          %{sudo touch /etc/chef/ohai/hints/openstack.json}
+          %{sudo mkdir -p #{Ohai::Config[:hints_path][0]}},
+          %{sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json}
         ])
       end
 

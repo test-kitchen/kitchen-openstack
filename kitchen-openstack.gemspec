@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'fog', '~> 1.18'
   # Newer Fogs throw a warning if unf isn't there :(
   spec.add_dependency 'unf'
+  spec.add_dependency 'ohai'
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'

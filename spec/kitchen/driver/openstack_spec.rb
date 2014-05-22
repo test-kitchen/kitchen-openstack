@@ -22,6 +22,7 @@ require 'logger'
 require 'stringio'
 require 'rspec'
 require 'kitchen'
+require 'ohai'
 
 describe Kitchen::Driver::Openstack do
   let(:logged_output) { StringIO.new }
@@ -904,8 +905,8 @@ describe Kitchen::Driver::Openstack do
         anything()).and_return(ssh)
       res = driver.send(:add_ohai_hint, state, config, server)
       expected = [
-        'sudo mkdir -p /etc/chef/ohai/hints',
-        'sudo touch /etc/chef/ohai/hints/openstack.json'
+        "sudo mkdir -p #{Ohai::Config[:hints_path][0]}",
+        "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
       ]
       expect(res).to eq(expected)
     end
