@@ -890,6 +890,27 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe '#add_ohai_hint' do
+    let(:config) { { :public_key_path => '/pub_key' } }
+    let(:server) { double(:password => 'aloha') }
+    let(:state) { { :hostname => 'host' } }
+    let(:ssh) do
+      s = double('ssh')
+      s.stub(:run) { |args| args }
+      s
+    end
+    it 'opens an SSH session to the server' do
+      Fog::SSH.stub(:new).with('host', 'root',
+        { :password => 'aloha' }).and_return(ssh)
+      res = driver.send(:add_ohai_hint, state, config, server)
+      expected = [
+        'mkdir -p /etc/chef/ohai/hints',
+        'touch /etc/chef/ohai/hints/openstack.json'
+      ]
+      expect(res).to eq(expected)
+    end
+  end
+
   describe '#disable_ssl_validation' do
     it 'turns off Excon SSL cert validation' do
       expect(driver.send(:disable_ssl_validation)).to eq(false)
