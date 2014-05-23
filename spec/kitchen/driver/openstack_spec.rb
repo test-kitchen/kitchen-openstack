@@ -22,6 +22,7 @@ require 'logger'
 require 'stringio'
 require 'rspec'
 require 'kitchen'
+require 'ohai'
 
 describe Kitchen::Driver::Openstack do
   let(:logged_output) { StringIO.new }
@@ -157,6 +158,7 @@ describe Kitchen::Driver::Openstack do
         'root',
         { :port => '22' }).and_return(true)
       d.stub(:get_ip).and_return('1.2.3.4')
+      d.stub(:add_ohai_hint).and_return(true)
       d.stub(:do_ssh_setup).and_return(true)
       d
     end
@@ -884,6 +886,27 @@ describe Kitchen::Driver::Openstack do
         'mkdir .ssh',
         'echo "a_key" >> ~/.ssh/authorized_keys',
         'passwd -l root'
+      ]
+      expect(res).to eq(expected)
+    end
+  end
+
+  describe '#add_ohai_hint' do
+    let(:config) { { :public_key_path => '/pub_key' } }
+    let(:server) { double(:password => 'aloha') }
+    let(:state) { { :hostname => 'host' } }
+    let(:ssh) do
+      s = double('ssh')
+      s.stub(:run) { |args| args }
+      s
+    end
+    it 'opens an SSH session to the server' do
+      Fog::SSH.stub(:new).with('host', 'root',
+        anything()).and_return(ssh)
+      res = driver.send(:add_ohai_hint, state, config, server)
+      expected = [
+        "sudo mkdir -p #{Ohai::Config[:hints_path][0]}",
+        "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
       ]
       expect(res).to eq(expected)
     end

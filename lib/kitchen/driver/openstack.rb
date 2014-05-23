@@ -22,6 +22,7 @@ require 'kitchen'
 require 'etc'
 require 'ipaddr'
 require 'socket'
+require 'ohai'
 
 module Kitchen
   module Driver
@@ -75,6 +76,7 @@ module Kitchen
         end
         info "Using public SSH key <#{config[:public_key_path]}>"
         info "Using private SSH key <#{config[:private_key_path]}>"
+        add_ohai_hint(state, config, server)
         unless config[:key_name]
           do_ssh_setup(state, config, server)
         end
@@ -258,6 +260,15 @@ module Kitchen
           [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv4? } }
         end
         return pub, priv
+      end
+
+      def add_ohai_hint(state, config, server)
+        info 'Adding OpenStack hint for ohai'
+        ssh = Fog::SSH.new(*build_ssh_args(state))
+        ssh.run([
+          %{sudo mkdir -p #{Ohai::Config[:hints_path][0]}},
+          %{sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json}
+        ])
       end
 
       def do_ssh_setup(state, config, server)
