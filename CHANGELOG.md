@@ -1,4 +1,8 @@
-# ?.?.? / ????-??-??
+# 1.5.0 / 2014-05-22
+
+### New Features
+
+* PR [#48][] - Enable the Ohai OpenStack plugin; via [@dschlenk][]
 
 # 1.4.0 / 2014-04-09
 
@@ -89,6 +93,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#48]: https://github.com/test-kitchen/kitchen-openstack/pull/48
 [#46]: https://github.com/test-kitchen/kitchen-openstack/pull/46
 [#41]: https://github.com/test-kitchen/kitchen-openstack/pull/41
 [#40]: https://github.com/test-kitchen/kitchen-openstack/pull/40
