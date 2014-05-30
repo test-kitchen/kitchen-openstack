@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# Encoding: UTF-8
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
@@ -22,5 +22,3 @@ module Kitchen
     OPENSTACK_VERSION = '1.5.1.dev'
   end
 end
-
-# vim: ai et ts=2 sts=2 sw=2 ft=ruby
