@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# Encoding: UTF-8
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
@@ -619,8 +619,22 @@ describe Kitchen::Driver::Openstack do
         Socket.stub(:gethostname).and_return('ab.c' * 20)
       end
 
-      it 'limits the generated name to 63-characters' do
+      it 'limits the generated name to 63 characters' do
         expect(driver.send(:generate_name, 'long').length).to eq(63)
+      end
+    end
+
+    context 'node with a long hostname, username, and base name' do
+      before(:each) do
+        Socket.unstub(:gethostname)
+        Socket.stub(:gethostname).and_return('ab.c' * 20)
+
+        Etc.unstub(:getlogin)
+        Etc.stub(:getlogin).and_return('user' * 20)
+      end
+
+      it 'limits the generated name to 63 characters' do
+        expect(driver.send(:generate_name, 'long' * 20).length).to eq(63)
       end
     end
   end
@@ -918,5 +932,3 @@ describe Kitchen::Driver::Openstack do
     end
   end
 end
-
-# vim: ai et ts=2 sts=2 sw=2 ft=ruby

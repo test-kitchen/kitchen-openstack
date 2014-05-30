@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# Encoding: UTF-8
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
@@ -191,20 +191,27 @@ module Kitchen
       end
 
       def generate_name(base)
-        # Generate what should be a unique server name
+        # Generate what should be a unique server name up to 63 total chars
+        # Base name:    15
+        # Username:     15
+        # Hostname:     23
+        # Random string: 7
+        # Separators:    3
+        # ================
+        # Total:        63
         sep = '-'
         pieces = [
           base,
           Etc.getlogin,
           Socket.gethostname,
-          Array.new(8) { rand(36).to_s(36) }.join
+          Array.new(7) { rand(36).to_s(36) }.join
         ]
         until pieces.join(sep).length <= 63 do
-          if pieces[2].length > 24
+          if pieces[2].length > 23
             pieces[2] = pieces[2][0..-2]
-          elsif pieces[1].length > 16
+          elsif pieces[1].length > 15
             pieces[1] = pieces[1][0..-2]
-          elsif pieces[0].length > 16
+          elsif pieces[0].length > 15
             pieces[0] = pieces[0][0..-2]
           end
         end
@@ -312,5 +319,3 @@ module Kitchen
     end
   end
 end
-
-# vim: ai et ts=2 sts=2 sw=2 ft=ruby

@@ -2,6 +2,7 @@
 
 ### Bug Fixes
 
+* PR [#50][] - Fix possible infinite loop when generating server names
 * PR [#49][] - Limit server names to 63 characters to get around OpenSSH bug
 [2239](https://bugzilla.mindrot.org/show_bug.cgi?id=2239); via [@dschlenk][]
 
@@ -100,6 +101,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#50]: https://github.com/test-kitchen/kitchen-openstack/pull/50
 [#49]: https://github.com/test-kitchen/kitchen-openstack/pull/49
 [#48]: https://github.com/test-kitchen/kitchen-openstack/pull/48
 [#46]: https://github.com/test-kitchen/kitchen-openstack/pull/46

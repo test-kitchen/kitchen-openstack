@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# Encoding: UTF-8
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
@@ -31,5 +31,3 @@ SimpleCov.minimum_coverage 90
 SimpleCov.start
 
 require_relative '../lib/kitchen/driver/openstack'
-
-# vim: ai et ts=2 sts=2 sw=2 ft=ruby

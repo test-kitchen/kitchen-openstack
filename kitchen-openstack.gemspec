@@ -1,4 +1,5 @@
-# coding: utf-8
+# Encoding: UTF-8
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'kitchen/driver/openstack_version'
@@ -34,5 +35,3 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'simplecov-console'
   spec.add_development_dependency 'coveralls'
 end
-
-# vim: ai et ts=2 sts=2 sw=2 ft=ruby
