@@ -1,5 +1,10 @@
 # ?.?.? / ????-??-??
 
+### Bug Fixes
+
+* PR [#49][] - Limit server names to 63 characters to get around OpenSSH bug
+[2239](https://bugzilla.mindrot.org/show_bug.cgi?id=2239); via [@dschlenk][]
+
 # 1.5.0 / 2014-05-22
 
 ### New Features
@@ -95,6 +100,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#49]: https://github.com/test-kitchen/kitchen-openstack/pull/49
 [#48]: https://github.com/test-kitchen/kitchen-openstack/pull/48
 [#46]: https://github.com/test-kitchen/kitchen-openstack/pull/46
 [#41]: https://github.com/test-kitchen/kitchen-openstack/pull/41
