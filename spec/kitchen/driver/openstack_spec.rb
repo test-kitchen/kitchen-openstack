@@ -619,8 +619,8 @@ describe Kitchen::Driver::Openstack do
         Socket.stub(:gethostname).and_return('ab.c' * 20)
       end
 
-      it 'limits the generated name to 64-characters' do
-        expect(driver.send(:generate_name, 'long').length).to eq(64)
+      it 'limits the generated name to 63-characters' do
+        expect(driver.send(:generate_name, 'long').length).to eq(63)
       end
     end
   end

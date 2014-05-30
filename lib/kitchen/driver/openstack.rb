@@ -199,7 +199,7 @@ module Kitchen
           Socket.gethostname,
           Array.new(8) { rand(36).to_s(36) }.join
         ]
-        until pieces.join(sep).length <= 64 do
+        until pieces.join(sep).length <= 63 do
           if pieces[2].length > 24
             pieces[2] = pieces[2][0..-2]
           elsif pieces[1].length > 16
