@@ -34,10 +34,10 @@ module Kitchen
 
       default_config :server_name, nil
       default_config :key_name, nil
-      default_config :private_key_path do |driver|
-        %w{id_rsa id_dsa}.collect do |k|
+      default_config :private_key_path do
+        %w(id_rsa id_dsa).map do |k|
           f = File.expand_path "~/.ssh/#{k}"
-          f if File.exists? f
+          f if File.exist?(f)
         end.compact.first
       end
       default_config :public_key_path do |driver|
@@ -57,11 +57,15 @@ module Kitchen
 
       def create(state)
         config[:server_name] ||= generate_name(instance.name)
-        config[:disable_ssl_validation] and disable_ssl_validation
+        config[:disable_ssl_validation] && disable_ssl_validation
         server = create_server
         state[:server_id] = server.id
         info "OpenStack instance <#{state[:server_id]}> created."
-        server.wait_for { print '.'; ready? } ; info "\n(server ready)"
+        server.wait_for do
+          print '.'
+          ready?
+        end
+        info "\n(server ready)"
         if config[:floating_ip_pool]
           attach_ip_from_pool(server, config[:floating_ip_pool])
         elsif config[:floating_ip]
@@ -69,17 +73,15 @@ module Kitchen
         end
         state[:hostname] = get_ip(server)
         state[:ssh_key] = config[:private_key_path]
-        wait_for_sshd(state[:hostname], config[:username],
-          { :port => config[:port] }) ; info '(ssh ready)'
+        wait_for_sshd(state[:hostname], config[:username], port: config[:port])
+        info '(ssh ready)'
         if config[:key_name]
           info "Using OpenStack keypair <#{config[:key_name]}>"
         end
         info "Using public SSH key <#{config[:public_key_path]}>"
         info "Using private SSH key <#{config[:private_key_path]}>"
-        add_ohai_hint(state, config, server)
-        unless config[:key_name]
-          do_ssh_setup(state, config, server)
-        end
+        add_ohai_hint(state)
+        do_ssh_setup(state, config, server) unless config[:key_name]
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
       end
@@ -87,7 +89,7 @@ module Kitchen
       def destroy(state)
         return if state[:server_id].nil?
 
-        config[:disable_ssl_validation] and disable_ssl_validation
+        config[:disable_ssl_validation] && disable_ssl_validation
         server = compute.servers.get(state[:server_id])
         server.destroy unless server.nil?
         info "OpenStack instance <#{state[:server_id]}> destroyed."
@@ -99,18 +101,19 @@ module Kitchen
 
       def openstack_server
         server_def = {
-          :provider           => 'OpenStack',
-          :openstack_username => config[:openstack_username],
-          :openstack_api_key  => config[:openstack_api_key],
-          :openstack_auth_url => config[:openstack_auth_url]
+          provider: 'OpenStack'
         }
-        optional = [
-          :openstack_tenant, :openstack_region, :openstack_service_name
-        ]
-        optional.each do |o|
-          config[o] and server_def[o] = config[o]
-        end
+        required_server_settings.each { |s| server_def[s] = config[s] }
+        optional_server_settings.each { |s| server_def[s] = config[s] }
         server_def
+      end
+
+      def required_server_settings
+        [:openstack_username, :openstack_api_key, :openstack_auth_url]
+      end
+
+      def optional_server_settings
+        [:openstack_tenant, :openstack_region, :openstack_service_name]
       end
 
       def network
@@ -148,22 +151,18 @@ module Kitchen
 
       def init_config
         {
-          :name       => config[:server_name],
-          :image_ref  => find_image(config[:image_ref]).id,
-          :flavor_ref => find_flavor(config[:flavor_ref]).id,
+          name: config[:server_name],
+          image_ref: find_image(config[:image_ref]).id,
+          flavor_ref: find_flavor(config[:flavor_ref]).id
         }
       end
 
       def optional_config(c)
         case c
         when :security_groups
-          if config[c].kind_of?(Array)
-            config[c]
-          end
+          config[c] if config[c].kind_of?(Array)
         when :user_data
-          if File.exist?(config[c])
-            File.open(config[c]) { |f| f.read }
-          end
+          File.open(config[c]) { |f| f.read } if File.exist?(config[c])
         else
           config[c]
         end
@@ -171,34 +170,34 @@ module Kitchen
 
       def find_image(image_ref)
         image = find_matching(compute.images, image_ref)
-        raise ActionFailed, 'Image not found' if !image
+        fail(ActionFailed, 'Image not found') unless image
         debug "Selected image: #{image.id} #{image.name}"
         image
       end
 
       def find_flavor(flavor_ref)
         flavor = find_matching(compute.flavors, flavor_ref)
-        raise ActionFailed, 'Flavor not found' if !flavor
+        fail(ActionFailed, 'Flavor not found') unless flavor
         debug "Selected flavor: #{flavor.id} #{flavor.name}"
         flavor
       end
 
       def find_network(network_ref)
         net = find_matching(network.networks.all, network_ref)
-        raise ActionFailed, 'Network not found' if !net
+        fail(ActionFailed, 'Network not found') unless net
         debug "Selected net: #{net.id} #{net.name}"
         net
       end
 
+      # Generate what should be a unique server name up to 63 total chars
+      # Base name:    15
+      # Username:     15
+      # Hostname:     23
+      # Random string: 7
+      # Separators:    3
+      # ================
+      # Total:        63
       def generate_name(base)
-        # Generate what should be a unique server name up to 63 total chars
-        # Base name:    15
-        # Username:     15
-        # Hostname:     23
-        # Random string: 7
-        # Separators:    3
-        # ================
-        # Total:        63
         sep = '-'
         pieces = [
           base,
@@ -206,7 +205,7 @@ module Kitchen
           Socket.gethostname,
           Array.new(7) { rand(36).to_s(36) }.join
         ]
-        until pieces.join(sep).length <= 63 do
+        until pieces.join(sep).length <= 63
           if pieces[2].length > 23
             pieces[2] = pieces[2][0..-2]
           elsif pieces[1].length > 15
@@ -221,11 +220,11 @@ module Kitchen
       def attach_ip_from_pool(server, pool)
         @@ip_pool_lock.synchronize do
           info "Attaching floating IP from <#{pool}> pool"
-          free_addrs = compute.addresses.collect do |i|
-            i.ip if i.fixed_ip.nil? and i.instance_id.nil? and i.pool == pool
+          free_addrs = compute.addresses.map do |i|
+            i.ip if i.fixed_ip.nil? && i.instance_id.nil? && i.pool == pool
           end.compact
           if free_addrs.empty?
-            raise ActionFailed, "No available IPs in pool <#{pool}>"
+            fail ActionFailed, "No available IPs in pool <#{pool}>"
           end
           config[:floating_ip] = free_addrs[0]
           attach_ip(server, free_addrs[0])
@@ -252,11 +251,11 @@ module Kitchen
         rescue Fog::Compute::OpenStack::NotFound
           # See Fog issue: https://github.com/fog/fog/issues/2160
           addrs = server.addresses
-          addrs['public'] and pub = addrs['public'].map { |i| i['addr'] }
-          addrs['private'] and priv = addrs['private'].map { |i| i['addr'] }
+          addrs['public'] && pub = addrs['public'].map { |i| i['addr'] }
+          addrs['private'] && priv = addrs['private'].map { |i| i['addr'] }
         end
         pub, priv = parse_ips(pub, priv)
-        pub.first || priv.first || raise(ActionFailed, 'Could not find an IP')
+        pub.first || priv.first || fail(ActionFailed, 'Could not find an IP')
       end
 
       def parse_ips(pub, priv)
@@ -266,27 +265,28 @@ module Kitchen
         else
           [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv4? } }
         end
-        return pub, priv
+        [pub, priv]
       end
 
-      def add_ohai_hint(state, config, server)
+      def add_ohai_hint(state)
         info 'Adding OpenStack hint for ohai'
         ssh = Fog::SSH.new(*build_ssh_args(state))
         ssh.run([
-          %{sudo mkdir -p #{Ohai::Config[:hints_path][0]}},
-          %{sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json}
+          %(sudo mkdir -p #{Ohai::Config[:hints_path][0]}),
+          %(sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json)
         ])
       end
 
       def do_ssh_setup(state, config, server)
         info "Setting up SSH access for key <#{config[:public_key_path]}>"
-        ssh = Fog::SSH.new(state[:hostname], config[:username],
-          { :password => server.password })
+        ssh = Fog::SSH.new(state[:hostname],
+                           config[:username],
+                           password: server.password)
         pub_key = open(config[:public_key_path]).read
         ssh.run([
-          %{mkdir .ssh},
-          %{echo "#{pub_key}" >> ~/.ssh/authorized_keys},
-          %{passwd -l #{config[:username]}}
+          %(mkdir .ssh),
+          %(echo "#{pub_key}" >> ~/.ssh/authorized_keys),
+          %(passwd -l #{config[:username]})
         ])
       end
 
@@ -297,25 +297,18 @@ module Kitchen
 
       def find_matching(collection, name)
         name = name.to_s
-        if name.start_with?('/')
-          regex = eval(name)
+        if name.start_with?('/') && name.end_with?('/')
+          regex = Regexp.new(name[1...-1])
           # check for regex name match
-          collection.each do |single|
-            return single if regex =~ single.name
-          end
+          collection.each { |single| return single if regex =~ single.name }
         else
           # check for exact id match
-          collection.each do |single|
-            return single if single.id == name
-          end
+          collection.each { |single| return single if single.id == name }
           # check for exact name match
-          collection.each do |single|
-            return single if single.name == name
-          end
+          collection.each { |single| return single if single.name == name }
         end
         nil
       end
-
     end
   end
 end

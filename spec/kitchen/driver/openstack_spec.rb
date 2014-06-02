@@ -34,7 +34,7 @@ describe Kitchen::Driver::Openstack do
 
   let(:instance) do
     double(
-      :name => 'potatoes', :logger => logger, :to_str => 'instance'
+      name: 'potatoes', logger: logger, to_str: 'instance'
     )
   end
 
@@ -45,9 +45,9 @@ describe Kitchen::Driver::Openstack do
   end
 
   before(:each) do
-    File.stub(:exists?).and_call_original
-    File.stub(:exists?).with(dsa).and_return(true)
-    File.stub(:exists?).with(rsa).and_return(true)
+    File.stub(:exist?).and_call_original
+    File.stub(:exist?).with(dsa).and_return(true)
+    File.stub(:exist?).with(rsa).and_return(true)
   end
 
   describe '#initialize'do
@@ -64,9 +64,9 @@ describe Kitchen::Driver::Openstack do
 
       context 'only a DSA SSH key available for the user' do
         before(:each) do
-          File.unstub(:exists?)
-          File.stub(:exists?).and_return(false)
-          File.stub(:exists?).with(dsa).and_return(true)
+          File.unstub(:exist?)
+          File.stub(:exist?).and_return(false)
+          File.stub(:exist?).with(dsa).and_return(true)
         end
 
         it 'uses the local user\'s DSA private key' do
@@ -80,9 +80,9 @@ describe Kitchen::Driver::Openstack do
 
       context 'only a RSA SSH key available for the user' do
         before(:each) do
-          File.unstub(:exists?)
-          File.stub(:exists?).and_return(false)
-          File.stub(:exists?).with(rsa).and_return(true)
+          File.unstub(:exist?)
+          File.stub(:exist?).and_return(false)
+          File.stub(:exist?).with(rsa).and_return(true)
         end
 
         it 'uses the local user\'s RSA private key' do
@@ -118,19 +118,19 @@ describe Kitchen::Driver::Openstack do
     context 'overridden options' do
       let(:config) do
         {
-          :image_ref => '22',
-          :flavor_ref => '33',
-          :public_key_path => '/tmp',
-          :username => 'admin',
-          :port => '2222',
-          :server_name => 'puppy',
-          :openstack_tenant => 'that_one',
-          :openstack_region => 'atlantis',
-          :openstack_service_name => 'the_service',
-          :private_key_path => '/path/to/id_rsa',
-          :floating_ip_pool => 'swimmers',
-          :floating_ip => '11111',
-          :network_ref => '0xCAFFE'
+          image_ref: '22',
+          flavor_ref: '33',
+          public_key_path: '/tmp',
+          username: 'admin',
+          port: '2222',
+          server_name: 'puppy',
+          openstack_tenant: 'that_one',
+          openstack_region: 'atlantis',
+          openstack_service_name: 'the_service',
+          private_key_path: '/path/to/id_rsa',
+          floating_ip_pool: 'swimmers',
+          floating_ip: '11111',
+          network_ref: '0xCAFFE'
         }
       end
 
@@ -145,18 +145,15 @@ describe Kitchen::Driver::Openstack do
 
   describe '#create' do
     let(:server) do
-      double(:id => 'test123', :wait_for => true,
-        :public_ip_addresses => %w{1.2.3.4})
+      double(id: 'test123', wait_for: true, public_ip_addresses: %w(1.2.3.4))
     end
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
       d.instance = instance
       d.stub(:generate_name).with('potatoes').and_return('a_monkey!')
       d.stub(:create_server).and_return(server)
-      d.stub(:wait_for_sshd).with(
-        '1.2.3.4',
-        'root',
-        { :port => '22' }).and_return(true)
+      d.stub(:wait_for_sshd).with('1.2.3.4', 'root', port: '22')
+        .and_return(true)
       d.stub(:get_ip).and_return('1.2.3.4')
       d.stub(:add_ohai_hint).and_return(true)
       d.stub(:do_ssh_setup).and_return(true)
@@ -166,10 +163,10 @@ describe Kitchen::Driver::Openstack do
     context 'required options provided' do
       let(:config) do
         {
-          :openstack_username => 'hello',
-          :openstack_api_key => 'world',
-          :openstack_auth_url => 'http:',
-          :openstack_tenant => 'www'
+          openstack_username: 'hello',
+          openstack_api_key: 'world',
+          openstack_auth_url: 'http:',
+          openstack_tenant: 'www'
         }
       end
 
@@ -195,7 +192,7 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'SSL validation disabled' do
-      let(:config) { { :disable_ssl_validation => true } }
+      let(:config) { { disable_ssl_validation: true } }
 
       it 'disables SSL cert validation' do
         driver.should_receive(:disable_ssl_validation)
@@ -207,10 +204,10 @@ describe Kitchen::Driver::Openstack do
   describe '#destroy' do
     let(:server_id) { '12345' }
     let(:hostname) { 'example.com' }
-    let(:state) { { :server_id => server_id, :hostname => hostname } }
-    let(:server) { double(:nil? => false, :destroy => true) }
-    let(:servers) { double(:get => server) }
-    let(:compute) { double(:servers => servers) }
+    let(:state) { { server_id: server_id, hostname: hostname } }
+    let(:server) { double(nil?: false, destroy: true) }
+    let(:servers) { double(get: server) }
+    let(:compute) { double(servers: servers) }
 
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
@@ -249,7 +246,7 @@ describe Kitchen::Driver::Openstack do
         s.stub(:get).with('12345').and_return(nil)
         s
       end
-      let(:compute) { double(:servers => servers) }
+      let(:compute) { double(servers: servers) }
       let(:driver) do
         d = Kitchen::Driver::Openstack.new(config)
         d.instance = instance
@@ -264,7 +261,7 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'SSL validation disabled' do
-      let(:config) { { :disable_ssl_validation => true } }
+      let(:config) { { disable_ssl_validation: true } }
 
       it 'disables SSL cert validation' do
         driver.should_receive(:disable_ssl_validation)
@@ -273,34 +270,70 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe '#openstack_server' do
+    let(:config) do
+      {
+        openstack_username: 'a',
+        openstack_api_key: 'b',
+        openstack_auth_url: 'http://',
+        openstack_tenant: 'me',
+        openstack_region: 'ORD',
+        openstack_service_name: 'stack'
+      }
+    end
+
+    it 'returns a hash of server settings' do
+      expected = config.merge(provider: 'OpenStack')
+      expect(driver.send(:openstack_server)).to eq(expected)
+    end
+  end
+
+  describe '#required_server_settings' do
+    it 'returns the required settings for an OpenStack server' do
+      expected = [
+        :openstack_username, :openstack_api_key, :openstack_auth_url
+      ]
+      expect(driver.send(:required_server_settings)).to eq(expected)
+    end
+  end
+
+  describe '#optional_server_settings' do
+    it 'returns the optional settings for an OpenStack server' do
+      expected = [
+        :openstack_tenant, :openstack_region, :openstack_service_name
+      ]
+      expect(driver.send(:optional_server_settings)).to eq(expected)
+    end
+  end
+
   describe '#compute' do
     let(:config) do
       {
-        :openstack_username => 'monkey',
-        :openstack_api_key => 'potato',
-        :openstack_auth_url => 'http:',
-        :openstack_tenant => 'link',
-        :openstack_region => 'ord',
-        :openstack_service_name => 'the_service'
+        openstack_username: 'monkey',
+        openstack_api_key: 'potato',
+        openstack_auth_url: 'http:',
+        openstack_tenant: 'link',
+        openstack_region: 'ord',
+        openstack_service_name: 'the_service'
       }
     end
 
     context 'all requirements provided' do
       it 'creates a new compute connection' do
         Fog::Compute.stub(:new) { |arg| arg }
-        res = config.merge({ :provider => 'OpenStack' })
+        res = config.merge(provider: 'OpenStack')
         expect(driver.send(:compute)).to eq(res)
       end
 
       it 'creates a new network connection' do
         Fog::Network.stub(:new) { |arg| arg }
-        res = config.merge({ :provider => 'OpenStack' })
+        res = config.merge(provider: 'OpenStack')
         expect(driver.send(:network)).to eq(res)
       end
     end
 
     context 'only an API key provided' do
-      let(:config) { { :openstack_api_key => '1234' } }
+      let(:config) { { openstack_api_key: '1234' } }
 
       it 'raises an error' do
         expect { driver.send(:compute) }.to raise_error(ArgumentError)
@@ -308,7 +341,7 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'only a username provided' do
-      let(:config) { { :openstack_username => 'monkey' } }
+      let(:config) { { openstack_username: 'monkey' } }
 
       it 'raises an error' do
         expect { driver.send(:compute) }.to raise_error(ArgumentError)
@@ -319,10 +352,10 @@ describe Kitchen::Driver::Openstack do
   describe '#create_server' do
     let(:config) do
       {
-        :server_name => 'hello',
-        :image_ref => '111',
-        :flavor_ref => '1',
-        :public_key_path => 'tarpals'
+        server_name: 'hello',
+        image_ref: '111',
+        flavor_ref: '1',
+        public_key_path: 'tarpals'
       }
     end
     let(:servers) do
@@ -330,25 +363,21 @@ describe Kitchen::Driver::Openstack do
       s.stub(:create) { |arg| arg }
       s
     end
-    let(:vlan1_net) { double(:id => '1', :name => 'vlan1') }
-    let(:vlan2_net) { double(:id => '2', :name => 'vlan2') }
-    let(:ubuntu_image) { double(:id => '111', :name => 'ubuntu') }
-    let(:fedora_image) { double(:id => '222', :name => 'fedora') }
-    let(:tiny_flavor) { double(:id => '1', :name => 'tiny') }
-    let(:small_flavor) { double(:id => '2', :name => 'small') }
+    let(:vlan1_net) { double(id: '1', name: 'vlan1') }
+    let(:vlan2_net) { double(id: '2', name: 'vlan2') }
+    let(:ubuntu_image) { double(id: '111', name: 'ubuntu') }
+    let(:fedora_image) { double(id: '222', name: 'fedora') }
+    let(:tiny_flavor) { double(id: '1', name: 'tiny') }
+    let(:small_flavor) { double(id: '2', name: 'small') }
     let(:compute) do
       double(
-        :servers       => servers,
-        :images        => [ubuntu_image, fedora_image],
-        :flavors       => [tiny_flavor, small_flavor],
+        servers: servers,
+        images: [ubuntu_image, fedora_image],
+        flavors: [tiny_flavor, small_flavor]
       )
     end
     let(:network) do
-      double(
-        :networks => double(
-          :all => [vlan1_net, vlan2_net]
-        )
-      )
+      double(networks: double(all: [vlan1_net, vlan2_net]))
     end
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
@@ -360,10 +389,8 @@ describe Kitchen::Driver::Openstack do
 
     context 'a default config' do
       before(:each) do
-        @expected = config.merge(:name => config[:server_name])
-        @expected.delete_if do |k, v|
-          k == :server_name
-        end
+        @expected = config.merge(name: config[:server_name])
+        @expected.delete_if { |k, _| k == :server_name }
       end
 
       it 'creates the server using a compute connection' do
@@ -374,17 +401,15 @@ describe Kitchen::Driver::Openstack do
     context 'a provided public key path' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals'
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals'
         }
       end
       before(:each) do
-        @expected = config.merge(:name => config[:server_name])
-        @expected.delete_if do |k, v|
-          k == :server_name
-        end
+        @expected = config.merge(name: config[:server_name])
+        @expected.delete_if { |k, _| k == :server_name }
       end
 
       it 'passes that public key path to Fog' do
@@ -395,19 +420,17 @@ describe Kitchen::Driver::Openstack do
     context 'a provided key name' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'montgomery',
-          :key_name => 'tarpals'
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'montgomery',
+          key_name: 'tarpals'
         }
       end
 
       before(:each) do
-        @expected = config.merge(:name => config[:server_name])
-        @expected.delete_if do |k, v|
-          k == :server_name
-        end
+        @expected = config.merge(name: config[:server_name])
+        @expected.delete_if { |k, _| k == :server_name }
       end
 
       it 'passes that key name to Fog' do
@@ -418,20 +441,18 @@ describe Kitchen::Driver::Openstack do
     context 'a provided security group' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'montgomery',
-          :key_name => 'tarpals',
-          :security_groups => ['ping-and-ssh']
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'montgomery',
+          key_name: 'tarpals',
+          security_groups: ['ping-and-ssh']
         }
       end
 
       before(:each) do
-        @expected = config.merge(:name => config[:server_name])
-        @expected.delete_if do |k, v|
-          k == :server_name
-        end
+        @expected = config.merge(name: config[:server_name])
+        @expected.delete_if { |k, _| k == :server_name }
       end
 
       it 'passes that security group to Fog' do
@@ -442,17 +463,18 @@ describe Kitchen::Driver::Openstack do
     context 'image/flavor specifies id' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals'
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals'
         }
       end
 
       it 'exact id match' do
-        servers.should_receive(:create).with(:name => 'hello',
-          :image_ref => '111', :flavor_ref => '1',
-          :public_key_path => 'tarpals')
+        servers.should_receive(:create).with(name: 'hello',
+                                             image_ref: '111',
+                                             flavor_ref: '1',
+                                             public_key_path: 'tarpals')
         driver.send(:create_server)
       end
     end
@@ -460,17 +482,18 @@ describe Kitchen::Driver::Openstack do
     context 'image/flavor specifies name' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => 'fedora',
-          :flavor_ref => 'small',
-          :public_key_path => 'tarpals'
+          server_name: 'hello',
+          image_ref: 'fedora',
+          flavor_ref: 'small',
+          public_key_path: 'tarpals'
         }
       end
 
       it 'exact name match' do
-        servers.should_receive(:create).with(:name => 'hello',
-          :image_ref => '222', :flavor_ref => '2',
-          :public_key_path => 'tarpals')
+        servers.should_receive(:create).with(name: 'hello',
+                                             image_ref: '222',
+                                             flavor_ref: '2',
+                                             public_key_path: 'tarpals')
         driver.send(:create_server)
       end
     end
@@ -478,18 +501,19 @@ describe Kitchen::Driver::Openstack do
     context 'image/flavor specifies regex' do
       let(:config) do
         {
-          :server_name => 'hello',
+          server_name: 'hello',
           # pass regex as string as yml returns string values
-          :image_ref => '/edo/',
-          :flavor_ref => '/in/',
-          :public_key_path => 'tarpals'
+          image_ref: '/edo/',
+          flavor_ref: '/in/',
+          public_key_path: 'tarpals'
         }
       end
 
       it 'regex name match' do
-        servers.should_receive(:create).with(:name => 'hello',
-          :image_ref => '222', :flavor_ref => '1',
-          :public_key_path => 'tarpals')
+        servers.should_receive(:create).with(name: 'hello',
+                                             image_ref: '222',
+                                             flavor_ref: '1',
+                                             public_key_path: 'tarpals')
         driver.send(:create_server)
       end
     end
@@ -497,11 +521,11 @@ describe Kitchen::Driver::Openstack do
     context 'network specifies id' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals',
-          :network_ref => '1'
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          network_ref: '1'
         }
       end
 
@@ -510,11 +534,11 @@ describe Kitchen::Driver::Openstack do
           { 'net_id' => '1' }
         ]
         servers.should_receive(:create).with(
-          :name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals',
-          :nics => networks
+          name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          nics: networks
         )
         driver.send(:create_server)
       end
@@ -523,11 +547,11 @@ describe Kitchen::Driver::Openstack do
     context 'network specifies name' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals',
-          :network_ref => 'vlan1'
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          network_ref: 'vlan1'
         }
       end
 
@@ -536,11 +560,11 @@ describe Kitchen::Driver::Openstack do
           { 'net_id' => '1' }
         ]
         servers.should_receive(:create).with(
-          :name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals',
-          :nics => networks
+          name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          nics: networks
         )
         driver.send(:create_server)
       end
@@ -549,25 +573,25 @@ describe Kitchen::Driver::Openstack do
     context 'multiple networks specifies id' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals',
-          :network_ref => %w(1 2)
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          network_ref: %w(1 2)
         }
       end
 
       it 'exact id match' do
         networks = [
           { 'net_id' => '1' },
-          { 'net_id' => '2' },
+          { 'net_id' => '2' }
         ]
         servers.should_receive(:create).with(
-          :name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals',
-          :nics => networks
+          name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          nics: networks
         )
         driver.send(:create_server)
       end
@@ -576,11 +600,11 @@ describe Kitchen::Driver::Openstack do
     context 'user_data specified' do
       let(:config) do
         {
-          :server_name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals',
-          :user_data => 'cloud-init.txt'
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          user_data: 'cloud-init.txt'
         }
       end
       let(:data) { "#cloud-config\n" }
@@ -592,11 +616,11 @@ describe Kitchen::Driver::Openstack do
 
       it 'should pass file contents' do
         servers.should_receive(:create).with(
-          :name => 'hello',
-          :image_ref => '111',
-          :flavor_ref => '1',
-          :public_key_path => 'tarpals',
-          :user_data => data)
+          name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          user_data: data)
         driver.send(:create_server)
       end
     end
@@ -643,9 +667,10 @@ describe Kitchen::Driver::Openstack do
     let(:server) { nil }
     let(:pool) { 'swimmers' }
     let(:ip) { '1.1.1.1' }
-    let(:address) { double(:ip => ip, :fixed_ip => nil, :instance_id => nil,
-      :pool => pool) }
-    let(:compute) { double(:addresses => [address]) }
+    let(:address) do
+      double(ip: ip, fixed_ip: nil, instance_id: nil, pool: pool)
+    end
+    let(:compute) { double(addresses: [address]) }
 
     before(:each) do
       driver.stub(:attach_ip).with(server, ip).and_return('bing!')
@@ -657,8 +682,10 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'no free addresses in the specified pool' do
-      let(:address) { double(:ip => ip, :fixed_ip => nil, :instance_id => nil,
-        :pool => 'some_other_pool') }
+      let(:address) do
+        double(ip: ip, fixed_ip: nil, instance_id: nil,
+               pool: 'some_other_pool')
+      end
 
       it 'raises an exception' do
         expect { driver.send(:attach_ip_from_pool, server, pool) }.to \
@@ -695,15 +722,15 @@ describe Kitchen::Driver::Openstack do
       d
     end
     let(:server) do
-      double(:addresses => addresses,
-        :public_ip_addresses => public_ip_addresses,
-        :private_ip_addresses => private_ip_addresses)
+      double(addresses: addresses,
+             public_ip_addresses: public_ip_addresses,
+             private_ip_addresses: private_ip_addresses)
     end
 
     context 'both public and private IPs' do
-      let(:public_ip_addresses) { %w{1::1 1.2.3.4} }
-      let(:private_ip_addresses) { %w{5.5.5.5} }
-      let(:parsed_ips) { [%w{1.2.3.4}, %w{5.5.5.5}] }
+      let(:public_ip_addresses) { %w(1::1 1.2.3.4) }
+      let(:private_ip_addresses) { %w(5.5.5.5) }
+      let(:parsed_ips) { [%w(1.2.3.4), %w(5.5.5.5)] }
 
       it 'returns a public IPv4 address' do
         expect(driver.send(:get_ip, server)).to eq('1.2.3.4')
@@ -711,8 +738,8 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'only public IPs' do
-      let(:public_ip_addresses) { %w{4.3.2.1 2::1} }
-      let(:parsed_ips) { [%w{4.3.2.1}, []] }
+      let(:public_ip_addresses) { %w(4.3.2.1 2::1) }
+      let(:parsed_ips) { [%w(4.3.2.1), []] }
 
       it 'returns a public IPv4 address' do
         expect(driver.send(:get_ip, server)).to eq('4.3.2.1')
@@ -720,8 +747,8 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'only private IPs' do
-      let(:private_ip_addresses) { %w{3::1 5.5.5.5} }
-      let(:parsed_ips) { [[], %w{5.5.5.5}] }
+      let(:private_ip_addresses) { %w(3::1 5.5.5.5) }
+      let(:parsed_ips) { [[], %w(5.5.5.5)] }
 
       it 'returns a private IPv4 address' do
         expect(driver.send(:get_ip, server)).to eq('5.5.5.5')
@@ -729,7 +756,7 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'IPs in user-defined network group' do
-      let(:config) { { :openstack_network_name => 'mynetwork' } }
+      let(:config) { { openstack_network_name: 'mynetwork' } }
       let(:addresses) do
         {
           'mynetwork' => [
@@ -762,7 +789,7 @@ describe Kitchen::Driver::Openstack do
             'private' => [{ 'addr' => '8.8.8.8' }, { 'addr' => '9.9.9.9' }]
           }
         end
-        let(:parsed_ips) { [%w{6.6.6.6 7.7.7.7}, %w{8.8.8.8 9.9.9.9}] }
+        let(:parsed_ips) { [%w(6.6.6.6 7.7.7.7), %w(8.8.8.8 9.9.9.9)] }
 
         it 'selects the first public IP' do
           expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
@@ -773,7 +800,7 @@ describe Kitchen::Driver::Openstack do
         let(:addresses) do
           { 'public' => [{ 'addr' => '6.6.6.6' }, { 'addr' => '7.7.7.7' }] }
         end
-        let(:parsed_ips) { [%w{6.6.6.6 7.7.7.7}, []] }
+        let(:parsed_ips) { [%w(6.6.6.6 7.7.7.7), []] }
 
         it 'selects the first public IP' do
           expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
@@ -784,7 +811,7 @@ describe Kitchen::Driver::Openstack do
         let(:addresses) do
           { 'private' => [{ 'addr' => '8.8.8.8' }, { 'addr' => '9.9.9.9' }] }
         end
-        let(:parsed_ips) { [[], %w{8.8.8.8 9.9.9.9}] }
+        let(:parsed_ips) { [[], %w(8.8.8.8 9.9.9.9)] }
 
         it 'selects the first private IP' do
           expect(driver.send(:get_ip, server)).to eq('8.8.8.8')
@@ -800,10 +827,10 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#parse_ips' do
-    let(:pub_v4) { %w{1.1.1.1 2.2.2.2} }
-    let(:pub_v6) { %w{1::1 2::2} }
-    let(:priv_v4) { %w{3.3.3.3 4.4.4.4} }
-    let(:priv_v6) { %w{3::3 4::4} }
+    let(:pub_v4) { %w(1.1.1.1 2.2.2.2) }
+    let(:pub_v6) { %w(1::1 2::2) }
+    let(:priv_v4) { %w(3.3.3.3 4.4.4.4) }
+    let(:priv_v6) { %w(3::3 4::4) }
     let(:pub) { pub_v4 + pub_v6 }
     let(:priv) { priv_v4 + priv_v6 }
 
@@ -815,7 +842,7 @@ describe Kitchen::Driver::Openstack do
       end
 
       context 'IPv6' do
-        let(:config) { { :use_ipv6 => true } }
+        let(:config) { { use_ipv6: true } }
 
         it 'returns only the v6 IPs' do
           expect(driver.send(:parse_ips, pub, priv)).to eq([pub_v6, priv_v6])
@@ -833,7 +860,7 @@ describe Kitchen::Driver::Openstack do
       end
 
       context 'IPv6' do
-        let(:config) { { :use_ipv6 => true } }
+        let(:config) { { use_ipv6: true } }
 
         it 'returns only the v6 IPs' do
           expect(driver.send(:parse_ips, pub, priv)).to eq([pub_v6, []])
@@ -851,7 +878,7 @@ describe Kitchen::Driver::Openstack do
       end
 
       context 'IPv6' do
-        let(:config) { { :use_ipv6 => true } }
+        let(:config) { { use_ipv6: true } }
 
         it 'returns only the v6 IPs' do
           expect(driver.send(:parse_ips, pub, priv)).to eq([[], priv_v6])
@@ -870,7 +897,7 @@ describe Kitchen::Driver::Openstack do
       end
 
       context 'IPv6' do
-        let(:config) { { :use_ipv6 => true } }
+        let(:config) { { use_ipv6: true } }
 
         it 'returns empty lists' do
           expect(driver.send(:parse_ips, nil, nil)).to eq([[], []])
@@ -880,10 +907,10 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#do_ssh_setup' do
-    let(:config) { { :public_key_path => '/pub_key' } }
-    let(:server) { double(:password => 'aloha') }
-    let(:state) { { :hostname => 'host' } }
-    let(:read) { double(:read => 'a_key') }
+    let(:config) { { public_key_path: '/pub_key' } }
+    let(:server) { double(password: 'aloha') }
+    let(:state) { { hostname: 'host' } }
+    let(:read) { double(read: 'a_key') }
     let(:ssh) do
       s = double('ssh')
       s.stub(:run) { |args| args }
@@ -891,8 +918,8 @@ describe Kitchen::Driver::Openstack do
     end
 
     it 'opens an SSH session to the server' do
-      Fog::SSH.stub(:new).with('host', 'root',
-        { :password => 'aloha' }).and_return(ssh)
+      Fog::SSH.stub(:new).with('host', 'root', password: 'aloha')
+        .and_return(ssh)
       driver.stub(:open).with('/pub_key').and_return(read)
       read.stub(:read).and_return('a_key')
       res = driver.send(:do_ssh_setup, state, config, server)
@@ -906,18 +933,15 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#add_ohai_hint' do
-    let(:config) { { :public_key_path => '/pub_key' } }
-    let(:server) { double(:password => 'aloha') }
-    let(:state) { { :hostname => 'host' } }
+    let(:state) { { hostname: 'host' } }
     let(:ssh) do
       s = double('ssh')
       s.stub(:run) { |args| args }
       s
     end
     it 'opens an SSH session to the server' do
-      Fog::SSH.stub(:new).with('host', 'root',
-        anything()).and_return(ssh)
-      res = driver.send(:add_ohai_hint, state, config, server)
+      Fog::SSH.stub(:new).with('host', 'root', anything).and_return(ssh)
+      res = driver.send(:add_ohai_hint, state)
       expected = [
         "sudo mkdir -p #{Ohai::Config[:hints_path][0]}",
         "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"

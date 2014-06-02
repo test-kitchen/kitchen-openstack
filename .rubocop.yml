@@ -1,0 +1,8 @@
+CyclomaticComplexity:
+  Enabled: false
+MethodLength:
+  Enabled: false
+ClassLength:
+  Enabled: false
+ClassVars:
+  Enabled: false

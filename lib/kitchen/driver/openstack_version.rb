@@ -17,8 +17,10 @@
 # limitations under the License.
 
 module Kitchen
+  # Version string for OpenStack Kitchen driver
+  #
+  # @author Jonathan Hartman <j@p4nt5.com>
   module Driver
-    # Version string for OpenStack Kitchen driver
     OPENSTACK_VERSION = '1.5.3.dev'
   end
 end
