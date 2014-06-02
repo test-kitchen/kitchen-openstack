@@ -7,5 +7,4 @@ rvm:
   - 1.9.2
   - 1.9.3
   - 2.0.0
-
-# vim: ai et ts=2 sts=2 sw=2 ft=yaml
+  - 2.1.1
