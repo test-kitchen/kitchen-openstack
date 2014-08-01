@@ -642,18 +642,35 @@ describe Kitchen::Driver::Openstack do
       end
 
       it 'limits the generated name to 63 characters' do
-        expect(driver.send(:generate_name, 'long').length).to eq(63)
+        expect(driver.send(:generate_name, 'long').length).to be <= (63)
       end
     end
 
     context 'node with a long hostname, username, and base name' do
       before(:each) do
-        allow(Socket).to receive(:gethostname).and_return('ab.c' * 20)
+        allow(Socket).to receive(:gethostname).and_return('abc' * 20)
         allow(Etc).to receive(:getlogin).and_return('user' * 20)
       end
 
       it 'limits the generated name to 63 characters' do
         expect(driver.send(:generate_name, 'long' * 20).length).to eq(63)
+      end
+    end
+
+    context 'a login and hostname with punctuation in them' do
+      let(:base) { 'a.base-name' }
+
+      before(:each) do
+        allow(Etc).to receive(:getlogin).and_return('some.u-se-r' * 20)
+        allow(Socket).to receive(:gethostname).and_return('a.host-name' * 20)
+      end
+
+      it 'strips out the dots to prevent bad server names' do
+        expect(driver.send(:generate_name, base)).to_not include('.')
+      end
+
+      it 'strips out all but the three hyphen separators' do
+        expect(driver.send(:generate_name, base).count('-')).to eq(3)
       end
     end
   end

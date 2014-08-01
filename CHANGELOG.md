@@ -1,5 +1,8 @@
 # ?.?.? / ????-??-??
 
+* PR [#53][] - Rework how server names are generated, disallowing possibly
+error-causing punctuation in resultant names
+
 # 1.5.2 / 2014-05-31
 
 ### Bug Fixes
@@ -103,6 +106,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#53]: https://github.com/test-kitchen/kitchen-openstack/pull/53
 [#50]: https://github.com/test-kitchen/kitchen-openstack/pull/50
 [#49]: https://github.com/test-kitchen/kitchen-openstack/pull/49
 [#48]: https://github.com/test-kitchen/kitchen-openstack/pull/48
