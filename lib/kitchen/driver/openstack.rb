@@ -160,7 +160,7 @@ module Kitchen
       def optional_config(c)
         case c
         when :security_groups
-          config[c] if config[c].kind_of?(Array)
+          config[c] if config[c].is_a?(Array)
         when :user_data
           File.open(config[c]) { |f| f.read } if File.exist?(config[c])
         else
