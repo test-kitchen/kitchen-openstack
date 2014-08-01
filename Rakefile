@@ -7,9 +7,7 @@ require 'rspec/core/rake_task'
 
 Cane::RakeTask.new
 
-Rubocop::RakeTask.new do |task|
-  task.patterns = %w(**/*.rb)
-end
+RuboCop::RakeTask.new
 
 desc 'Display LOC stats'
 task :loc do
