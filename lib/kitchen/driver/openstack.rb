@@ -160,7 +160,7 @@ module Kitchen
       def optional_config(c)
         case c
         when :security_groups
-          config[c] if config[c].kind_of?(Array)
+          config[c] if config[c].is_a?(Array)
         when :user_data
           File.open(config[c]) { |f| f.read } if File.exist?(config[c])
         else
@@ -200,21 +200,13 @@ module Kitchen
       def generate_name(base)
         sep = '-'
         pieces = [
-          base,
-          Etc.getlogin,
-          Socket.gethostname,
+          base.gsub(/\W/, '')[0..14],
+          Etc.getlogin.gsub(/\W/, '')[0..14],
+          Socket.gethostname.gsub(/\W/, '')[0..22],
           Array.new(7) { rand(36).to_s(36) }.join
         ]
-        until pieces.join(sep).length <= 63
-          if pieces[2].length > 23
-            pieces[2] = pieces[2][0..-2]
-          elsif pieces[1].length > 15
-            pieces[1] = pieces[1][0..-2]
-          elsif pieces[0].length > 15
-            pieces[0] = pieces[0][0..-2]
-          end
-        end
-        pieces.join sep
+        puts "Name: #{pieces.join(sep)}"
+        pieces.join(sep)
       end
 
       def attach_ip_from_pool(server, pool)

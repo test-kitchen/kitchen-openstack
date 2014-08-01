@@ -9,14 +9,14 @@ Gem::Specification.new do |spec|
   spec.version       = Kitchen::Driver::OPENSTACK_VERSION
   spec.authors       = ['Jonathan Hartman']
   spec.email         = ['j@p4nt5.com']
-  spec.description   = %q{A Test Kitchen OpenStack Nova driver}
+  spec.description   = 'A Test Kitchen OpenStack Nova driver'
   spec.summary       = spec.description
   spec.homepage      = 'https://github.com/test-kitchen/kitchen-openstack'
   spec.license       = 'Apache'
 
-  spec.files         = `git ls-files`.split($/)
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
+  spec.files         = `git ls-files`.split($INPUT_RECORD_SEPARATOR)
+  spec.executables   = spec.files.grep(/^bin\//) { |f| File.basename(f) }
+  spec.test_files    = spec.files.grep(/^(test|spec|features)\//)
   spec.require_paths = ['lib']
 
   spec.add_dependency 'test-kitchen', '~> 1.1'
