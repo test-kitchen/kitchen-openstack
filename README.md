@@ -34,7 +34,7 @@ Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
       openstack_username: [YOUR OPENSTACK USERNAME]
       openstack_api_key: [YOUR OPENSTACK API KEY]
       openstack_auth_url: [YOUR OPENSTACK AUTH URL]
-      require_chef_omnibus: latest (if you'll be using Chef)
+      require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
       image_ref: [SERVER IMAGE ID]
       flavor_ref: [SERVER FLAVOR ID]
 
