@@ -1,4 +1,4 @@
-# ?.?.? / ????-??-??
+# 1.5.3 / 2014-08-01
 
 * PR [#53][] - Rework how server names are generated, disallowing possibly
 error-causing punctuation in resultant names
