@@ -66,10 +66,10 @@ module Kitchen
           ready?
         end
         info "\n(server ready)"
-        if config[:floating_ip_pool]
-          attach_ip_from_pool(server, config[:floating_ip_pool])
-        elsif config[:floating_ip]
+        if config[:floating_ip]
           attach_ip(server, config[:floating_ip])
+        elsif config[:floating_ip_pool]
+          attach_ip_from_pool(server, config[:floating_ip_pool])
         end
         state[:hostname] = get_ip(server)
         state[:ssh_key] = config[:private_key_path]
