@@ -726,6 +726,7 @@ describe Kitchen::Driver::Openstack do
     let(:addresses) { nil }
     let(:public_ip_addresses) { nil }
     let(:private_ip_addresses) { nil }
+    let(:ip_addresses) { nil }
     let(:parsed_ips) { [[], []] }
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
@@ -736,7 +737,8 @@ describe Kitchen::Driver::Openstack do
     let(:server) do
       double(addresses: addresses,
              public_ip_addresses: public_ip_addresses,
-             private_ip_addresses: private_ip_addresses)
+             private_ip_addresses: private_ip_addresses,
+             ip_addresses: ip_addresses)
     end
 
     context 'both public and private IPs' do
@@ -763,6 +765,15 @@ describe Kitchen::Driver::Openstack do
       let(:parsed_ips) { [[], %w(5.5.5.5)] }
 
       it 'returns a private IPv4 address' do
+        expect(driver.send(:get_ip, server)).to eq('5.5.5.5')
+      end
+    end
+
+    context 'no predictable network name' do
+      let(:ip_addresses) { %w(3::1 5.5.5.5) }
+      let(:parsed_ips) { [[], %w(5.5.5.5)] }
+
+      it 'returns the first IP that matches the IP version' do
         expect(driver.send(:get_ip, server)).to eq('5.5.5.5')
       end
     end

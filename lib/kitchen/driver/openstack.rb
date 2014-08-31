@@ -240,12 +240,13 @@ module Kitchen
         end
         begin
           pub, priv = server.public_ip_addresses, server.private_ip_addresses
-        rescue Fog::Compute::OpenStack::NotFound
+        rescue Fog::Compute::OpenStack::NotFound, Excon::Errors::Forbidden
           # See Fog issue: https://github.com/fog/fog/issues/2160
           addrs = server.addresses
           addrs['public'] && pub = addrs['public'].map { |i| i['addr'] }
           addrs['private'] && priv = addrs['private'].map { |i| i['addr'] }
         end
+        priv ||= server.ip_addresses unless pub
         pub, priv = parse_ips(pub, priv)
         pub.first || priv.first || fail(ActionFailed, 'Could not find an IP')
       end
