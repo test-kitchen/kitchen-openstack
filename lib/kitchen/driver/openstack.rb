@@ -72,16 +72,8 @@ module Kitchen
           attach_ip(server, config[:floating_ip])
         end
         state[:hostname] = get_ip(server)
-        state[:ssh_key] = config[:private_key_path]
-        wait_for_sshd(state[:hostname], config[:username], port: config[:port])
-        info '(ssh ready)'
-        if config[:key_name]
-          info "Using OpenStack keypair <#{config[:key_name]}>"
-        end
-        info "Using public SSH key <#{config[:public_key_path]}>"
-        info "Using private SSH key <#{config[:private_key_path]}>"
+        setup_ssh(server, state)
         add_ohai_hint(state)
-        do_ssh_setup(state, config, server) unless config[:key_name]
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
       end
@@ -229,6 +221,18 @@ module Kitchen
         (server.addresses['public'] ||= []) << { 'version' => 4, 'addr' => ip }
       end
 
+      def get_public_private_ips(server)
+        begin
+          pub, priv = server.public_ip_addresses, server.private_ip_addresses
+        rescue Fog::Compute::OpenStack::NotFound, Excon::Errors::Forbidden
+          # See Fog issue: https://github.com/fog/fog/issues/2160
+          addrs = server.addresses
+          addrs['public'] && pub = addrs['public'].map { |i| i['addr'] }
+          addrs['private'] && priv = addrs['private'].map { |i| i['addr'] }
+        end
+        [pub, priv]
+      end
+
       def get_ip(server)
         unless config[:floating_ip].nil?
           debug "Using floating ip: #{config[:floating_ip]}"
@@ -238,14 +242,7 @@ module Kitchen
           debug "Using configured net: #{config[:openstack_network_name]}"
           return server.addresses[config[:openstack_network_name]].first['addr']
         end
-        begin
-          pub, priv = server.public_ip_addresses, server.private_ip_addresses
-        rescue Fog::Compute::OpenStack::NotFound, Excon::Errors::Forbidden
-          # See Fog issue: https://github.com/fog/fog/issues/2160
-          addrs = server.addresses
-          addrs['public'] && pub = addrs['public'].map { |i| i['addr'] }
-          addrs['private'] && priv = addrs['private'].map { |i| i['addr'] }
-        end
+        pub, priv = get_public_private_ips(server)
         priv ||= server.ip_addresses unless pub
         pub, priv = parse_ips(pub, priv)
         pub.first || priv.first || fail(ActionFailed, 'Could not find an IP')
@@ -268,6 +265,18 @@ module Kitchen
           %(sudo mkdir -p #{Ohai::Config[:hints_path][0]}),
           %(sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json)
         ])
+      end
+
+      def setup_ssh(server, state)
+        wait_for_sshd(state[:hostname], config[:username], port: config[:port])
+        info '(ssh ready)'
+        if config[:key_name]
+          info "Using OpenStack keypair <#{config[:key_name]}>"
+        end
+        info "Using public SSH key <#{config[:public_key_path]}>"
+        info "Using private SSH key <#{config[:private_key_path]}>"
+        state[:ssh_key] = config[:private_key_path]
+        do_ssh_setup(state, config, server) unless config[:key_name]
       end
 
       def do_ssh_setup(state, config, server)
