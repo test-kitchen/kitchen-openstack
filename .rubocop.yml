@@ -6,3 +6,5 @@ ClassLength:
   Enabled: false
 ClassVars:
   Enabled: false
+PerceivedComplexity:
+  Max: 10
