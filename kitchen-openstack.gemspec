@@ -19,6 +19,8 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(/^(test|spec|features)\//)
   spec.require_paths = ['lib']
 
+  spec.required_ruby_version = '>= 1.9.3'
+
   spec.add_dependency 'test-kitchen', '~> 1.1'
   spec.add_dependency 'fog', '~> 1.18'
   # Newer Fogs throw a warning if unf isn't there :(
