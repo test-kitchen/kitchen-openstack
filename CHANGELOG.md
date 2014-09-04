@@ -1,4 +1,11 @@
-# ?.?.? / ????.??.??
+# 1.6.0 / 2014-09.04
+
+### Improvements
+
+* PR [#56][] - Fall back to the first valid IP if no public or private nets can
+be found; via [@jer][]
+* PR [#55][] - Give a floating IP priority over an IP pool if both are present;
+via [@StaymanHou][]
 
 ### Bug Fixes
 
@@ -113,6 +120,8 @@ certain specified NICs; via [@monsterzz][]
 * Initial release! Woo!
 
 [#58]: https://github.com/test-kitchen/kitchen-openstack/pull/58
+[#56]: https://github.com/test-kitchen/kitchen-openstack/pull/56
+[#55]: https://github.com/test-kitchen/kitchen-openstack/pull/55
 [#53]: https://github.com/test-kitchen/kitchen-openstack/pull/53
 [#50]: https://github.com/test-kitchen/kitchen-openstack/pull/50
 [#49]: https://github.com/test-kitchen/kitchen-openstack/pull/49
@@ -137,6 +146,8 @@ certain specified NICs; via [@monsterzz][]
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@StaymanHou]: https://github.com/StaymanHou
+[@jer]: https://github.com/jer
 [@dschlenk]: https://github.com/dschlenk
 [@wilreichert]: https://github.com/wilreichert
 [@tenforward]: https://github.com/tenforward
