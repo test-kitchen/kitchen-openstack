@@ -56,7 +56,7 @@ module Kitchen
       default_config :network_ref, nil
 
       def create(state)
-        config[:server_name] ||= generate_name(instance.name)
+        config[:server_name] ||= default_name
         config[:disable_ssl_validation] && disable_ssl_validation
         server = create_server
         state[:server_id] = server.id
@@ -189,16 +189,13 @@ module Kitchen
       # Separators:    3
       # ================
       # Total:        63
-      def generate_name(base)
-        sep = '-'
-        pieces = [
-          base.gsub(/\W/, '')[0..14],
-          Etc.getlogin.gsub(/\W/, '')[0..14],
+      def default_name
+        [
+          instance.name.gsub(/\W/, '')[0..14],
+          (Etc.getlogin || 'nologin').gsub(/\W/, '')[0..14],
           Socket.gethostname.gsub(/\W/, '')[0..22],
           Array.new(7) { rand(36).to_s(36) }.join
-        ]
-        puts "Name: #{pieces.join(sep)}"
-        pieces.join(sep)
+        ].join('-')
       end
 
       def attach_ip_from_pool(server, pool)

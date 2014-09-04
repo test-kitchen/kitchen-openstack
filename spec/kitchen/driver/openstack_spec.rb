@@ -31,10 +31,11 @@ describe Kitchen::Driver::Openstack do
   let(:state) { Hash.new }
   let(:dsa) { File.expand_path('~/.ssh/id_dsa') }
   let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
+  let(:instance_name) { 'potatoes' }
 
   let(:instance) do
     double(
-      name: 'potatoes', logger: logger, to_str: 'instance'
+      name: instance_name, logger: logger, to_str: 'instance'
     )
   end
 
@@ -148,8 +149,7 @@ describe Kitchen::Driver::Openstack do
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
       d.instance = instance
-      allow(d).to receive(:generate_name).with('potatoes')
-        .and_return('a_monkey!')
+      allow(d).to receive(:default_name).and_return('a_monkey!')
       allow(d).to receive(:create_server).and_return(server)
       allow(d).to receive(:wait_for_sshd).with('1.2.3.4', 'root', port: '22')
         .and_return(true)
@@ -625,52 +625,56 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
-  describe '#generate_name' do
+  describe '#default_name' do
+    let(:login) { 'user' }
+    let(:hostname) { 'host' }
+
     before(:each) do
-      allow(Etc).to receive(:getlogin).and_return('user')
-      allow(Socket).to receive(:gethostname).and_return('host')
+      allow(Etc).to receive(:getlogin).and_return(login)
+      allow(Socket).to receive(:gethostname).and_return(hostname)
     end
 
     it 'generates a name' do
-      expect(driver.send(:generate_name, 'monkey')).to match(
-        /^monkey-user-host-/)
+      expect(driver.send(:default_name)).to match(/^potatoes-user-host-(\S*)/)
     end
 
     context 'local node with a long hostname' do
-      before(:each) do
-        allow(Socket).to receive(:gethostname).and_return('ab.c' * 20)
-      end
+      let(:hostname) { 'ab.c' * 20 }
 
       it 'limits the generated name to 63 characters' do
-        expect(driver.send(:generate_name, 'long').length).to be <= (63)
+        expect(driver.send(:default_name).length).to be <= (63)
       end
     end
 
     context 'node with a long hostname, username, and base name' do
-      before(:each) do
-        allow(Socket).to receive(:gethostname).and_return('abc' * 20)
-        allow(Etc).to receive(:getlogin).and_return('user' * 20)
-      end
+      let(:login) { 'abcd' * 20 }
+      let(:hostname) { 'efgh' * 20 }
+      let(:instance_name) { 'ijkl' * 20 }
 
       it 'limits the generated name to 63 characters' do
-        expect(driver.send(:generate_name, 'long' * 20).length).to eq(63)
+        expect(driver.send(:default_name).length).to eq(63)
       end
     end
 
     context 'a login and hostname with punctuation in them' do
-      let(:base) { 'a.base-name' }
-
-      before(:each) do
-        allow(Etc).to receive(:getlogin).and_return('some.u-se-r' * 20)
-        allow(Socket).to receive(:gethostname).and_return('a.host-name' * 20)
-      end
+      let(:login) { 'some.u-se-r' }
+      let(:hostname) { 'a.host-name' }
+      let(:instance_name) { 'a.instance-name' }
 
       it 'strips out the dots to prevent bad server names' do
-        expect(driver.send(:generate_name, base)).to_not include('.')
+        expect(driver.send(:default_name)).to_not include('.')
       end
 
       it 'strips out all but the three hyphen separators' do
-        expect(driver.send(:generate_name, base).count('-')).to eq(3)
+        expect(driver.send(:default_name).count('-')).to eq(3)
+      end
+    end
+
+    context 'a non-login shell' do
+      let(:login) { nil }
+
+      it 'subs in a placeholder login string' do
+        expect(driver.send(:default_name)).to match(/^potatoes-nologin-/)
       end
     end
   end
