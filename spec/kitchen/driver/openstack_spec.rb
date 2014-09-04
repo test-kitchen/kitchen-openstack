@@ -669,6 +669,14 @@ describe Kitchen::Driver::Openstack do
         expect(driver.send(:default_name).count('-')).to eq(3)
       end
     end
+
+    context 'a non-login shell' do
+      let(:login) { nil }
+
+      it 'subs in a placeholder login string' do
+        expect(driver.send(:default_name)).to match(/^potatoes-nologin-/)
+      end
+    end
   end
 
   describe '#attach_ip_from_pool' do

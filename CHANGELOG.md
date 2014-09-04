@@ -1,5 +1,9 @@
 # ?.?.? / ????.??.??
 
+### Bug Fixes
+
+* PR [#58][] - Prevent errors when run without a login shell
+
 # 1.5.3 / 2014-08-01
 
 * PR [#53][] - Rework how server names are generated, disallowing possibly
@@ -108,6 +112,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#58]: https://github.com/test-kitchen/kitchen-openstack/pull/58
 [#53]: https://github.com/test-kitchen/kitchen-openstack/pull/53
 [#50]: https://github.com/test-kitchen/kitchen-openstack/pull/50
 [#49]: https://github.com/test-kitchen/kitchen-openstack/pull/49
