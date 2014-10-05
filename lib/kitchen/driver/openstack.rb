@@ -117,7 +117,7 @@ module Kitchen
       end
 
       def create_server
-        server_def = init_config
+        server_def = init_configuration
 
         if config[:network_ref]
           networks = [].concat([config[:network_ref]])
@@ -141,7 +141,7 @@ module Kitchen
         compute.servers.create(server_def)
       end
 
-      def init_config
+      def init_configuration
         {
           name: config[:server_name],
           image_ref: find_image(config[:image_ref]).id,
