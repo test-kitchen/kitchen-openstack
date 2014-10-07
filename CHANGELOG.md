@@ -1,6 +1,11 @@
-# ?.?.? / ????-??-??
+# 1.6.1 / 2014-10-07
 
-# 1.6.0 / 2014-09.04
+### Bug Fixes
+
+* PR [#60][] - Resolve method name conflict with Kitchen::Configurable; via
+[@stevejmason][]
+
+# 1.6.0 / 2014-09-04
 
 ### Improvements
 
@@ -121,6 +126,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#60]: https://github.com/test-kitchen/kitchen-openstack/pull/60
 [#58]: https://github.com/test-kitchen/kitchen-openstack/pull/58
 [#56]: https://github.com/test-kitchen/kitchen-openstack/pull/56
 [#55]: https://github.com/test-kitchen/kitchen-openstack/pull/55
@@ -148,6 +154,7 @@ certain specified NICs; via [@monsterzz][]
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@stevejmason]: https://github.com/stevejmason
 [@StaymanHou]: https://github.com/StaymanHou
 [@jer]: https://github.com/jer
 [@dschlenk]: https://github.com/dschlenk
