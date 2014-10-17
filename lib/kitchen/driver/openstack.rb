@@ -227,9 +227,10 @@ module Kitchen
         if server_name_prefix.empty?
           warn 'Server name prefix empty or invalid; using fully generated name'
           server_name_prefix = default_name
+        else
+          random_suffix = ('a'..'z').to_a.shuffle[0, 8].join
+          server_name_prefix + '-' + random_suffix
         end
-        random_suffix = ('a'..'z').to_a.shuffle[0, 8].join
-        server_name_prefix + '-' + random_suffix
       end
 
       def attach_ip_from_pool(server, pool)

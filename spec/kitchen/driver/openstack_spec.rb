@@ -689,6 +689,12 @@ describe Kitchen::Driver::Openstack do
     let(:hostname) { 'host' }
     let(:prefix) { 'parsnip' }
 
+    # These are still used in the "blank prefix" test
+    before(:each) do
+      allow(Etc).to receive(:getlogin).and_return(login)
+      allow(Socket).to receive(:gethostname).and_return(hostname)
+    end
+
     it 'generates a name with the selected prefix' do
       expect(driver.send(:server_name_prefix, prefix))
         .to match(/^parsnip-(\S*)/)
@@ -714,6 +720,13 @@ describe Kitchen::Driver::Openstack do
       it 'strips out all but the one hyphen separator' do
         expect(driver.send(:server_name_prefix, bad_char_prefix)
           .count('-')).to eq(1)
+      end
+    end
+
+    context 'blank prefix' do
+      it 'generates fully random server name' do
+        expect(driver.send(:server_name_prefix, ''))
+          .to match(/potatoes-user-host-(\S*)/)
       end
     end
   end
