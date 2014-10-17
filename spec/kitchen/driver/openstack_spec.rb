@@ -123,6 +123,7 @@ describe Kitchen::Driver::Openstack do
           username: 'admin',
           port: '2222',
           server_name: 'puppy',
+          server_name_prefix: 'parsnip',
           openstack_tenant: 'that_one',
           openstack_region: 'atlantis',
           openstack_service_name: 'the_service',
@@ -138,6 +139,10 @@ describe Kitchen::Driver::Openstack do
         config.each do |k, v|
           expect(drv[k]).to eq(v)
         end
+      end
+
+      it 'overrides server name prefix with explicit server name, if given' do
+        expect(driver[:server_name]).to eq(config[:server_name])
       end
     end
   end
@@ -675,6 +680,40 @@ describe Kitchen::Driver::Openstack do
 
       it 'subs in a placeholder login string' do
         expect(driver.send(:default_name)).to match(/^potatoes-nologin-/)
+      end
+    end
+  end
+
+  describe '#server_name_prefix' do
+    let(:login) { 'user' }
+    let(:hostname) { 'host' }
+    let(:prefix) { 'parsnip' }
+
+    it 'generates a name with the selected prefix' do
+      expect(driver.send(:server_name_prefix, prefix))
+        .to match(/^parsnip-(\S*)/)
+    end
+
+    context 'very long prefix provided' do
+      let(:long_prefix) { 'a' * 70 }
+
+      it 'limits the generated name to 63 characters' do
+        expect(driver.send(:server_name_prefix, long_prefix).length)
+          .to be <= (63)
+      end
+    end
+
+    context 'a prefix with punctuation' do
+      let(:bad_char_prefix) { 'pa-rsn.ip' }
+
+      it 'strips out the dots to prevent bad server names' do
+        expect(driver.send(:server_name_prefix, bad_char_prefix))
+          .to_not include('.')
+      end
+
+      it 'strips out all but the one hyphen separator' do
+        expect(driver.send(:server_name_prefix, bad_char_prefix)
+          .count('-')).to eq(1)
       end
     end
   end
