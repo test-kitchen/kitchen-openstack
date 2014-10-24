@@ -52,6 +52,7 @@ module Kitchen
       default_config :openstack_network_name, nil
       default_config :floating_ip_pool, nil
       default_config :floating_ip, nil
+      default_config :availability_zone, nil
       default_config :security_groups, nil
       default_config :network_ref, nil
 
@@ -145,7 +146,8 @@ module Kitchen
         {
           name: config[:server_name],
           image_ref: find_image(config[:image_ref]).id,
-          flavor_ref: find_flavor(config[:flavor_ref]).id
+          flavor_ref: find_flavor(config[:flavor_ref]).id,
+          availability_zone: config[:availability_zone]
         }
       end
 

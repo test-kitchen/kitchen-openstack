@@ -53,6 +53,7 @@ behavior can be overridden with additional options:
     key_name: [SSH KEY NAME]
     openstack_tenant: [YOUR OPENSTACK TENANT ID]
     openstack_region: [A VALID OPENSTACK REGION]
+    availability_zone: [AN OPENSTACK AVAILABILITY ZONE]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
     openstack_network_name: [YOUR OPENSTACK NETWORK NAME USED TO CONNECT]
     security_groups:

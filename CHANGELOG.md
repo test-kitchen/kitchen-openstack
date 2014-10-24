@@ -1,5 +1,9 @@
 # ?.?.? / ????-??-??
 
+### New Features
+
+* PR [#62][] - Add availability zone support; via [@fortable1999][]
+
 # 1.6.1 / 2014-10-07
 
 ### Bug Fixes
@@ -128,6 +132,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#62]: https://github.com/test-kitchen/kitchen-openstack/pull/62
 [#60]: https://github.com/test-kitchen/kitchen-openstack/pull/60
 [#58]: https://github.com/test-kitchen/kitchen-openstack/pull/58
 [#56]: https://github.com/test-kitchen/kitchen-openstack/pull/56
@@ -156,6 +161,7 @@ certain specified NICs; via [@monsterzz][]
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@fortable1999]: https://github.com/fortable1999
 [@stevejmason]: https://github.com/stevejmason
 [@StaymanHou]: https://github.com/StaymanHou
 [@jer]: https://github.com/jer
