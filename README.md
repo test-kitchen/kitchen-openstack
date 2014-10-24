@@ -46,6 +46,7 @@ key will be used (with an RSA key taking precedence over a DSA), though that
 behavior can be overridden with additional options:
 
     server_name: [A UNIQUE SERVER NAME]
+    server_name_prefix: [STATIC PREFIX FOR RANDOM SERVER NAME]
     private_key_path: [PATH TO YOUR PRIVATE SSH KEY]
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
@@ -62,6 +63,11 @@ behavior can be overridden with additional options:
     network_ref:
       - [OPENSTACK NETWORK NAMES OR...]
       - [...ID TO CREATE INSTANCE WITH]
+
+If a `server_name_prefix` is specified then this prefix will be used when 
+generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
+`myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are 
+specified then the `server_name` takes precedence.
 
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.

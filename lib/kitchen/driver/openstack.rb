@@ -33,6 +33,7 @@ module Kitchen
       @@ip_pool_lock = Mutex.new
 
       default_config :server_name, nil
+      default_config :server_name_prefix, nil
       default_config :key_name, nil
       default_config :private_key_path do
         %w(id_rsa id_dsa).map do |k|
@@ -57,7 +58,15 @@ module Kitchen
       default_config :network_ref, nil
 
       def create(state)
-        config[:server_name] ||= default_name
+        unless config[:server_name]
+          if config[:server_name_prefix]
+            config[:server_name] = server_name_prefix(
+              config[:server_name_prefix]
+            )
+          else
+            config[:server_name] = default_name
+          end
+        end
         config[:disable_ssl_validation] && disable_ssl_validation
         server = create_server
         state[:server_id] = server.id
@@ -198,6 +207,32 @@ module Kitchen
           Socket.gethostname.gsub(/\W/, '')[0..22],
           Array.new(7) { rand(36).to_s(36) }.join
         ].join('-')
+      end
+
+      def server_name_prefix(server_name_prefix)
+        # Generate what should be a unique server name with given prefix
+        # of up to 63 total chars
+        #
+        # Provided prefix:  variable, max 54
+        # Separator:        1
+        # Random string:    8
+        # ===================
+        # Max:              63
+        #
+        if server_name_prefix.length > 54
+          warn 'Server name prefix too long, truncated to 54 characters'
+          server_name_prefix = server_name_prefix[0..53]
+        end
+
+        server_name_prefix.gsub!(/\W/, '')
+
+        if server_name_prefix.empty?
+          warn 'Server name prefix empty or invalid; using fully generated name'
+          default_name
+        else
+          random_suffix = ('a'..'z').to_a.shuffle[0, 8].join
+          server_name_prefix + '-' + random_suffix
+        end
       end
 
       def attach_ip_from_pool(server, pool)
