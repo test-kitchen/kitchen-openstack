@@ -105,6 +105,8 @@ describe Kitchen::Driver::Openstack do
         :openstack_service_name,
         :floating_ip_pool,
         :floating_ip,
+        :availability_zone,
+        :security_groups,
         :network_ref
       ]
       nils.each do |i|
@@ -354,6 +356,7 @@ describe Kitchen::Driver::Openstack do
         server_name: 'hello',
         image_ref: '111',
         flavor_ref: '1',
+        availability_zone: nil,
         public_key_path: 'tarpals'
       }
     end
@@ -403,6 +406,7 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
+          availability_zone: nil,
           public_key_path: 'tarpals'
         }
       end
@@ -422,6 +426,7 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
+          availability_zone: nil,
           public_key_path: 'montgomery',
           key_name: 'tarpals'
         }
@@ -443,6 +448,7 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
+          availability_zone: nil,
           public_key_path: 'montgomery',
           key_name: 'tarpals',
           security_groups: ['ping-and-ssh']
@@ -455,6 +461,28 @@ describe Kitchen::Driver::Openstack do
       end
 
       it 'passes that security group to Fog' do
+        expect(driver.send(:create_server)).to eq(@expected)
+      end
+    end
+
+    context 'a provided availability zone' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          availability_zone: 'elsewhere',
+          public_key_path: 'montgomery',
+          key_name: 'tarpals'
+        }
+      end
+
+      before(:each) do
+        @expected = config.merge(name: config[:server_name])
+        @expected.delete_if { |k, _| k == :server_name }
+      end
+
+      it 'passes that availability zone to Fog' do
         expect(driver.send(:create_server)).to eq(@expected)
       end
     end
@@ -473,6 +501,7 @@ describe Kitchen::Driver::Openstack do
         expect(servers).to receive(:create).with(name: 'hello',
                                                  image_ref: '111',
                                                  flavor_ref: '1',
+                                                 availability_zone: nil,
                                                  public_key_path: 'tarpals')
         driver.send(:create_server)
       end
@@ -492,6 +521,7 @@ describe Kitchen::Driver::Openstack do
         expect(servers).to receive(:create).with(name: 'hello',
                                                  image_ref: '222',
                                                  flavor_ref: '2',
+                                                 availability_zone: nil,
                                                  public_key_path: 'tarpals')
         driver.send(:create_server)
       end
@@ -512,6 +542,7 @@ describe Kitchen::Driver::Openstack do
         expect(servers).to receive(:create).with(name: 'hello',
                                                  image_ref: '222',
                                                  flavor_ref: '1',
+                                                 availability_zone: nil,
                                                  public_key_path: 'tarpals')
         driver.send(:create_server)
       end
@@ -536,6 +567,7 @@ describe Kitchen::Driver::Openstack do
           name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
+          availability_zone: nil,
           public_key_path: 'tarpals',
           nics: networks
         )
@@ -562,6 +594,7 @@ describe Kitchen::Driver::Openstack do
           name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
+          availability_zone: nil,
           public_key_path: 'tarpals',
           nics: networks
         )
@@ -589,6 +622,7 @@ describe Kitchen::Driver::Openstack do
           name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
+          availability_zone: nil,
           public_key_path: 'tarpals',
           nics: networks
         )
@@ -618,6 +652,7 @@ describe Kitchen::Driver::Openstack do
           name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
+          availability_zone: nil,
           public_key_path: 'tarpals',
           user_data: data)
         driver.send(:create_server)
