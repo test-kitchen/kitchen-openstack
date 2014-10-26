@@ -63,6 +63,8 @@ behavior can be overridden with additional options:
     network_ref:
       - [OPENSTACK NETWORK NAMES OR...]
       - [...ID TO CREATE INSTANCE WITH]
+    no_ssh_tcp_check: [DEFAULTS TO false, SKIPS TCP CHECK WHEN true]
+    no_ssh_tcp_check_sleep: [NUM OF SECONDS TO SLEEP IF no_ssh_tcp_check IS SET]
 
 If a `server_name_prefix` is specified then this prefix will be used when 
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.

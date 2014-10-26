@@ -1,7 +1,8 @@
-# ?.?.? / ????-??-??
+# 1.7.0 / 2014-10-25
 
 ### New Features
 
+* PR [#66][] - Allow setting a timed sleep for SSH check edge cases
 * PR [#63][] - Add support for a static server name prefix; via [@ftclausen][]
 * PR [#62][] - Add availability zone support; via [@fortable1999][]
 
@@ -133,6 +134,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#66]: https://github.com/test-kitchen/kitchen-openstack/pull/66
 [#63]: https://github.com/test-kitchen/kitchen-openstack/pull/63
 [#62]: https://github.com/test-kitchen/kitchen-openstack/pull/62
 [#60]: https://github.com/test-kitchen/kitchen-openstack/pull/60
