@@ -176,10 +176,7 @@ module Kitchen
 
       def check_server(server_def)
         compute.servers.each do |server|
-          if server.name == server_def[:name]
-            puts "Server #{server.name} already exist. Will use it."
-            return server
-          end
+          server if server.name == server_def[:name]
         end
         compute.servers.create(server_def)
       end
