@@ -160,12 +160,13 @@ module Kitchen
           end
         end
 
-        [
+	keywords = [
           :security_groups,
           :public_key_path,
           :key_name,
           :user_data
-        ].each do |c|
+        ]
+	keywords.each do |c|
           server_def[c] = optional_config(c) if config[c]
         end
 
