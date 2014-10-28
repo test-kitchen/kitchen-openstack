@@ -165,16 +165,17 @@ module Kitchen
           :public_key_path,
           :key_name,
           :user_data
-        ]
-        keywords.each do |c|
-          if config[c]
-            server_def[c] = optional_config(c)
-          end
+        ].each do |c|
+          server_def[c] = optional_config(c) if config[c]
         end
 
         # Can't use the Fog bootstrap and/or setup methods here; they require a
         # public IP address that can't be guaranteed to exist across all
         # OpenStack deployments (e.g. TryStack ARM only has private IPs).
+        check_server(server_def)
+      end
+
+      def check_server(server_def)
         compute.servers.each do |server|
           if server.name == server_def[:name]
             puts "Server #{server.name} already exist. Will use it."
