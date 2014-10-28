@@ -344,7 +344,7 @@ module Kitchen
 
       def do_ssh_setup(state, config, server)
         info "Setting up SSH access for key <#{config[:public_key_path]}>"
-	password = config[:password].nil? ? server.password : config[:password]
+        password = config[:password].nil? ? server.password : config[:password]
         ssh = Fog::SSH.new(state[:hostname],
                            config[:username],
                            password: password)
