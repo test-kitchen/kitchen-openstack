@@ -160,7 +160,7 @@ module Kitchen
           end
         end
 
-        keywords = [
+        [
           :security_groups,
           :public_key_path,
           :key_name,
