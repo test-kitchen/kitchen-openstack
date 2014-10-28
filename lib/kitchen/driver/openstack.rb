@@ -114,11 +114,7 @@ module Kitchen
         if env == 'env'
           cmd
         else
-          if is_sudo
-            "sudo -E #{env} #{naked_cmd}"
-          else
-            "#{env} #{cmd}"
-          end
+          is_sudo ? "sudo -E #{env} #{naked_cmd}" : "#{env} #{cmd}"
         end
       end
 
