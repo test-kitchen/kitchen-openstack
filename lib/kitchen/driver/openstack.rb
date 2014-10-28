@@ -160,14 +160,16 @@ module Kitchen
           end
         end
 
-	keywords = [
+        keywords = [
           :security_groups,
           :public_key_path,
           :key_name,
           :user_data
         ]
-	keywords.each do |c|
-          server_def[c] = optional_config(c) if config[c]
+        keywords.each do |c|
+          if config[c]
+            server_def[c] = optional_config(c)
+          end
         end
 
         # Can't use the Fog bootstrap and/or setup methods here; they require a
