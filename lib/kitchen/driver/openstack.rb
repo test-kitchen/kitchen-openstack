@@ -101,6 +101,23 @@ module Kitchen
         state.delete(:hostname)
       end
 
+      def env_cmd(cmd)
+        # if env is defined, add env terms when execute cmd.
+        is_sudo = cmd.start_with?('sudo -E')
+        naked_cmd = is_sudo ? cmd[8..-1] : cmd # remove sudo -E
+        env = 'env'
+        unless config[:env].nil?
+          config[:env].each do |env_k, env_v|
+            env << " #{env_k}=#{env_v}"
+          end
+        end
+        if env == 'env'
+          cmd
+        else
+          is_sudo ? "sudo -E #{env} #{naked_cmd}" : "#{env} #{cmd}"
+        end
+      end
+
       private
 
       def openstack_server
@@ -150,6 +167,13 @@ module Kitchen
         # Can't use the Fog bootstrap and/or setup methods here; they require a
         # public IP address that can't be guaranteed to exist across all
         # OpenStack deployments (e.g. TryStack ARM only has private IPs).
+        check_server(server_def)
+      end
+
+      def check_server(server_def)
+        compute.servers.each do |server|
+          server if server.name == server_def[:name]
+        end
         compute.servers.create(server_def)
       end
 
@@ -316,9 +340,10 @@ module Kitchen
 
       def do_ssh_setup(state, config, server)
         info "Setting up SSH access for key <#{config[:public_key_path]}>"
+        password = config[:password].nil? ? server.password : config[:password]
         ssh = Fog::SSH.new(state[:hostname],
                            config[:username],
-                           password: server.password)
+                           password: password)
         pub_key = open(config[:public_key_path]).read
         ssh.run([
           %(mkdir .ssh),

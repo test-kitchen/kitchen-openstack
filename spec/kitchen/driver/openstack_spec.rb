@@ -376,6 +376,7 @@ describe Kitchen::Driver::Openstack do
     let(:servers) do
       s = double('servers')
       allow(s).to receive(:create) { |arg| arg }
+      allow(s).to receive(:each) { |arg| arg }
       s
     end
     let(:vlan1_net) { double(id: '1', name: 'vlan1') }
