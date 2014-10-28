@@ -104,14 +104,22 @@ module Kitchen
       def env_cmd(cmd)
         # if env is defined, add env terms when execute cmd.
         is_sudo = cmd.start_with?("sudo -E")
-        naked_cmd = is_sudo ? cmd[8..-1] : cmd # remove sudo -E(8 charactors ahead)
+        naked_cmd = is_sudo ? cmd[8..-1] : cmd # remove sudo -E
         env = "env"
         if not config[:env].nil? then
           config[:env].each do |env_k, env_v|
             env << " #{env_k}=#{env_v}"
           end
         end
-        env == "env" ? cmd : is_sudo ? "sudo -E #{env} #{naked_cmd}" : "#{env} #{cmd}"
+        if env == "env"
+          cmd
+        else
+          if is_sudo
+            "sudo -E #{env} #{naked_cmd}"
+          else
+            "#{env} #{cmd}"
+          end
+        end
       end
 
 
