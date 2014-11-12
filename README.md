@@ -65,6 +65,12 @@ behavior can be overridden with additional options:
       - [...ID TO CREATE INSTANCE WITH]
     no_ssh_tcp_check: [DEFAULTS TO false, SKIPS TCP CHECK WHEN true]
     no_ssh_tcp_check_sleep: [NUM OF SECONDS TO SLEEP IF no_ssh_tcp_check IS SET]
+    use_volume_store: [DEFAULTS TO false, IF ture OPENSTACK WILL USE VOLUME STORAGE]
+    make_new_volume: [DEFAULTS TO false, MAKE A NEW VOLUME BASED ON image_ref WHEN TRUE]
+    volume_size: [THE SIZE OF THE VOLUME IN GB, DEFAULTS TO 20]
+    volume_id: [THE VOLUME TO BE USED WHEN make_new_volume IS FALSE]
+    volume_device_name: [THE VOLUME MOUNT LOCATION, DEFAULTS TO /dev/vda]
+    delete_voule: [DEFAULTS TO false, WHEN true THE VOULE WILL BE DELETED ON DESTROY]
 
 If a `server_name_prefix` is specified then this prefix will be used when 
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
