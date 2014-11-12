@@ -1,5 +1,9 @@
 # ?.?.? / ????-??-??
 
+### New Features
+
+* PR [#74][] - Support attaching block storage volumes; via [@LiamHaworth][]
+
 # 1.7.1 / 2015-01-07
 
 * PR [#70][] - Use configured password for SSH access, if provided
@@ -140,6 +144,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#74]: https://github.com/test-kitchen/kitchen-openstack/pull/74
 [#70]: https://github.com/test-kitchen/kitchen-openstack/pull/70
 [#66]: https://github.com/test-kitchen/kitchen-openstack/pull/66
 [#63]: https://github.com/test-kitchen/kitchen-openstack/pull/63
@@ -172,6 +177,7 @@ certain specified NICs; via [@monsterzz][]
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@LiamHaworth]: https://github.com/LiamHaworth
 [@ftclausen]: https://github.com/ftclausen
 [@fortable1999]: https://github.com/fortable1999
 [@stevejmason]: https://github.com/stevejmason
