@@ -62,6 +62,8 @@ module Kitchen
       # Openstack Volume
       default_config :use_volume_store, false
       default_config :make_new_volume, false
+      default_config :volume_snapshot, false
+      default_config :snapshot_id, nil
       default_config :volume_size, 20
       default_config :volume_id, nil
       default_config :volume_device_name, 'vda'
@@ -148,10 +150,16 @@ module Kitchen
       end
 
       def create_volume
+        opt = {}
+        if config[:volume_snapshot]
+          opt[:snapshot_id] = config[:snapshot_id]
+        else
+          opt[:imageRef] = config[:image_ref]
+        end
         resp = volume.create_volume("#{config[:server_name]}-volume",
                                     "Volume for server #{config[:server_name]}",
                                     config[:volume_size],
-                                    { :imageRef => config[:image_ref] })
+                                    opt)
         vol_id = resp[:body]['volume']['id']
         puts "Waiting for volume <#{vol_id}> to be ready\r"
         sleep(1) until volume_ready?(vol_id)
