@@ -67,6 +67,8 @@ behavior can be overridden with additional options:
     no_ssh_tcp_check_sleep: [NUM OF SECONDS TO SLEEP IF no_ssh_tcp_check IS SET]
     use_volume_store: [DEFAULTS TO false, IF ture OPENSTACK WILL USE VOLUME STORAGE]
     make_new_volume: [DEFAULTS TO false, MAKE A NEW VOLUME BASED ON image_ref WHEN TRUE]
+    volume_snapshot: [WHEN make_new_volume AND THIS OPTION ARE TRUE, THE VOLUME WILL BE MADE FROM A VOLUME SNAPSHOT]
+    snapshot_id: [SNAPSHOT REF ID]
     volume_size: [THE SIZE OF THE VOLUME IN GB, DEFAULTS TO 20]
     volume_id: [THE VOLUME TO BE USED WHEN make_new_volume IS FALSE]
     volume_device_name: [THE VOLUME MOUNT LOCATION, DEFAULTS TO /dev/vda]
