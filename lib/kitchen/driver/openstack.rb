@@ -64,7 +64,7 @@ module Kitchen
       default_config :make_new_volume, false
       default_config :volume_size, 20
       default_config :volume_id, nil
-      default_config :volume_device_name, '/dev/vda'
+      default_config :volume_device_name, 'vda'
       default_config :delete_volume, false
 
       def create(state)
