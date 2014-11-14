@@ -59,6 +59,16 @@ module Kitchen
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
 
+      # Openstack Volume
+      default_config :use_volume_store, false
+      default_config :make_new_volume, false
+      default_config :volume_snapshot, false
+      default_config :snapshot_id, nil
+      default_config :volume_size, 20
+      default_config :volume_id, nil
+      default_config :volume_device_name, 'vda'
+      default_config :delete_volume, false
+
       def create(state)
         unless config[:server_name]
           if config[:server_name_prefix]
@@ -128,8 +138,58 @@ module Kitchen
         Fog::Compute.new(openstack_server)
       end
 
+      def volume
+        Fog::Volume.new(openstack_server)
+      end
+
+      def volume_ready?(vol_id)
+        resp = volume.get_volume_details(vol_id)
+        status = resp[:body]['volume']['status']
+        fail "Failed to make volume <#{vol_id}>" if status == 'error'
+        status == 'available'
+      end
+
+      def create_volume
+        opt = {}
+        if config[:volume_snapshot]
+          opt[:snapshot_id] = config[:snapshot_id]
+        else
+          opt[:imageRef] = config[:image_ref]
+        end
+        resp = volume.create_volume("#{config[:server_name]}-volume",
+                                    "Volume for server #{config[:server_name]}",
+                                    config[:volume_size],
+                                    opt)
+        vol_id = resp[:body]['volume']['id']
+        puts "Waiting for volume <#{vol_id}> to be ready\r"
+        sleep(1) until volume_ready?(vol_id)
+        vol_id
+      end
+
       def create_server
         server_def = init_configuration
+
+        if config[:use_volume_store]
+          if config[:make_new_volume]
+            puts "Making new volume"
+            vol_id = create_volume
+            puts "Volume <#{vol_id}> is online and ready to be used"
+            server_def[:block_device_mapping] = {
+              :volume_size => config[:volume_size],
+              :volume_id => vol_id,
+              :delete_on_termination => config[:delete_volume],
+              :device_name => config[:volume_device_name]
+            }
+          else
+            puts "Using volume <#{config[:volume_id]}> for block storage"
+            server_def[:block_device_mapping] = {
+              :volume_size => config[:volume_size],
+              :volume_id => config[:volume_id],
+              :delete_on_termination => config[:delete_volume],
+              :device_name => config[:volume_device_name]
+            }
+          end
+        end
 
         if config[:network_ref]
           networks = [].concat([config[:network_ref]])
