@@ -71,8 +71,8 @@ behavior can be overridden with additional options:
     snapshot_id: [SNAPSHOT REF ID]
     volume_size: [THE SIZE OF THE VOLUME IN GB, DEFAULTS TO 20]
     volume_id: [THE VOLUME TO BE USED WHEN make_new_volume IS FALSE]
-    volume_device_name: [THE VOLUME MOUNT LOCATION, DEFAULTS TO /dev/vda]
-    delete_voule: [DEFAULTS TO false, WHEN true THE VOULE WILL BE DELETED ON DESTROY]
+    volume_device_name: [THE DEVICE NAME TO MOUNT AS, DEFAULTS TO vda]
+    delete_volume: [DEFAULTS TO false, WHEN true THE VOLUME WILL BE DELETED ON DESTROY]
 
 If a `server_name_prefix` is specified then this prefix will be used when 
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
