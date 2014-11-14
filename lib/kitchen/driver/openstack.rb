@@ -171,7 +171,7 @@ module Kitchen
 
         if config[:use_volume_store]
           if config[:make_new_volume]
-            puts "Making volume <#{vol_name}> [#{vol_size}gb]"
+            puts "Making new volume"
             vol_id = create_volume
             puts "Volume <#{vol_id}> is online and ready to be used"
             server_def[:block_device_mapping] = {
