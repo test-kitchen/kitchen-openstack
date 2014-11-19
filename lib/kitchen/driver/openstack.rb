@@ -84,7 +84,6 @@ module Kitchen
         state[:server_id] = server.id
         info "OpenStack instance <#{state[:server_id]}> created."
         server.wait_for do
-          print '.'
           ready?
         end
         info "\n(server ready)"
