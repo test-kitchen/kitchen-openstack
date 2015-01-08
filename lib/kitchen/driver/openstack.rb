@@ -45,6 +45,7 @@ module Kitchen
         driver[:private_key_path] + '.pub'
       end
       default_config :username, 'root'
+      default_config :password, nil
       default_config :port, '22'
       default_config :use_ipv6, false
       default_config :openstack_tenant, nil
@@ -318,7 +319,7 @@ module Kitchen
         info "Setting up SSH access for key <#{config[:public_key_path]}>"
         ssh = Fog::SSH.new(state[:hostname],
                            config[:username],
-                           password: server.password)
+                           password: config[:password] || server.password)
         pub_key = open(config[:public_key_path]).read
         ssh.run([
           %(mkdir .ssh),

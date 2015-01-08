@@ -50,6 +50,7 @@ behavior can be overridden with additional options:
     private_key_path: [PATH TO YOUR PRIVATE SSH KEY]
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
+    password: [SSH PASSWORD]
     port: [SSH PORT]
     key_name: [SSH KEY NAME]
     openstack_tenant: [YOUR OPENSTACK TENANT ID]

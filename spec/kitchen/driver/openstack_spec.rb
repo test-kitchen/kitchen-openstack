@@ -1033,24 +1033,33 @@ describe Kitchen::Driver::Openstack do
     let(:server) { double(password: 'aloha') }
     let(:state) { { hostname: 'host' } }
     let(:read) { double(read: 'a_key') }
-    let(:ssh) do
-      s = double('ssh')
-      allow(s).to receive(:run) { |args| args }
-      s
+    let(:ssh) { double(run: true) }
+
+    before(:each) do
+      allow(driver).to receive(:open).with(config[:public_key_path])
+        .and_return(read)
     end
 
     it 'opens an SSH session to the server' do
-      allow(Fog::SSH).to receive(:new).with('host', 'root', password: 'aloha')
-        .and_return(ssh)
-      allow(driver).to receive(:open).with('/pub_key').and_return(read)
-      allow(read).to receive(:read).and_return('a_key')
-      res = driver.send(:do_ssh_setup, state, config, server)
-      expected = [
+      expect(Fog::SSH).to receive(:new).with(state[:hostname],
+                                             'root',
+                                             password: 'aloha').and_return(ssh)
+      expect(ssh).to receive(:run).with([
         'mkdir .ssh',
         'echo "a_key" >> ~/.ssh/authorized_keys',
         'passwd -l root'
-      ]
-      expect(res).to eq(expected)
+      ])
+      driver.send(:do_ssh_setup, state, config, server)
+    end
+
+    context 'a configured SSH password' do
+      let(:config) { super().merge(password: '12345') }
+
+      it 'uses the configured password' do
+        expect(Fog::SSH).to receive(:new)
+          .with(state[:hostname], 'root', password: '12345').and_return(ssh)
+        driver.send(:do_ssh_setup, state, config, server)
+      end
     end
   end
 
