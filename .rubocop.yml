@@ -1,10 +1,12 @@
 CyclomaticComplexity:
-  Enabled: false
+  Max: 8
 MethodLength:
-  Enabled: false
+  Max: 30
 ClassLength:
-  Enabled: false
+  Max: 300
 ClassVars:
   Enabled: false
 PerceivedComplexity:
   Max: 10
+AbcSize:
+  Max: 41
