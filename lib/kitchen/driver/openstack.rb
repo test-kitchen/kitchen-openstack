@@ -59,6 +59,7 @@ module Kitchen
       default_config :network_ref, nil
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
+      default_config :block_device_mapping, nil
 
       def create(state)
         unless config[:server_name]
@@ -129,6 +130,10 @@ module Kitchen
         Fog::Compute.new(openstack_server)
       end
 
+      def get_bdm(config)
+        OpenstackVolume.get_bdm(config, openstack_server)
+      end
+
       def create_server
         server_def = init_configuration
 
@@ -137,6 +142,10 @@ module Kitchen
           server_def[:nics] = networks.flatten.map do |net|
             { 'net_id' => find_network(net).id }
           end
+        end
+
+        if config[:block_device_mapping]
+          server_def[:block_device_mapping] = get_bdm(config)
         end
 
         [
@@ -359,6 +368,48 @@ module Kitchen
           collection.each { |single| return single if single.name == name }
         end
         nil
+      end
+    end
+
+    # A class to allow the Kitchen Openstack driver
+    # to use Openstack volumes
+    #
+    # @author Liam Haworth <liam.haworth@bluereef.com.au>
+    class OpenstackVolume
+      def self.volume(openstack_server)
+        Fog::Volume.new(openstack_server)
+      end
+
+      def self.volume_ready?(vol_id, os)
+        resp = volume(os).get_volume_details(vol_id)
+        status = resp[:body]['volume']['status']
+        fail "Failed to make volume <#{vol_id}>" if status == 'error'
+        status == 'available'
+      end
+
+      def self.create_volume(config, os)
+        opt = {}
+        if config[:snapshot_id]
+          opt[:snapshot_id] = config[:snapshot_id]
+        else
+          opt[:imageRef] = config[:image_ref]
+        end
+        resp = volume(os).create_volume("#{config[:server_name]}-volume",
+                                        "#{config[:server_name]} volume",
+                                        config[:volume_size],
+                                        opt)
+        vol_id = resp[:body]['volume']['id']
+        info "Waiting for volume <#{vol_id}> to be ready\r"
+        sleep(1) until volume_ready?(vol_id, os)
+        vol_id
+      end
+
+      def self.get_bdm(config, os)
+        bdm = config[:block_device_mapping]
+        bdm[:volume_id] = create_volume(config, os) if bdm[:make_volume]
+        bdm.delete_if { |k, _| k == :make_volume }
+        bdm.delete_if { |k, _| k == :snapshot_id }
+        bdm
       end
     end
   end

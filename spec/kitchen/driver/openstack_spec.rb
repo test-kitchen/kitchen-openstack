@@ -140,7 +140,14 @@ describe Kitchen::Driver::Openstack do
           private_key_path: '/path/to/id_rsa',
           floating_ip_pool: 'swimmers',
           floating_ip: '11111',
-          network_ref: '0xCAFFE'
+          network_ref: '0xCAFFE',
+          use_volume_store: 'true',
+          make_new_volume: 'true',
+          volume_snapshot: 'false',
+          volume_size: '5',
+          volume_id: '44',
+          volume_device_name: 'vda',
+          delete_volume: 'true'
         }
       end
 
@@ -370,7 +377,15 @@ describe Kitchen::Driver::Openstack do
         image_ref: '111',
         flavor_ref: '1',
         availability_zone: nil,
-        public_key_path: 'tarpals'
+        public_key_path: 'tarpals',
+        block_device_mapping: {
+          make_volume: 'true',
+          snapshot_id: '333',
+          volume_size: '5',
+          volume_id: '222',
+          device_name: 'vda',
+          delete_on_termination: 'true'
+        }
       }
     end
     let(:servers) do
@@ -406,6 +421,7 @@ describe Kitchen::Driver::Openstack do
       before(:each) do
         @expected = config.merge(name: config[:server_name])
         @expected.delete_if { |k, _| k == :server_name }
+
       end
 
       it 'creates the server using a compute connection' do
