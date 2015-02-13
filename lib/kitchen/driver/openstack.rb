@@ -404,7 +404,6 @@ module Kitchen
                                         bdm[:volume_size],
                                         opt)
         vol_id = resp[:body]['volume']['id']
-        puts "Waiting for volume <#{vol_id}> to be ready\r"
         sleep(1) until volume_ready?(vol_id, os)
         vol_id
       end
