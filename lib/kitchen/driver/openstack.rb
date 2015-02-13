@@ -130,8 +130,12 @@ module Kitchen
         Fog::Compute.new(openstack_server)
       end
 
+      def volume
+        OpenstackVolume.new
+      end
+
       def get_bdm(config)
-        OpenstackVolume.get_bdm(config, openstack_server)
+        volume.get_bdm(config, openstack_server)
       end
 
       def create_server
@@ -376,35 +380,36 @@ module Kitchen
     #
     # @author Liam Haworth <liam.haworth@bluereef.com.au>
     class OpenstackVolume
-      def self.volume(openstack_server)
+      def volume(openstack_server)
         Fog::Volume.new(openstack_server)
       end
 
-      def self.volume_ready?(vol_id, os)
+      def volume_ready?(vol_id, os)
         resp = volume(os).get_volume_details(vol_id)
         status = resp[:body]['volume']['status']
         fail "Failed to make volume <#{vol_id}>" if status == 'error'
         status == 'available'
       end
 
-      def self.create_volume(config, os)
+      def create_volume(config, os)
         opt = {}
-        if config[:snapshot_id]
-          opt[:snapshot_id] = config[:snapshot_id]
+        bdm = config[:block_device_mapping]
+        if bdm[:snapshot_id]
+          opt[:snapshot_id] = bdm[:snapshot_id]
         else
           opt[:imageRef] = config[:image_ref]
         end
         resp = volume(os).create_volume("#{config[:server_name]}-volume",
                                         "#{config[:server_name]} volume",
-                                        config[:volume_size],
+                                        bdm[:volume_size],
                                         opt)
         vol_id = resp[:body]['volume']['id']
-        info "Waiting for volume <#{vol_id}> to be ready\r"
+        puts "Waiting for volume <#{vol_id}> to be ready\r"
         sleep(1) until volume_ready?(vol_id, os)
         vol_id
       end
 
-      def self.get_bdm(config, os)
+      def get_bdm(config, os)
         bdm = config[:block_device_mapping]
         bdm[:volume_id] = create_volume(config, os) if bdm[:make_volume]
         bdm.delete_if { |k, _| k == :make_volume }
