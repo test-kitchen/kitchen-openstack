@@ -379,11 +379,9 @@ describe Kitchen::Driver::Openstack do
         availability_zone: nil,
         public_key_path: 'tarpals',
         block_device_mapping: {
-          make_volume: 'true',
-          snapshot_id: '333',
           volume_size: '5',
-          volume_id: '222',
-          device_name: 'vda',
+          volume_id: '333',
+          volume_device_name: 'vda',
           delete_on_termination: 'true'
         }
       }
@@ -409,11 +407,20 @@ describe Kitchen::Driver::Openstack do
     let(:network) do
       double(networks: double(all: [vlan1_net, vlan2_net]))
     end
+    let(:block_device_mapping) do
+      {
+        volume_id: '333',
+        volume_size: '5',
+        volume_device_name: 'vda',
+        delete_on_termination: 'true'
+      }
+    end
     let(:driver) do
       d = Kitchen::Driver::Openstack.new(config)
       d.instance = instance
       allow(d).to receive(:compute).and_return(compute)
       allow(d).to receive(:network).and_return(network)
+      allow(d).to receive(:get_bdm).and_return(block_device_mapping)
       d
     end
 
@@ -1138,6 +1145,117 @@ describe Kitchen::Driver::Openstack do
   describe '#disable_ssl_validation' do
     it 'turns off Excon SSL cert validation' do
       expect(driver.send(:disable_ssl_validation)).to eq(false)
+    end
+  end
+end
+
+describe Kitchen::Driver::OpenstackVolume do
+  let(:os) do
+    {
+      openstack_username: 'twilight',
+      openstack_api_key: 'sparkle',
+      openstack_auth_url: 'http:',
+      openstack_tenant: 'trixie',
+      openstack_region: 'syd',
+      openstack_service_name: 'the_service'
+    }
+  end
+
+  describe '#volume' do
+    let(:vol_driver) do
+      Kitchen::Driver::OpenstackVolume.new
+    end
+
+    it 'creates a new block device connection' do
+      allow(Fog::Volume).to receive(:new) { |arg| arg }
+      expect(vol_driver.send(:volume, os)).to eq(os)
+    end
+  end
+
+  describe '#volume_ready?' do
+    let(:volume_details) do
+      {
+        body: { 'volume' => { 'status' => 'available' } }
+      }
+    end
+
+    let(:volume) do
+      double(
+        get_volume_details: volume_details
+      )
+    end
+
+    let(:vol_driver) do
+      d = Kitchen::Driver::OpenstackVolume.new
+      allow(d).to receive(:volume).and_return(volume)
+      d
+    end
+
+    it 'checks if the volume is ready' do
+      expect(vol_driver.send(:volume_ready?, '333', os)).to eq(true)
+    end
+  end
+
+  describe '#create_volume' do
+    let(:config) do
+      {
+        server_name: 'applejack',
+        block_device_mapping: {
+          snapshot_id: '444',
+          volume_size: '5'
+        }
+      }
+    end
+
+    let(:create_volume) do
+      {
+        body: { 'volume' => { 'id' => '555' } }
+      }
+    end
+
+    let(:volume) do
+      double(
+        create_volume: create_volume
+      )
+    end
+
+    let(:vol_driver) do
+      d = Kitchen::Driver::OpenstackVolume.new
+      allow(d).to receive(:volume).and_return(volume)
+      allow(d).to receive(:volume_ready?).and_return(true)
+      d
+    end
+
+    it 'creates a volume' do
+      expect(vol_driver.send(:create_volume, config, os)).to eq('555')
+    end
+  end
+
+  describe '#get_bdm' do
+    let(:config) do
+      {
+        block_device_mapping: {
+          make_volue: true,
+          snapshot_id: '333',
+          volume_id: '555',
+          volume_size: '5',
+          volume_device_name: 'vda',
+          delete_on_termination: true
+        }
+      }
+    end
+
+    let(:vol_driver) do
+      d = Kitchen::Driver::OpenstackVolume.new
+      allow(d).to receive(:create_volume).and_return('555')
+      d
+    end
+
+    it 'returns the block device mapping config' do
+      expects = config[:block_device_mapping]
+      expects.delete_if { |k, _| k == :make_volume }
+      expects.delete_if { |k, _| k == :snapshot_id }
+      expect(vol_driver.send(:get_bdm, config, os)).to eq(expects)
     end
   end
 end
