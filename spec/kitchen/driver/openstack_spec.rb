@@ -428,7 +428,6 @@ describe Kitchen::Driver::Openstack do
       before(:each) do
         @expected = config.merge(name: config[:server_name])
         @expected.delete_if { |k, _| k == :server_name }
-
       end
 
       it 'creates the server using a compute connection' do
