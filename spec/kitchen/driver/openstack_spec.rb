@@ -141,13 +141,14 @@ describe Kitchen::Driver::Openstack do
           floating_ip_pool: 'swimmers',
           floating_ip: '11111',
           network_ref: '0xCAFFE',
-          use_volume_store: 'true',
-          make_new_volume: 'true',
-          volume_snapshot: 'false',
-          volume_size: '5',
-          volume_id: '44',
-          volume_device_name: 'vda',
-          delete_volume: 'true'
+          block_device_mapping: {
+            make_volume: true,
+            snapshot_id: '44',
+            volume_id: '55',
+            volume_size: '5',
+            device_name: 'vda',
+            delete_on_termination: true
+          }
         }
       end
 
