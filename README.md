@@ -50,6 +50,7 @@ behavior can be overridden with additional options:
     private_key_path: [PATH TO YOUR PRIVATE SSH KEY]
     public_key_path: [PATH TO YOUR SSH PUBLIC KEY]
     username: [SSH USER]
+    password: [SSH PASSWORD]
     port: [SSH PORT]
     key_name: [SSH KEY NAME]
     openstack_tenant: [YOUR OPENSTACK TENANT ID]
@@ -65,14 +66,14 @@ behavior can be overridden with additional options:
       - [...ID TO CREATE INSTANCE WITH]
     no_ssh_tcp_check: [DEFAULTS TO false, SKIPS TCP CHECK WHEN true]
     no_ssh_tcp_check_sleep: [NUM OF SECONDS TO SLEEP IF no_ssh_tcp_check IS SET]
-    use_volume_store: [DEFAULTS TO false, IF ture OPENSTACK WILL USE VOLUME STORAGE]
-    make_new_volume: [DEFAULTS TO false, MAKE A NEW VOLUME BASED ON image_ref WHEN TRUE]
-    volume_snapshot: [WHEN make_new_volume AND THIS OPTION ARE TRUE, THE VOLUME WILL BE MADE FROM A VOLUME SNAPSHOT]
-    snapshot_id: [SNAPSHOT REF ID]
-    volume_size: [THE SIZE OF THE VOLUME IN GB, DEFAULTS TO 20]
-    volume_id: [THE VOLUME TO BE USED WHEN make_new_volume IS FALSE]
-    volume_device_name: [THE DEVICE NAME TO MOUNT AS, DEFAULTS TO vda]
-    delete_volume: [DEFAULTS TO false, WHEN true THE VOLUME WILL BE DELETED ON DESTROY]
+    block_device_mapping:
+      make_volume: [DEFAULTS TO false, MAKES A NEW VOLUME WHEN true]
+      snapshot_id: [WHEN SET WILL MAKE VOLUME FROM VOLUME SNAPSHOT]
+      volume_id: [WILL ATTACH VOLUME WHEN SET]
+      volume_size: [THE SIZE OF THE VOLUME TO BE ATTACHED/MADE]
+      device_name: [SET TO vda UNLESS YOU KNOW WHAT YOU ARE DOING]
+      delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
+
 
 If a `server_name_prefix` is specified then this prefix will be used when 
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.

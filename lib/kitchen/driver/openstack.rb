@@ -45,6 +45,7 @@ module Kitchen
         driver[:private_key_path] + '.pub'
       end
       default_config :username, 'root'
+      default_config :password, nil
       default_config :port, '22'
       default_config :use_ipv6, false
       default_config :openstack_tenant, nil
@@ -58,6 +59,7 @@ module Kitchen
       default_config :network_ref, nil
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
+      default_config :block_device_mapping, nil
 
       # Openstack Volume
       default_config :use_volume_store, false
@@ -138,31 +140,11 @@ module Kitchen
       end
 
       def volume
-        Fog::Volume.new(openstack_server)
+        OpenstackVolume.new
       end
 
-      def volume_ready?(vol_id)
-        resp = volume.get_volume_details(vol_id)
-        status = resp[:body]['volume']['status']
-        fail "Failed to make volume <#{vol_id}>" if status == 'error'
-        status == 'available'
-      end
-
-      def create_volume
-        opt = {}
-        if config[:volume_snapshot]
-          opt[:snapshot_id] = config[:snapshot_id]
-        else
-          opt[:imageRef] = config[:image_ref]
-        end
-        resp = volume.create_volume("#{config[:server_name]}-volume",
-                                    "Volume for server #{config[:server_name]}",
-                                    config[:volume_size],
-                                    opt)
-        vol_id = resp[:body]['volume']['id']
-        puts "Waiting for volume <#{vol_id}> to be ready\r"
-        sleep(1) until volume_ready?(vol_id)
-        vol_id
+      def get_bdm(config)
+        volume.get_bdm(config, openstack_server)
       end
 
       def create_server
@@ -195,6 +177,10 @@ module Kitchen
           server_def[:nics] = networks.flatten.map do |net|
             { 'net_id' => find_network(net).id }
           end
+        end
+
+        if config[:block_device_mapping]
+          server_def[:block_device_mapping] = get_bdm(config)
         end
 
         [
@@ -377,7 +363,7 @@ module Kitchen
         info "Setting up SSH access for key <#{config[:public_key_path]}>"
         ssh = Fog::SSH.new(state[:hostname],
                            config[:username],
-                           password: server.password)
+                           password: config[:password] || server.password)
         pub_key = open(config[:public_key_path]).read
         ssh.run([
           %(mkdir .ssh),
@@ -417,6 +403,48 @@ module Kitchen
           collection.each { |single| return single if single.name == name }
         end
         nil
+      end
+    end
+
+    # A class to allow the Kitchen Openstack driver
+    # to use Openstack volumes
+    #
+    # @author Liam Haworth <liam.haworth@bluereef.com.au>
+    class OpenstackVolume
+      def volume(openstack_server)
+        Fog::Volume.new(openstack_server)
+      end
+
+      def volume_ready?(vol_id, os)
+        resp = volume(os).get_volume_details(vol_id)
+        status = resp[:body]['volume']['status']
+        fail "Failed to make volume <#{vol_id}>" if status == 'error'
+        status == 'available'
+      end
+
+      def create_volume(config, os)
+        opt = {}
+        bdm = config[:block_device_mapping]
+        if bdm[:snapshot_id]
+          opt[:snapshot_id] = bdm[:snapshot_id]
+        else
+          opt[:imageRef] = config[:image_ref]
+        end
+        resp = volume(os).create_volume("#{config[:server_name]}-volume",
+                                        "#{config[:server_name]} volume",
+                                        bdm[:volume_size],
+                                        opt)
+        vol_id = resp[:body]['volume']['id']
+        sleep(1) until volume_ready?(vol_id, os)
+        vol_id
+      end
+
+      def get_bdm(config, os)
+        bdm = config[:block_device_mapping]
+        bdm[:volume_id] = create_volume(config, os) if bdm[:make_volume]
+        bdm.delete_if { |k, _| k == :make_volume }
+        bdm.delete_if { |k, _| k == :snapshot_id }
+        bdm
       end
     end
   end

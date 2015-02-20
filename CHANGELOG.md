@@ -1,5 +1,9 @@
 # ?.?.? / ????-??-??
 
+# 1.7.1 / 2015-01-07
+
+* PR [#70][] - Use configured password for SSH access, if provided
+
 # 1.7.0 / 2014-10-25
 
 ### New Features
@@ -136,6 +140,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#70]: https://github.com/test-kitchen/kitchen-openstack/pull/70
 [#66]: https://github.com/test-kitchen/kitchen-openstack/pull/66
 [#63]: https://github.com/test-kitchen/kitchen-openstack/pull/63
 [#62]: https://github.com/test-kitchen/kitchen-openstack/pull/62

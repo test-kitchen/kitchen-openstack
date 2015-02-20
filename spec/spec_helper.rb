@@ -28,6 +28,8 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
   SimpleCov::Formatter::Console
 ]
 SimpleCov.minimum_coverage 90
-SimpleCov.start
+SimpleCov.start do
+  add_filter '/vendor/'
+end
 
 require_relative '../lib/kitchen/driver/openstack'
