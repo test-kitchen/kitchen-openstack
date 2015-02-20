@@ -72,6 +72,8 @@ behavior can be overridden with additional options:
       volume_id: [WILL ATTACH VOLUME WHEN SET]
       volume_size: [THE SIZE OF THE VOLUME TO BE ATTACHED/MADE]
       device_name: [SET TO vda UNLESS YOU KNOW WHAT YOU ARE DOING]
+      availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
+      volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
        
 

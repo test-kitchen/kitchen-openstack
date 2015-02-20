@@ -394,10 +394,10 @@ module Kitchen
       def create_volume(config, os)
         opt = {}
         bdm = config[:block_device_mapping]
-        if bdm[:snapshot_id]
-          opt[:snapshot_id] = bdm[:snapshot_id]
-        else
-          opt[:imageRef] = config[:image_ref]
+        vanilla_options = [:snapshot_id, :imageRef, :volume_type,
+                           :source_volid, :availability_zone]
+	vanilla_options.select{|o| bdm[o]}.each do |key|
+          opt[key] = bdm[key]
         end
         resp = volume(os).create_volume("#{config[:server_name]}-volume",
                                         "#{config[:server_name]} volume",
