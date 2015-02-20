@@ -73,7 +73,7 @@ behavior can be overridden with additional options:
       volume_size: [THE SIZE OF THE VOLUME TO BE ATTACHED/MADE]
       device_name: [SET TO vda UNLESS YOU KNOW WHAT YOU ARE DOING]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
-
+       
 
 If a `server_name_prefix` is specified then this prefix will be used when 
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
