@@ -66,6 +66,16 @@ behavior can be overridden with additional options:
       - [...ID TO CREATE INSTANCE WITH]
     no_ssh_tcp_check: [DEFAULTS TO false, SKIPS TCP CHECK WHEN true]
     no_ssh_tcp_check_sleep: [NUM OF SECONDS TO SLEEP IF no_ssh_tcp_check IS SET]
+    block_device_mapping:
+      make_volume: [DEFAULTS TO false, MAKES A NEW VOLUME WHEN true]
+      snapshot_id: [WHEN SET WILL MAKE VOLUME FROM VOLUME SNAPSHOT]
+      volume_id: [WILL ATTACH VOLUME WHEN SET]
+      volume_size: [THE SIZE OF THE VOLUME TO BE ATTACHED/MADE]
+      device_name: [SET TO vda UNLESS YOU KNOW WHAT YOU ARE DOING]
+      availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
+      volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
+      delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
+       
 
 If a `server_name_prefix` is specified then this prefix will be used when 
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
