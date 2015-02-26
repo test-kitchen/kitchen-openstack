@@ -2,7 +2,7 @@
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
-# Copyright (C) 2013, Jonathan Hartman
+# Copyright (C) 2013-2015, Jonathan Hartman
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ require 'etc'
 require 'ipaddr'
 require 'socket'
 require 'ohai'
+require_relative 'openstack/volume'
 
 module Kitchen
   module Driver
@@ -131,7 +132,7 @@ module Kitchen
       end
 
       def volume
-        OpenstackVolume.new
+        Volume.new
       end
 
       def get_bdm(config)
@@ -372,48 +373,6 @@ module Kitchen
           collection.each { |single| return single if single.name == name }
         end
         nil
-      end
-    end
-
-    # A class to allow the Kitchen Openstack driver
-    # to use Openstack volumes
-    #
-    # @author Liam Haworth <liam.haworth@bluereef.com.au>
-    class OpenstackVolume
-      def volume(openstack_server)
-        Fog::Volume.new(openstack_server)
-      end
-
-      def volume_ready?(vol_id, os)
-        resp = volume(os).get_volume_details(vol_id)
-        status = resp[:body]['volume']['status']
-        fail "Failed to make volume <#{vol_id}>" if status == 'error'
-        status == 'available'
-      end
-
-      def create_volume(config, os)
-        opt = {}
-        bdm = config[:block_device_mapping]
-        vanilla_options = [:snapshot_id, :imageRef, :volume_type,
-                           :source_volid, :availability_zone]
-        vanilla_options.select { |o| bdm[o] }.each do |key|
-          opt[key] = bdm[key]
-        end
-        resp = volume(os).create_volume("#{config[:server_name]}-volume",
-                                        "#{config[:server_name]} volume",
-                                        bdm[:volume_size],
-                                        opt)
-        vol_id = resp[:body]['volume']['id']
-        sleep(1) until volume_ready?(vol_id, os)
-        vol_id
-      end
-
-      def get_bdm(config, os)
-        bdm = config[:block_device_mapping]
-        bdm[:volume_id] = create_volume(config, os) if bdm[:make_volume]
-        bdm.delete_if { |k, _| k == :make_volume }
-        bdm.delete_if { |k, _| k == :snapshot_id }
-        bdm
       end
     end
   end
