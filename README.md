@@ -105,6 +105,28 @@ Test Kitchen's SSH calls to the node.
     floating_ip: [A SPECIFIC FLOATING IP TO ASSIGN]
     floating_ip_pool: [AN OPENSTACK POOL NAME TO ASSIGN THE NEXT IP FROM]
 
+In some complex network scenarios you can have several IP addresses designated
+as public or private. Use `public_ip_order` or `private_ip_order` to control
+which one to use for further SSH connection. Default is 0 (first one)
+
+For example if you have openstack istance that has network with several IPs assigned like
+
+```
++--------------------------------------+------------+--------+------------+-------------+----------------------------------+
+| ID                                   | Name       | Status | Task State | Power State | Networks                         |
++--------------------------------------+------------+--------+------------+-------------+----------------------------------+
+| 31c98de4-026f-4d12-b03f-a8a35c6e730b | kitchen    | ACTIVE | None       | Running     | test=10.0.0.1, 10.0.1.1   |
+
+```
+
+to use second `10.0.1.1` IP address you need to specify
+
+```yaml
+  private_ip_order: 1
+
+```
+assuming that test network is configured as private.
+
 The `network_ref` option can be specified as an exact id, an exact name,
 or as a regular expression matching the name of the network. You can pass one
 
