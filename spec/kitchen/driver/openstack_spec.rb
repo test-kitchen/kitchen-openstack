@@ -24,13 +24,11 @@ describe Kitchen::Driver::Openstack do
     )
   end
 
-  let(:driver) do
-    d = described_class.new(config)
-    d.instance = instance
-    d
-  end
+  let(:driver) { described_class.new(config) }
 
   before(:each) do
+    allow_any_instance_of(described_class).to receive(:instance)
+      .and_return(instance)
     allow(File).to receive(:exist?).and_call_original
     allow(File).to receive(:exist?).with(dsa).and_return(true)
     allow(File).to receive(:exist?).with(rsa).and_return(true)
@@ -155,8 +153,7 @@ describe Kitchen::Driver::Openstack do
       double(id: 'test123', wait_for: true, public_ip_addresses: %w(1.2.3.4))
     end
     let(:driver) do
-      d = described_class.new(config)
-      d.instance = instance
+      d = super()
       allow(d).to receive(:default_name).and_return('a_monkey!')
       allow(d).to receive(:create_server).and_return(server)
       allow(d).to receive(:wait_for_sshd).with('1.2.3.4', 'root', port: '22')
@@ -217,8 +214,7 @@ describe Kitchen::Driver::Openstack do
     let(:compute) { double(servers: servers) }
 
     let(:driver) do
-      d = described_class.new(config)
-      d.instance = instance
+      d = super()
       allow(d).to receive(:compute).and_return(compute)
       d
     end
@@ -255,8 +251,7 @@ describe Kitchen::Driver::Openstack do
       end
       let(:compute) { double(servers: servers) }
       let(:driver) do
-        d = described_class.new(config)
-        d.instance = instance
+        d = super()
         allow(d).to receive(:compute).and_return(compute)
         d
       end
@@ -402,8 +397,7 @@ describe Kitchen::Driver::Openstack do
       }
     end
     let(:driver) do
-      d = described_class.new(config)
-      d.instance = instance
+      d = super()
       allow(d).to receive(:compute).and_return(compute)
       allow(d).to receive(:network).and_return(network)
       allow(d).to receive(:get_bdm).and_return(block_device_mapping)
@@ -836,8 +830,7 @@ describe Kitchen::Driver::Openstack do
     let(:ip_addresses) { nil }
     let(:parsed_ips) { [[], []] }
     let(:driver) do
-      d = described_class.new(config)
-      d.instance = instance
+      d = super()
       allow(d).to receive(:parse_ips).and_return(parsed_ips)
       d
     end
