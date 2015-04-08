@@ -247,7 +247,7 @@ module Kitchen
           warn 'Server name prefix empty or invalid; using fully generated name'
           default_name
         else
-          random_suffix = ('a'..'z').to_a.shuffle[0, 8].join
+          random_suffix = ('a'..'z').to_a.sample(8).join
           server_name_prefix + '-' + random_suffix
         end
       end
