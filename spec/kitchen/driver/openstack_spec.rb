@@ -1113,6 +1113,34 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe '#ssh_key_name' do
+    let(:config) { { key_name: 'yml_key_name' } }
+
+    it 'can be overridden using the environment variable OS_KEY_NAME' do
+      ENV['OS_KEY_NAME'] = 'env_key_name'
+      expect(driver.send(:ssh_key_name)).to eq('env_key_name')
+    end
+
+    it 'uses the yml value when no environment variable override is present' do
+      ENV['OS_KEY_NAME'] = nil
+      expect(driver.send(:ssh_key_name)).to eq('yml_key_name')
+    end
+  end
+
+  describe '#ssh_private_key_path' do
+    let(:config) { { private_key_path: 'yml_private_key_path' } }
+
+    it 'can be overridden using the environment variable OS_PRIVATE_KEY_PATH' do
+      ENV['OS_PRIVATE_KEY_PATH'] = 'env_private_key_path'
+      expect(driver.send(:ssh_private_key_path)).to eq('env_private_key_path')
+    end
+
+    it 'uses the yml value when no environment variable override is present' do
+      ENV['OS_PRIVATE_KEY_PATH'] = nil
+      expect(driver.send(:ssh_private_key_path)).to eq('yml_private_key_path')
+    end
+  end
+
   describe '#setup_ssh' do
     let(:server) { double }
     before(:each) do

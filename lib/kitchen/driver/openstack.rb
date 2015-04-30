@@ -334,18 +334,24 @@ module Kitchen
         ])
       end
 
+      def ssh_key_name
+        ENV['OS_KEY_NAME'] || config[:key_name]
+      end
+
+      def ssh_private_key_path
+        ENV['OS_PRIVATE_KEY_PATH'] || config[:private_key_path]
+      end
+
       def setup_ssh(server, state)
         tcp_check(state)
-        if config[:key_name]
-          info "Using OpenStack keypair <#{config[:key_name]}>"
-        end
-        info "Using public SSH key <#{config[:public_key_path]}>"
-        info "Using private SSH key <#{config[:private_key_path]}>"
-        state[:ssh_key] = config[:private_key_path]
-        do_ssh_setup(state, config, server) unless config[:key_name]
+        info "Using OpenStack keypair <#{ssh_key_name}>" if ssh_key_name
+        info "Using private SSH key <#{ssh_private_key_path}>"
+        state[:ssh_key] = ssh_private_key_path
+        do_ssh_setup(state, config, server) unless ssh_key_name
       end
 
       def do_ssh_setup(state, config, server)
+        info "Using public SSH key <#{config[:public_key_path]}>"
         info "Setting up SSH access for key <#{config[:public_key_path]}>"
         ssh = Fog::SSH.new(state[:hostname],
                            config[:username],
