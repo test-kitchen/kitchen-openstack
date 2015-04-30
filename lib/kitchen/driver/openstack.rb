@@ -42,9 +42,7 @@ module Kitchen
           f if File.exist?(f)
         end.compact.first
       end
-      default_config :public_key_path do |driver|
-        driver[:private_key_path] + '.pub'
-      end
+      default_config :public_key_path, nil
       default_config :username, 'root'
       default_config :password, nil
       default_config :port, '22'
@@ -169,10 +167,11 @@ module Kitchen
           server_def[:block_device_mapping] = get_bdm(config)
         end
 
+        server_def[:key_name] = ssh_key_name
+        
         [
           :security_groups,
           :public_key_path,
-          :key_name,
           :user_data
         ].each do |c|
           server_def[c] = optional_config(c) if config[c]
