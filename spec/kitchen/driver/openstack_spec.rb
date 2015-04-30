@@ -284,7 +284,33 @@ describe Kitchen::Driver::Openstack do
       }
     end
 
-    it 'returns a hash of server settings' do
+    it 'uses ENV values if provided' do
+      ENV['OS_USERNAME'] = 'env_user'
+      ENV['OS_PASSWORD'] = 'env_api_key'
+      ENV['OS_TENANT_NAME'] = 'env_tenant'
+      ENV['OS_REGION_NAME'] = 'env_region'
+      ENV['OS_AUTH_URL'] = 'env_auth_url'
+
+      expected = {
+        openstack_username: 'env_user',
+        openstack_api_key: 'env_api_key',
+        openstack_tenant: 'env_tenant',
+        openstack_region: 'env_region',
+        openstack_auth_url: 'env_auth_url/tokens',
+        openstack_service_name: 'stack',
+        provider: 'OpenStack'
+      }
+
+      expect(driver.send(:openstack_server)).to eq(expected)
+    end
+
+    it 'falls back to yml values if the ENV values are not present' do
+      ENV['OS_USERNAME'] = nil
+      ENV['OS_PASSWORD'] = nil
+      ENV['OS_TENANT_NAME'] = nil
+      ENV['OS_REGION_NAME'] = nil
+      ENV['OS_AUTH_URL'] = nil
+
       expected = config.merge(provider: 'OpenStack')
       expect(driver.send(:openstack_server)).to eq(expected)
     end
@@ -292,19 +318,23 @@ describe Kitchen::Driver::Openstack do
 
   describe '#required_server_settings' do
     it 'returns the required settings for an OpenStack server' do
-      expected = [
+      expected_keys = [
         :openstack_username, :openstack_api_key, :openstack_auth_url
       ]
-      expect(driver.send(:required_server_settings)).to eq(expected)
+      expected_keys.each do |expected|
+        expect(driver.send(:required_server_settings)).to include(expected)
+      end
     end
   end
 
   describe '#optional_server_settings' do
     it 'returns the optional settings for an OpenStack server' do
-      expected = [
+      expected_keys = [
         :openstack_tenant, :openstack_region, :openstack_service_name
       ]
-      expect(driver.send(:optional_server_settings)).to eq(expected)
+      expected_keys.each do |expected|
+        expect(driver.send(:optional_server_settings)).to include(expected)
+      end
     end
   end
 
