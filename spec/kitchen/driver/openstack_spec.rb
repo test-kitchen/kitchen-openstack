@@ -284,7 +284,33 @@ describe Kitchen::Driver::Openstack do
       }
     end
 
-    it 'returns a hash of server settings' do
+    it 'uses ENV values if provided' do
+      ENV['OS_USERNAME'] = 'env_user'
+      ENV['OS_PASSWORD'] = 'env_api_key'
+      ENV['OS_TENANT_NAME'] = 'env_tenant'
+      ENV['OS_REGION_NAME'] = 'env_region'
+      ENV['OS_AUTH_URL'] = 'env_auth_url'
+
+      expected = {
+        openstack_username: 'env_user',
+        openstack_api_key: 'env_api_key',
+        openstack_tenant: 'env_tenant',
+        openstack_region: 'env_region',
+        openstack_auth_url: 'env_auth_url/tokens',
+        openstack_service_name: 'stack',
+        provider: 'OpenStack'
+      }
+
+      expect(driver.send(:openstack_server)).to eq(expected)
+    end
+
+    it 'falls back to yml values if the ENV values are not present' do
+      ENV['OS_USERNAME'] = nil
+      ENV['OS_PASSWORD'] = nil
+      ENV['OS_TENANT_NAME'] = nil
+      ENV['OS_REGION_NAME'] = nil
+      ENV['OS_AUTH_URL'] = nil
+
       expected = config.merge(provider: 'OpenStack')
       expect(driver.send(:openstack_server)).to eq(expected)
     end
@@ -292,19 +318,23 @@ describe Kitchen::Driver::Openstack do
 
   describe '#required_server_settings' do
     it 'returns the required settings for an OpenStack server' do
-      expected = [
+      expected_keys = [
         :openstack_username, :openstack_api_key, :openstack_auth_url
       ]
-      expect(driver.send(:required_server_settings)).to eq(expected)
+      expected_keys.each do |expected|
+        expect(driver.send(:required_server_settings)).to include(expected)
+      end
     end
   end
 
   describe '#optional_server_settings' do
     it 'returns the optional settings for an OpenStack server' do
-      expected = [
+      expected_keys = [
         :openstack_tenant, :openstack_region, :openstack_service_name
       ]
-      expect(driver.send(:optional_server_settings)).to eq(expected)
+      expected_keys.each do |expected|
+        expect(driver.send(:optional_server_settings)).to include(expected)
+      end
     end
   end
 
@@ -1080,6 +1110,34 @@ describe Kitchen::Driver::Openstack do
         "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
       ]
       expect(res).to eq(expected)
+    end
+  end
+
+  describe '#ssh_key_name' do
+    let(:config) { { key_name: 'yml_key_name' } }
+
+    it 'can be overridden using the environment variable OS_KEY_NAME' do
+      ENV['OS_KEY_NAME'] = 'env_key_name'
+      expect(driver.send(:ssh_key_name)).to eq('env_key_name')
+    end
+
+    it 'uses the yml value when no environment variable override is present' do
+      ENV['OS_KEY_NAME'] = nil
+      expect(driver.send(:ssh_key_name)).to eq('yml_key_name')
+    end
+  end
+
+  describe '#ssh_private_key_path' do
+    let(:config) { { private_key_path: 'yml_private_key_path' } }
+
+    it 'can be overridden using the environment variable OS_PRIVATE_KEY_PATH' do
+      ENV['OS_PRIVATE_KEY_PATH'] = 'env_private_key_path'
+      expect(driver.send(:ssh_private_key_path)).to eq('env_private_key_path')
+    end
+
+    it 'uses the yml value when no environment variable override is present' do
+      ENV['OS_PRIVATE_KEY_PATH'] = nil
+      expect(driver.send(:ssh_private_key_path)).to eq('yml_private_key_path')
     end
   end
 

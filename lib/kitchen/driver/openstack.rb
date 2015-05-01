@@ -42,9 +42,7 @@ module Kitchen
           f if File.exist?(f)
         end.compact.first
       end
-      default_config :public_key_path do |driver|
-        driver[:private_key_path] + '.pub'
-      end
+      default_config :public_key_path, nil
       default_config :username, 'root'
       default_config :password, nil
       default_config :port, '22'
@@ -110,17 +108,33 @@ module Kitchen
         server_def = {
           provider: 'OpenStack'
         }
-        required_server_settings.each { |s| server_def[s] = config[s] }
-        optional_server_settings.each { |s| server_def[s] = config[s] }
+        server_def.merge!(required_server_settings)
+        server_def.merge!(optional_server_settings)
         server_def
       end
 
       def required_server_settings
-        [:openstack_username, :openstack_api_key, :openstack_auth_url]
+        settings = {}
+        settings[:openstack_username] =
+          ENV['OS_USERNAME'] || config[:openstack_username]
+        settings[:openstack_api_key] =
+          ENV['OS_PASSWORD'] || config[:openstack_api_key]
+        if ENV['OS_AUTH_URL']
+          settings[:openstack_auth_url] = "#{ENV['OS_AUTH_URL']}/tokens"
+        else
+          settings[:openstack_auth_url] = config[:openstack_auth_url]
+        end
+        settings
       end
 
       def optional_server_settings
-        [:openstack_tenant, :openstack_region, :openstack_service_name]
+        settings = {}
+        settings[:openstack_tenant] =
+          ENV['OS_TENANT_NAME'] || config[:openstack_tenant]
+        settings[:openstack_region] =
+          ENV['OS_REGION_NAME'] || config[:openstack_region]
+        settings[:openstack_service_name] = config[:openstack_service_name]
+        settings
       end
 
       def network
@@ -153,10 +167,11 @@ module Kitchen
           server_def[:block_device_mapping] = get_bdm(config)
         end
 
+        server_def[:key_name] = ssh_key_name
+        
         [
           :security_groups,
           :public_key_path,
-          :key_name,
           :user_data
         ].each do |c|
           server_def[c] = optional_config(c) if config[c]
@@ -318,18 +333,24 @@ module Kitchen
         ])
       end
 
+      def ssh_key_name
+        ENV['OS_KEY_NAME'] || config[:key_name]
+      end
+
+      def ssh_private_key_path
+        ENV['OS_PRIVATE_KEY_PATH'] || config[:private_key_path]
+      end
+
       def setup_ssh(server, state)
         tcp_check(state)
-        if config[:key_name]
-          info "Using OpenStack keypair <#{config[:key_name]}>"
-        end
-        info "Using public SSH key <#{config[:public_key_path]}>"
-        info "Using private SSH key <#{config[:private_key_path]}>"
-        state[:ssh_key] = config[:private_key_path]
-        do_ssh_setup(state, config, server) unless config[:key_name]
+        info "Using OpenStack keypair <#{ssh_key_name}>" if ssh_key_name
+        info "Using private SSH key <#{ssh_private_key_path}>"
+        state[:ssh_key] = ssh_private_key_path
+        do_ssh_setup(state, config, server) unless ssh_key_name
       end
 
       def do_ssh_setup(state, config, server)
+        info "Using public SSH key <#{config[:public_key_path]}>"
         info "Setting up SSH access for key <#{config[:public_key_path]}>"
         ssh = Fog::SSH.new(state[:hostname],
                            config[:username],

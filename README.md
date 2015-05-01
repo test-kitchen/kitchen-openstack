@@ -27,6 +27,27 @@ Or install it yourself as:
 
 ## Usage
 
+The driver needs to be able to connect and authenticate to the OpenStack instance
+you intend to use for testing. You can provide connection and authentication data
+either directly in the the `.kitchen.yml` file OR you can depend on environment
+variables that are commonly setup when using OpenStack CLI tools: 
+http://docs.openstack.org/cli-reference/content/cli_openrc.html
+
+Any configuration within your environment will take precedence over
+values defined in the `.kitchen.yml`
+
+### OpenStack Configuration ENV to YML Mapping
+
+Environment Variable | .kitchen.yml configuration key
+---------------------| ------------------------------
+OS_USERNAME          | openstack_username
+OS_PASSWORD          | openstack_api_key
+OS_AUTH_URL          | openstack_auth_url
+OS_TENANT_NAME       | openstack_tenant
+OS_REGION_NAME       | openstack_region
+
+### Required Configuration
+
 Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
 
     driver:
@@ -81,12 +102,35 @@ generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
 `myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are 
 specified then the `server_name` takes precedence.
 
+### Configuring SSH
+
+#### YML configuration
+
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
 
 If a `key_name` is provided without any `private_key_path`, unexpected
 behavior may result if your local RSA/DSA private key doesn't match that
 OpenStack key.
+
+#### Environment variable configuration
+
+You may also configure which key pair is used when creating your instance
+and where to find your private key used to ssh to that instance using environment
+variables. This is helpful in cases where multiple users with unique keys are
+collaborating on the tests.
+
+Any configuration within your environment will take precedence over
+values defined in the `.kitchen.yml`
+
+### Configuration ENV to YML Mapping
+
+Environment Variable | .kitchen.yml configuration key
+---------------------| ------------------------------
+OS_KEY_NAME          | key_name
+OS_PRIVATE_KEY_PATH  | private_key_path
+
+### Configuring Networking
 
 A specific `floating_ip` or the ID of a `floating_ip_pool` can be provided to
 bind a floating IP to the node. Any floating IP will be the IP used for
