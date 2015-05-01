@@ -110,17 +110,33 @@ module Kitchen
         server_def = {
           provider: 'OpenStack'
         }
-        required_server_settings.each { |s| server_def[s] = config[s] }
-        optional_server_settings.each { |s| server_def[s] = config[s] }
+        server_def.merge!(required_server_settings)
+        server_def.merge!(optional_server_settings)
         server_def
       end
 
       def required_server_settings
-        [:openstack_username, :openstack_api_key, :openstack_auth_url]
+        settings = {}
+        settings[:openstack_username] =
+          ENV['OS_USERNAME'] || config[:openstack_username]
+        settings[:openstack_api_key] =
+          ENV['OS_PASSWORD'] || config[:openstack_api_key]
+        if ENV['OS_AUTH_URL']
+          settings[:openstack_auth_url] = "#{ENV['OS_AUTH_URL']}/tokens"
+        else
+          settings[:openstack_auth_url] = config[:openstack_auth_url]
+        end
+        settings
       end
 
       def optional_server_settings
-        [:openstack_tenant, :openstack_region, :openstack_service_name]
+        settings = {}
+        settings[:openstack_tenant] =
+          ENV['OS_TENANT_NAME'] || config[:openstack_tenant]
+        settings[:openstack_region] =
+          ENV['OS_REGION_NAME'] || config[:openstack_region]
+        settings[:openstack_service_name] = config[:openstack_service_name]
+        settings
       end
 
       def network
