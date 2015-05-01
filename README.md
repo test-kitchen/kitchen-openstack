@@ -27,6 +27,27 @@ Or install it yourself as:
 
 ## Usage
 
+The driver needs to be able to connect and authenticate to the OpenStack instance
+you intend to use for testing. You can provide connection and authentication data
+either directly in the the `.kitchen.yml` file OR you can depend on environment
+variables that are commonly setup when using OpenStack CLI tools: 
+http://docs.openstack.org/cli-reference/content/cli_openrc.html
+
+Any configuration within your environment will take precedence over
+values defined in the `.kitchen.yml`
+
+### OpenStack Configuration ENV to YML Mapping
+
+Environment Variable | .kitchen.yml configuration key
+---------------------| ------------------------------
+OS_USERNAME          | openstack_username
+OS_PASSWORD          | openstack_api_key
+OS_AUTH_URL          | openstack_auth_url
+OS_TENANT_NAME       | openstack_tenant
+OS_REGION_NAME       | openstack_region
+
+### Required Configuration
+
 Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
 
     driver:
