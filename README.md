@@ -102,12 +102,35 @@ generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
 `myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are 
 specified then the `server_name` takes precedence.
 
+### Configuring SSH
+
+#### YML configuration
+
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
 
 If a `key_name` is provided without any `private_key_path`, unexpected
 behavior may result if your local RSA/DSA private key doesn't match that
 OpenStack key.
+
+#### Environment variable configuration
+
+You may also configure which key pair is used when creating your instance
+and where to find your private key used to ssh to that instance using environment
+variables. This is helpful in cases where multiple users with unique keys are
+collaborating on the tests.
+
+Any configuration within your environment will take precedence over
+values defined in the `.kitchen.yml`
+
+### Configuration ENV to YML Mapping
+
+Environment Variable | .kitchen.yml configuration key
+---------------------| ------------------------------
+OS_KEY_NAME          | key_name
+OS_PRIVATE_KEY_PATH  | private_key_path
+
+### Configuring Networking
 
 A specific `floating_ip` or the ID of a `floating_ip_pool` can be provided to
 bind a floating IP to the node. Any floating IP will be the IP used for
