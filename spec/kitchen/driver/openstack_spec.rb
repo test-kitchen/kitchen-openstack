@@ -1045,26 +1045,23 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
-
   describe '#add_ohai_hint' do
     let(:state) { { hostname: 'host' } }
     let(:instance) do
       d = super()
       connection = double
-      expect(connection).to receive(:execute).with(
-        "sudo mkdir -p #{Ohai::Config[:hints_path][0]};sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
-        ) 
-      transport = double()
-      allow(transport).to receive(:connection).with(any_args).and_return(connection)
+      expect(connection).to receive(:execute)
+        .with(/sudo mkdir.*touch.*openstack.json/)
+      transport = double
+      allow(transport).to receive(:connection).
+        with(any_args).and_return(connection)
       allow(d).to receive(:transport).and_return(transport)
       d
     end
     it 'opens an SSH session to the server' do
-      res = driver.send(:add_ohai_hint, state)
+      driver.send(:add_ohai_hint, state)
     end
   end
-
-
 
   describe '#disable_ssl_validation' do
     it 'turns off Excon SSL cert validation' do

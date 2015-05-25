@@ -59,44 +59,45 @@ module Kitchen
       default_config :security_groups, nil
       default_config :network_ref, nil
 
-      #TODO no idea how to map this to new transport in
-      #test kitchen 1.4
+      # TODO no idea how to map this
+      # to new transport in test kitchen 1.4,
+      # figure it out
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
 
       default_config :block_device_mapping, nil
 
-      # Taken from https://github.com/test-kitchen/kitchen-ec2/blob/master/lib/kitchen/driver/ec2.rb
+      # Taken from kitchen-ec2
       def self.deprecation_warn(driver, old_key, new_key)
-        driver.warn "WARN: The driver[#{driver.class.name}] config key `#{old_key}` " \
-          "is deprecated, please use `#{new_key}`"
+        driver.warn "WARN: The driver[#{driver.class.name}] config key " \
+         "`#{old_key}` is deprecated, please use `#{new_key}`"
       end
 
       validations[:username] = lambda do |attr, val, driver|
         unless val.nil?
-          deprecation_warn(driver, attr, "transport.username")
+          deprecation_warn(driver, attr, 'transport.username')
         end
       end
 
       validations[:password] = lambda do |attr, val, driver|
         unless val.nil?
-          deprecation_warn(driver, attr, "transport.password")
+          deprecation_warn(driver, attr, 'transport.password')
         end
       end
 
       validations[:port] = lambda do |attr, val, driver|
         unless val.nil?
-          deprecation_warn(driver, attr, "transport.port")
+          deprecation_warn(driver, attr, 'transport.port')
         end
       end
 
       validations[:private_key_path] = lambda do |attr, val, driver|
         unless val.nil?
-          deprecation_warn(driver, attr, "transport.ssh_key")
+          deprecation_warn(driver, attr, 'transport.ssh_key')
         end
       end
 
-      # Lifted from https://github.com/test-kitchen/kitchen-ec2/blob/master/lib/kitchen/driver/ec2.rb
+      # Lifted from https://github.com/test-kitchen/kitchen-ec2
       # This copies transport config from the current config object into the
       # state.  This relies on logic in the transport that merges the transport
       # config with the current state object, so its a bad coupling.  But we
@@ -365,8 +366,11 @@ module Kitchen
 
       def add_ohai_hint(state)
         info 'Adding OpenStack hint for ohai'
+        mkdir_cmd = "sudo mkdir -p #{Ohai::Config[:hints_path][0]}"
+        touch_cmd = "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
+
         instance.transport.connection(state).execute(
-          "sudo mkdir -p #{Ohai::Config[:hints_path][0]};sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
+          "#{mkdir_cmd};#{touch_cmd}"
         )
       end
 
