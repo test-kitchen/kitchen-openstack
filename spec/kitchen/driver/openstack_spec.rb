@@ -18,6 +18,7 @@ describe Kitchen::Driver::Openstack do
   let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
   let(:instance_name) { 'potatoes' }
 
+
   let(:instance) do
     double(
       name: instance_name, logger: logger, to_str: 'instance'
@@ -28,7 +29,7 @@ describe Kitchen::Driver::Openstack do
 
   before(:each) do
     allow_any_instance_of(described_class).to receive(:instance)
-      .and_return(instance)
+    .and_return(instance)
     allow(File).to receive(:exist?).and_call_original
     allow(File).to receive(:exist?).with(dsa).and_return(true)
     allow(File).to receive(:exist?).with(rsa).and_return(true)
@@ -156,13 +157,28 @@ describe Kitchen::Driver::Openstack do
       d = super()
       allow(d).to receive(:default_name).and_return('a_monkey!')
       allow(d).to receive(:create_server).and_return(server)
-      allow(d).to receive(:wait_for_sshd).with('1.2.3.4', 'root', port: '22')
-        .and_return(true)
       allow(d).to receive(:get_ip).and_return('1.2.3.4')
       allow(d).to receive(:add_ohai_hint).and_return(true)
       allow(d).to receive(:do_ssh_setup).and_return(true)
       d
     end
+
+
+    let(:instance) do
+      d = super()
+      connection = double
+      expect(connection).to receive(:wait_until_ready).and_return(true)
+      allow(connection).to receive(:execute).with(/openstack.json/)
+      transport = double()
+      allow(transport).to receive(:connection).with(hash_including(
+        server_id: 'test123', hostname: "1.2.3.4"
+        )).and_return(connection)
+      allow(d).to receive(:transport).and_return(transport)
+      d
+    end
+
+
+
 
     context 'required options provided' do
       let(:config) do
@@ -669,7 +685,7 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-          user_data: data)
+        user_data: data)
         driver.send(:create_server)
       end
     end
@@ -742,7 +758,7 @@ describe Kitchen::Driver::Openstack do
 
     it 'generates a name with the selected prefix' do
       expect(driver.send(:server_name_prefix, prefix))
-        .to match(/^parsnip-(\S*)/)
+      .to match(/^parsnip-(\S*)/)
     end
 
     context 'very long prefix provided' do
@@ -750,7 +766,7 @@ describe Kitchen::Driver::Openstack do
 
       it 'limits the generated name to 63 characters' do
         expect(driver.send(:server_name_prefix, long_prefix).length)
-          .to be <= (63)
+        .to be <= (63)
       end
     end
 
@@ -759,19 +775,19 @@ describe Kitchen::Driver::Openstack do
 
       it 'strips out the dots to prevent bad server names' do
         expect(driver.send(:server_name_prefix, bad_char_prefix))
-          .to_not include('.')
+        .to_not include('.')
       end
 
       it 'strips out all but the one hyphen separator' do
         expect(driver.send(:server_name_prefix, bad_char_prefix)
-          .count('-')).to eq(1)
+               .count('-')).to eq(1)
       end
     end
 
     context 'blank prefix' do
       it 'generates fully random server name' do
         expect(driver.send(:server_name_prefix, ''))
-          .to match(/potatoes-user-host-(\S*)/)
+        .to match(/potatoes-user-host-(\S*)/)
       end
     end
   end
@@ -819,7 +835,7 @@ describe Kitchen::Driver::Openstack do
 
     it 'associates the IP address with the server' do
       expect(driver.send(:attach_ip, server, ip)).to eq(
-        [{ 'version' => 4, 'addr' => ip }])
+      [{ 'version' => 4, 'addr' => ip }])
     end
   end
 
@@ -899,9 +915,9 @@ describe Kitchen::Driver::Openstack do
         s = double('server')
         allow(s).to receive(:addresses).and_return(addresses)
         allow(s).to receive(:public_ip_addresses).and_raise(
-          Fog::Compute::OpenStack::NotFound)
+        Fog::Compute::OpenStack::NotFound)
         allow(s).to receive(:private_ip_addresses).and_raise(
-          Fog::Compute::OpenStack::NotFound)
+        Fog::Compute::OpenStack::NotFound)
         s
       end
 
@@ -1029,96 +1045,26 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
-  describe '#do_ssh_setup' do
-    let(:config) { { public_key_path: '/pub_key' } }
-    let(:server) { double(password: 'aloha') }
-    let(:state) { { hostname: 'host' } }
-    let(:read) { double(read: 'a_key') }
-    let(:ssh) { double(run: true) }
-
-    before(:each) do
-      allow(driver).to receive(:open).with(config[:public_key_path])
-        .and_return(read)
-    end
-
-    it 'opens an SSH session to the server' do
-      expect(Fog::SSH).to receive(:new).with(state[:hostname],
-                                             'root',
-                                             password: 'aloha').and_return(ssh)
-      expect(ssh).to receive(:run).with([
-        'mkdir .ssh',
-        'echo "a_key" >> ~/.ssh/authorized_keys',
-        'passwd -l root'
-      ])
-      driver.send(:do_ssh_setup, state, config, server)
-    end
-
-    context 'a configured SSH password' do
-      let(:config) { super().merge(password: '12345') }
-
-      it 'uses the configured password' do
-        expect(Fog::SSH).to receive(:new)
-          .with(state[:hostname], 'root', password: '12345').and_return(ssh)
-        driver.send(:do_ssh_setup, state, config, server)
-      end
-    end
-  end
 
   describe '#add_ohai_hint' do
     let(:state) { { hostname: 'host' } }
-    let(:ssh) do
-      s = double('ssh')
-      allow(s).to receive(:run) { |args| args }
-      s
+    let(:instance) do
+      d = super()
+      connection = double
+      expect(connection).to receive(:execute).with(
+        "sudo mkdir -p #{Ohai::Config[:hints_path][0]};sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
+        ) 
+      transport = double()
+      allow(transport).to receive(:connection).with(any_args).and_return(connection)
+      allow(d).to receive(:transport).and_return(transport)
+      d
     end
     it 'opens an SSH session to the server' do
-      allow(Fog::SSH).to receive(:new).with('host', 'root', anything)
-        .and_return(ssh)
       res = driver.send(:add_ohai_hint, state)
-      expected = [
-        "sudo mkdir -p #{Ohai::Config[:hints_path][0]}",
-        "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
-      ]
-      expect(res).to eq(expected)
     end
   end
 
-  describe '#setup_ssh' do
-    let(:server) { double }
-    before(:each) do
-      [:tcp_check, :do_ssh_setup].each do |m|
-        allow_any_instance_of(described_class).to receive(m)
-      end
-    end
 
-    it 'calls the TCP check' do
-      expect_any_instance_of(described_class).to receive(:tcp_check).with(state)
-      driver.send(:setup_ssh, server, state)
-    end
-  end
-
-  describe '#tcp_check' do
-    let(:state) { { hostname: 'hostname' } }
-
-    context 'standard SSH check' do
-      it 'calls the normal Kitchen SSH wait' do
-        expect_any_instance_of(described_class).not_to receive(:sleep)
-        expect_any_instance_of(described_class).to receive(:wait_for_sshd)
-          .with('hostname', 'root', port: '22')
-        driver.send(:tcp_check, state)
-      end
-    end
-
-    context 'override SSH wait' do
-      let(:config) { { no_ssh_tcp_check: true } }
-
-      it 'sleeps instead of monitoring the SSH port' do
-        expect_any_instance_of(described_class).not_to receive(:wait_for_sshd)
-        expect_any_instance_of(described_class).to receive(:sleep).with(120)
-        driver.send(:tcp_check, state)
-      end
-    end
-  end
 
   describe '#disable_ssl_validation' do
     it 'turns off Excon SSL cert validation' do
