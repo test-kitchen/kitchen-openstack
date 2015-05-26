@@ -59,7 +59,7 @@ module Kitchen
       default_config :security_groups, nil
       default_config :network_ref, nil
 
-      # TODO no idea how to map this
+      # TODO: no idea how to map this
       # to new transport in test kitchen 1.4,
       # figure it out
       default_config :no_ssh_tcp_check, false
@@ -74,27 +74,19 @@ module Kitchen
       end
 
       validations[:username] = lambda do |attr, val, driver|
-        unless val.nil?
-          deprecation_warn(driver, attr, 'transport.username')
-        end
+        deprecation_warn(driver, attr, 'transport.username') unless val.nil?
       end
 
       validations[:password] = lambda do |attr, val, driver|
-        unless val.nil?
-          deprecation_warn(driver, attr, 'transport.password')
-        end
+        deprecation_warn(driver, attr, 'transport.password') unless val.nil?
       end
 
       validations[:port] = lambda do |attr, val, driver|
-        unless val.nil?
-          deprecation_warn(driver, attr, 'transport.port')
-        end
+        deprecation_warn(driver, attr, 'transport.port') unless val.nil?
       end
 
       validations[:private_key_path] = lambda do |attr, val, driver|
-        unless val.nil?
-          deprecation_warn(driver, attr, 'transport.ssh_key')
-        end
+        deprecation_warn(driver, attr, 'transport.ssh_key') unless val.nil?
       end
 
       # Lifted from https://github.com/test-kitchen/kitchen-ec2
@@ -103,18 +95,10 @@ module Kitchen
       # config with the current state object, so its a bad coupling.  But we
       # can get rid of this when we get rid of these deprecated configs!
       def copy_deprecated_configs(state)
-        if config[:username]
-          state[:username] = config[:username]
-        end
-        if config[:private_key_path]
-          state[:ssh_key] = config[:private_key_path]
-        end
-        if config[:port]
-          state[:port] = config[:port]
-        end
-        if config[:password]
-          state[:password] = config[:password]
-        end
+        state[:username] = config[:username] if config[:username]
+        state[:ssh_key] = config[:private_key_path] if config[:private_key_path]
+        state[:port] = config[:port] if config[:port]
+        state[:password] = config[:password] if config[:password]
       end
 
       def create(state)
@@ -329,7 +313,8 @@ module Kitchen
 
       def get_public_private_ips(server)
         begin
-          pub, priv = server.public_ip_addresses, server.private_ip_addresses
+          pub = server.public_ip_addresses
+          priv = server.private_ip_addresses
         rescue Fog::Compute::OpenStack::NotFound, Excon::Errors::Forbidden
           # See Fog issue: https://github.com/fog/fog/issues/2160
           addrs = server.addresses
@@ -355,7 +340,8 @@ module Kitchen
       end
 
       def parse_ips(pub, priv)
-        pub, priv = Array(pub), Array(priv)
+        pub = Array(pub)
+        priv = Array(priv)
         if config[:use_ipv6]
           [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv6? } }
         else
@@ -373,8 +359,6 @@ module Kitchen
           "#{mkdir_cmd};#{touch_cmd}"
         )
       end
-
-
 
       def disable_ssl_validation
         require 'excon'

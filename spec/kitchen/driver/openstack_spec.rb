@@ -29,7 +29,7 @@ describe Kitchen::Driver::Openstack do
 
   before(:each) do
     allow_any_instance_of(described_class).to receive(:instance)
-    .and_return(instance)
+      .and_return(instance)
     allow(File).to receive(:exist?).and_call_original
     allow(File).to receive(:exist?).with(dsa).and_return(true)
     allow(File).to receive(:exist?).with(rsa).and_return(true)
@@ -169,9 +169,10 @@ describe Kitchen::Driver::Openstack do
       connection = double
       expect(connection).to receive(:wait_until_ready).and_return(true)
       allow(connection).to receive(:execute).with(/openstack.json/)
-      transport = double()
-      allow(transport).to receive(:connection).with(hash_including(
-        server_id: 'test123', hostname: "1.2.3.4"
+      transport = double
+      allow(transport).to receive(:connection).with(
+        hash_including(
+         server_id: 'test123', hostname: '1.2.3.4'
         )).and_return(connection)
       allow(d).to receive(:transport).and_return(transport)
       d
