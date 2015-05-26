@@ -17,14 +17,11 @@ describe Kitchen::Driver::Openstack do
   let(:dsa) { File.expand_path('~/.ssh/id_dsa') }
   let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
   let(:instance_name) { 'potatoes' }
-
-
   let(:instance) do
     double(
       name: instance_name, logger: logger, to_str: 'instance'
     )
   end
-
   let(:driver) { described_class.new(config) }
 
   before(:each) do
@@ -162,8 +159,6 @@ describe Kitchen::Driver::Openstack do
       allow(d).to receive(:do_ssh_setup).and_return(true)
       d
     end
-
-
     let(:instance) do
       d = super()
       connection = double
@@ -172,14 +167,11 @@ describe Kitchen::Driver::Openstack do
       transport = double
       allow(transport).to receive(:connection).with(
         hash_including(
-         server_id: 'test123', hostname: '1.2.3.4'
+          server_id: 'test123', hostname: '1.2.3.4'
         )).and_return(connection)
       allow(d).to receive(:transport).and_return(transport)
       d
     end
-
-
-
 
     context 'required options provided' do
       let(:config) do
