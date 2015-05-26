@@ -102,15 +102,7 @@ module Kitchen
       end
 
       def create(state)
-        unless config[:server_name]
-          if config[:server_name_prefix]
-            config[:server_name] = server_name_prefix(
-              config[:server_name_prefix]
-            )
-          else
-            config[:server_name] = default_name
-          end
-        end
+        set_server_name
         config[:disable_ssl_validation] && disable_ssl_validation
         server = create_server
         state[:server_id] = server.id
@@ -152,6 +144,17 @@ module Kitchen
         required_server_settings.each { |s| server_def[s] = config[s] }
         optional_server_settings.each { |s| server_def[s] = config[s] }
         server_def
+      end
+
+      def set_server_name
+        return if config[:server_name]
+        if config[:server_name_prefix]
+          config[:server_name] = server_name_prefix(
+            config[:server_name_prefix]
+          )
+        else
+          config[:server_name] = default_name
+        end
       end
 
       def required_server_settings
