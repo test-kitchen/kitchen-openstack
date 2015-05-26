@@ -678,7 +678,7 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-        user_data: data)
+          user_data: data)
         driver.send(:create_server)
       end
     end
@@ -751,7 +751,7 @@ describe Kitchen::Driver::Openstack do
 
     it 'generates a name with the selected prefix' do
       expect(driver.send(:server_name_prefix, prefix))
-      .to match(/^parsnip-(\S*)/)
+        .to match(/^parsnip-(\S*)/)
     end
 
     context 'very long prefix provided' do
@@ -759,7 +759,7 @@ describe Kitchen::Driver::Openstack do
 
       it 'limits the generated name to 63 characters' do
         expect(driver.send(:server_name_prefix, long_prefix).length)
-        .to be <= (63)
+          .to be <= (63)
       end
     end
 
@@ -768,19 +768,19 @@ describe Kitchen::Driver::Openstack do
 
       it 'strips out the dots to prevent bad server names' do
         expect(driver.send(:server_name_prefix, bad_char_prefix))
-        .to_not include('.')
+          .to_not include('.')
       end
 
       it 'strips out all but the one hyphen separator' do
         expect(driver.send(:server_name_prefix, bad_char_prefix)
-               .count('-')).to eq(1)
+          .count('-')).to eq(1)
       end
     end
 
     context 'blank prefix' do
       it 'generates fully random server name' do
         expect(driver.send(:server_name_prefix, ''))
-        .to match(/potatoes-user-host-(\S*)/)
+          .to match(/potatoes-user-host-(\S*)/)
       end
     end
   end
@@ -828,7 +828,7 @@ describe Kitchen::Driver::Openstack do
 
     it 'associates the IP address with the server' do
       expect(driver.send(:attach_ip, server, ip)).to eq(
-      [{ 'version' => 4, 'addr' => ip }])
+        [{ 'version' => 4, 'addr' => ip }])
     end
   end
 
@@ -908,9 +908,9 @@ describe Kitchen::Driver::Openstack do
         s = double('server')
         allow(s).to receive(:addresses).and_return(addresses)
         allow(s).to receive(:public_ip_addresses).and_raise(
-        Fog::Compute::OpenStack::NotFound)
+          Fog::Compute::OpenStack::NotFound)
         allow(s).to receive(:private_ip_addresses).and_raise(
-        Fog::Compute::OpenStack::NotFound)
+          Fog::Compute::OpenStack::NotFound)
         s
       end
 
@@ -1046,8 +1046,8 @@ describe Kitchen::Driver::Openstack do
       expect(connection).to receive(:execute)
         .with(/sudo mkdir.*touch.*openstack.json/)
       transport = double
-      allow(transport).to receive(:connection).
-        with(any_args).and_return(connection)
+      allow(transport).to receive(:connection)
+        .with(any_args).and_return(connection)
       allow(d).to receive(:transport).and_return(transport)
       d
     end
