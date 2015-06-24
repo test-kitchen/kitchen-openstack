@@ -25,6 +25,10 @@ Or install it yourself as:
 
     $ gem install kitchen-openstack
 
+Or if using [chefdk](https://downloads.chef.io/chef-dk) install with:
+
+    $ chef gem install kitchen-openstack
+
 ## Usage
 
 Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
