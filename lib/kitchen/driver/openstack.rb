@@ -1,4 +1,4 @@
-# Encoding: UTF-8
+# Encoding: utf-8
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
@@ -88,6 +88,7 @@ module Kitchen
         end
         state[:hostname] = get_ip(server)
         setup_ssh(server, state)
+        wait_for_ssh_key_access(state)
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
@@ -105,6 +106,25 @@ module Kitchen
       end
 
       private
+
+      def wait_for_ssh_key_access(state)
+        new_state = build_ssh_args(state)
+        new_state[2][:number_of_password_prompts] = 0
+        info "Checking ssh key authentication"
+        30.times do
+          ssh = Fog::SSH.new(*new_state)
+          begin
+            ssh.run([%(uname -a)])
+          rescue => e
+            info "Server not yet accepting SSH key: #{e.message}"
+            sleep 1
+          else
+            info "SSH key authetication successful"
+            return
+          end
+        end
+        raise "30 seconds went by and we couldn't connect, somethings broken"
+      end
 
       def openstack_server
         server_def = {
