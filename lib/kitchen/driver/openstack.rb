@@ -30,7 +30,7 @@ module Kitchen
     # Openstack driver for Kitchen.
     #
     # @author Jonathan Hartman <j@p4nt5.com>
-    class Openstack < Kitchen::Driver::SSHBase
+    class Openstack < Kitchen::Driver::SSHBase # rubocop:disable Metrics/ClassLength, Metrics/LineLength
       @@ip_pool_lock = Mutex.new
 
       default_config :server_name, nil
@@ -62,7 +62,7 @@ module Kitchen
       default_config :no_ssh_tcp_check_sleep, 120
       default_config :block_device_mapping, nil
 
-      def create(state)
+      def create(state) # rubocop:disable Metrics/AbcSize
         unless config[:server_name]
           if config[:server_name_prefix]
             config[:server_name] = server_name_prefix(
@@ -110,7 +110,7 @@ module Kitchen
       def wait_for_ssh_key_access(state)
         new_state = build_ssh_args(state)
         new_state[2][:number_of_password_prompts] = 0
-        info "Checking ssh key authentication"
+        info 'Checking ssh key authentication'
         30.times do
           ssh = Fog::SSH.new(*new_state)
           begin
@@ -119,11 +119,11 @@ module Kitchen
             info "Server not yet accepting SSH key: #{e.message}"
             sleep 1
           else
-            info "SSH key authetication successful"
+            info 'SSH key authetication successful'
             return
           end
         end
-        raise "30 seconds went by and we couldn't connect, somethings broken"
+        fail "30 seconds went by and we couldn't connect, somethings broken"
       end
 
       def openstack_server
@@ -294,7 +294,8 @@ module Kitchen
 
       def get_public_private_ips(server)
         begin
-          pub, priv = server.public_ip_addresses, server.private_ip_addresses
+          pub = server.public_ip_addresses
+          priv = server.private_ip_addresses
         rescue Fog::Compute::OpenStack::NotFound, Excon::Errors::Forbidden
           # See Fog issue: https://github.com/fog/fog/issues/2160
           addrs = server.addresses
@@ -320,7 +321,8 @@ module Kitchen
       end
 
       def parse_ips(pub, priv)
-        pub, priv = Array(pub), Array(priv)
+        pub = Array(pub)
+        priv = Array(priv)
         if config[:use_ipv6]
           [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv6? } }
         else
