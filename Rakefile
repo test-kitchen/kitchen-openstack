@@ -17,4 +17,4 @@ end
 
 RSpec::Core::RakeTask.new(:spec)
 
-task default: [:cane, :rubocop, :loc, :spec]
+task default: [:rubocop, :loc, :spec]
