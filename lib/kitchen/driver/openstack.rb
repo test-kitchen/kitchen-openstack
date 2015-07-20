@@ -42,10 +42,10 @@ module Kitchen
             f = File.expand_path "~/.ssh/#{k}"
             f if File.exist?(f)
           end.compact.first
-        else
-          puts "You don't have a :public_key_path, you'll need to add it otherwise this'll break."
-          exit 1
         end
+      else
+        puts "You don't have a :public_key_path, you'll need to add it otherwise this'll break."
+        exit 1
       end
       default_config :public_key_path do |driver|
         driver[:private_key_path] + '.pub'
