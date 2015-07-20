@@ -36,11 +36,16 @@ module Kitchen
       default_config :server_name, nil
       default_config :server_name_prefix, nil
       default_config :key_name, nil
-      default_config :private_key_path do
-        %w(id_rsa id_dsa).map do |k|
-          f = File.expand_path "~/.ssh/#{k}"
-          f if File.exist?(f)
-        end.compact.first
+      if :private_key_path
+        default_config :private_key_path do
+          %w(id_rsa id_dsa).map do |k|
+            f = File.expand_path "~/.ssh/#{k}"
+            f if File.exist?(f)
+          end.compact.first
+        else
+          puts "You don't have a :public_key_path, you'll need to add it otherwise this'll break."
+          exit 1
+        end
       end
       default_config :public_key_path do |driver|
         driver[:private_key_path] + '.pub'
