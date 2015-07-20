@@ -44,7 +44,8 @@ module Kitchen
           end.compact.first
         end
       else
-        puts "You don't have a :public_key_path, you'll need to add it otherwise this'll break."
+        puts "You don't have a [:public_key_path] set."
+        puts "You'll need to add it otherwise this'll break."
         exit 1
       end
       default_config :public_key_path do |driver|
