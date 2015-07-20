@@ -36,7 +36,7 @@ Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
     driver:
       name: openstack
       openstack_username: [YOUR OPENSTACK USERNAME]
-      openstack_api_key: [YOUR OPENSTACK API KEY]
+      openstack_api_key: [YOUR OPENSTACK API KEY] # AKA your OPENSTACK PASSWORD
       openstack_auth_url: [YOUR OPENSTACK AUTH URL]
       require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
       image_ref: [SERVER IMAGE ID]
@@ -57,7 +57,7 @@ behavior can be overridden with additional options:
     password: [SSH PASSWORD]
     port: [SSH PORT]
     key_name: [SSH KEY NAME]
-    openstack_tenant: [YOUR OPENSTACK TENANT ID]
+    openstack_tenant: [YOUR OPENSTACK TENANT NAME]
     openstack_region: [A VALID OPENSTACK REGION]
     availability_zone: [AN OPENSTACK AVAILABILITY ZONE]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
@@ -79,10 +79,10 @@ behavior can be overridden with additional options:
       availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
       volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
-       
-If a `server_name_prefix` is specified then this prefix will be used when 
+
+If a `server_name_prefix` is specified then this prefix will be used when
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
-`myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are 
+`myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are
 specified then the `server_name` takes precedence.
 
 If a `key_name` is provided it will be used instead of any
