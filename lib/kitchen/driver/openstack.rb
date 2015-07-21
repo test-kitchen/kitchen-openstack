@@ -36,11 +36,17 @@ module Kitchen
       default_config :server_name, nil
       default_config :server_name_prefix, nil
       default_config :key_name, nil
-      default_config :private_key_path do
-        %w(id_rsa id_dsa).map do |k|
-          f = File.expand_path "~/.ssh/#{k}"
-          f if File.exist?(f)
-        end.compact.first
+      if :private_key_path
+        default_config :private_key_path do
+          %w(id_rsa id_dsa).map do |k|
+            f = File.expand_path "~/.ssh/#{k}"
+            f if File.exist?(f)
+          end.compact.first
+        end
+      else
+        puts "You don't have a [:public_key_path] set."
+        puts "You'll need to add it otherwise this'll break."
+        exit 1
       end
       default_config :public_key_path do |driver|
         driver[:private_key_path] + '.pub'
@@ -274,7 +280,8 @@ module Kitchen
 
       def get_public_private_ips(server)
         begin
-          pub, priv = server.public_ip_addresses, server.private_ip_addresses
+          pub = server.public_ip_addresses
+          priv = server.private_ip_addresses
         rescue Fog::Compute::OpenStack::NotFound, Excon::Errors::Forbidden
           # See Fog issue: https://github.com/fog/fog/issues/2160
           addrs = server.addresses
@@ -300,7 +307,8 @@ module Kitchen
       end
 
       def parse_ips(pub, priv)
-        pub, priv = Array(pub), Array(priv)
+        pub = Array(pub)
+        priv = Array(priv)
         if config[:use_ipv6]
           [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv6? } }
         else
