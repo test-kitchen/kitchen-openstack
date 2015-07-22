@@ -36,20 +36,14 @@ module Kitchen
       default_config :server_name, nil
       default_config :server_name_prefix, nil
       default_config :key_name, nil
-      if :private_key_path
-        default_config :private_key_path do
-          %w(id_rsa id_dsa).map do |k|
-            f = File.expand_path "~/.ssh/#{k}"
-            f if File.exist?(f)
-          end.compact.first
-        end
-      else
-        puts "You don't have a [:public_key_path] set."
-        puts "You'll need to add it otherwise this'll break."
-        exit 1
+      default_config :private_key_path do
+        %w(id_rsa id_dsa).map do |k|
+          f = File.expand_path("~/.ssh/#{k}")
+          f if File.exist?(f)
+        end.compact.first
       end
       default_config :public_key_path do |driver|
-        driver[:private_key_path] + '.pub'
+        driver[:private_key_path] + '.pub' if driver[:private_key_path]
       end
       default_config :username, 'root'
       default_config :password, nil
@@ -67,6 +61,14 @@ module Kitchen
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
       default_config :block_device_mapping, nil
+
+      required_config :private_key_path
+      required_config :public_key_path do |_, value, driver|
+        if value.nil? && driver[:key_name].nil?
+          fail(UserError,
+               'Either a `:public_key_path` or `:key_name` is required')
+        end
+      end
 
       def create(state)
         unless config[:server_name]
