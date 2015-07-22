@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 1.9.3'
 
-  spec.add_dependency 'test-kitchen', '~> 1.2'
+  spec.add_dependency 'test-kitchen', '~> 1.4'
   spec.add_dependency 'fog', '~> 1.18'
   # Newer Fogs throw a warning if unf isn't there :(
   spec.add_dependency 'unf'

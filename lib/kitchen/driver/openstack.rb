@@ -30,7 +30,7 @@ module Kitchen
     # Openstack driver for Kitchen.
     #
     # @author Jonathan Hartman <j@p4nt5.com>
-    class Openstack < Kitchen::Driver::SSHBase
+    class Openstack < Kitchen::Driver::Base
       @@ip_pool_lock = Mutex.new
 
       default_config :server_name, nil
@@ -64,20 +64,51 @@ module Kitchen
       default_config :availability_zone, nil
       default_config :security_groups, nil
       default_config :network_ref, nil
+
+      # TODO: no idea how to map this
+      # to new transport in test kitchen 1.4,
+      # figure it out
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
+
       default_config :block_device_mapping, nil
 
+      # Taken from kitchen-ec2
+      def self.deprecation_warn(driver, old_key, new_key)
+        driver.warn "WARN: The driver[#{driver.class.name}] config key " \
+         "`#{old_key}` is deprecated, please use `#{new_key}`"
+      end
+
+      validations[:username] = lambda do |attr, val, driver|
+        deprecation_warn(driver, attr, 'transport.username') unless val.nil?
+      end
+
+      validations[:password] = lambda do |attr, val, driver|
+        deprecation_warn(driver, attr, 'transport.password') unless val.nil?
+      end
+
+      validations[:port] = lambda do |attr, val, driver|
+        deprecation_warn(driver, attr, 'transport.port') unless val.nil?
+      end
+
+      validations[:private_key_path] = lambda do |attr, val, driver|
+        deprecation_warn(driver, attr, 'transport.ssh_key') unless val.nil?
+      end
+
+      # Lifted from https://github.com/test-kitchen/kitchen-ec2
+      # This copies transport config from the current config object into the
+      # state.  This relies on logic in the transport that merges the transport
+      # config with the current state object, so its a bad coupling.  But we
+      # can get rid of this when we get rid of these deprecated configs!
+      def copy_deprecated_configs(state)
+        state[:username] = config[:username] if config[:username]
+        state[:ssh_key] = config[:private_key_path] if config[:private_key_path]
+        state[:port] = config[:port] if config[:port]
+        state[:password] = config[:password] if config[:password]
+      end
+
       def create(state)
-        unless config[:server_name]
-          if config[:server_name_prefix]
-            config[:server_name] = server_name_prefix(
-              config[:server_name_prefix]
-            )
-          else
-            config[:server_name] = default_name
-          end
-        end
+        set_server_name
         config[:disable_ssl_validation] && disable_ssl_validation
         server = create_server
         state[:server_id] = server.id
@@ -93,7 +124,7 @@ module Kitchen
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
         state[:hostname] = get_ip(server)
-        setup_ssh(server, state)
+        instance.transport.connection(state).wait_until_ready
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
@@ -119,6 +150,17 @@ module Kitchen
         required_server_settings.each { |s| server_def[s] = config[s] }
         optional_server_settings.each { |s| server_def[s] = config[s] }
         server_def
+      end
+
+      def set_server_name
+        return if config[:server_name]
+        if config[:server_name_prefix]
+          config[:server_name] = server_name_prefix(
+            config[:server_name_prefix]
+          )
+        else
+          config[:server_name] = default_name
+        end
       end
 
       def required_server_settings
@@ -319,48 +361,12 @@ module Kitchen
 
       def add_ohai_hint(state)
         info 'Adding OpenStack hint for ohai'
-        ssh = Fog::SSH.new(*build_ssh_args(state))
-        ssh.run([
-          %(sudo mkdir -p #{Ohai::Config[:hints_path][0]}),
-          %(sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json)
-        ])
-      end
+        mkdir_cmd = "sudo mkdir -p #{Ohai::Config[:hints_path][0]}"
+        touch_cmd = "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
 
-      def setup_ssh(server, state)
-        tcp_check(state)
-        if config[:key_name]
-          info "Using OpenStack keypair <#{config[:key_name]}>"
-        end
-        info "Using public SSH key <#{config[:public_key_path]}>"
-        info "Using private SSH key <#{config[:private_key_path]}>"
-        state[:ssh_key] = config[:private_key_path]
-        do_ssh_setup(state, config, server) unless config[:key_name]
-      end
-
-      def do_ssh_setup(state, config, server)
-        info "Setting up SSH access for key <#{config[:public_key_path]}>"
-        ssh = Fog::SSH.new(state[:hostname],
-                           config[:username],
-                           password: config[:password] || server.password)
-        pub_key = open(config[:public_key_path]).read
-        ssh.run([
-          %(mkdir .ssh),
-          %(echo "#{pub_key}" >> ~/.ssh/authorized_keys),
-          %(passwd -l #{config[:username]})
-        ])
-      end
-
-      def tcp_check(state)
-        # allow driver config to bypass SSH tcp check -- because
-        # it doesn't respect ssh_config values that might be required
-        if config[:no_ssh_tcp_check]
-          sleep(config[:no_ssh_tcp_check_sleep])
-        else
-          wait_for_sshd(state[:hostname],
-                        config[:username],
-                        port: config[:port])
-        end
-        info '(ssh ready)'
+        instance.transport.connection(state).execute(
+          "#{mkdir_cmd};#{touch_cmd}"
+        )
       end
 
       def disable_ssl_validation
