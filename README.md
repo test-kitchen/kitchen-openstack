@@ -1,8 +1,14 @@
-[![Gem Version](https://badge.fury.io/rb/kitchen-openstack.png)](http://badge.fury.io/rb/kitchen-openstack)
-[![Build Status](https://travis-ci.org/test-kitchen/kitchen-openstack.png?branch=master)](https://travis-ci.org/test-kitchen/kitchen-openstack)
-[![Code Climate](https://codeclimate.com/github/test-kitchen/kitchen-openstack.png)](https://codeclimate.com/github/test-kitchen/kitchen-openstack)
-[![Coverage Status](https://coveralls.io/repos/test-kitchen/kitchen-openstack/badge.png)](https://coveralls.io/r/test-kitchen/kitchen-openstack)
-[![Dependency Status](https://gemnasium.com/test-kitchen/kitchen-openstack.png)](https://gemnasium.com/test-kitchen/kitchen-openstack)
+[![Gem Version](https://img.shields.io/gem/v/kitchen-openstack.svg)][gem]
+[![Build Status](https://img.shields.io/travis/test-kitchen/kitchen-openstack.svg)][travis]
+[![Code Climate](https://img.shields.io/codeclimate/github/test-kitchen/kitchen-openstack.svg)][codeclimate]
+[![Coverage Status](https://img.shields.io/coveralls/test-kitchen/kitchen-openstack.svg)][coveralls]
+[![Dependency Status](https://img.shields.io/gemnasium/test-kitchen/kitchen-openstack.svg)][gemnasium]
+
+[gem]: https://rubygems.org/gems/kitchen-openstack
+[travis]: https://travis-ci.org/test-kitchen/kitchen-openstack
+[codeclimate]: https://codeclimate.com/github/test-kitchen/kitchen-openstack
+[coveralls]: https://coveralls.io/r/test-kitchen/kitchen-openstack
+[gemnasium]: https://gemnasium.com/test-kitchen/kitchen-openstack
 
 # Kitchen::OpenStack
 
