@@ -55,6 +55,8 @@ module Kitchen
       default_config :openstack_network_name, nil
       default_config :floating_ip_pool, nil
       default_config :floating_ip, nil
+      default_config :private_ip_order, 0
+      default_config :public_ip_order, 0
       default_config :availability_zone, nil
       default_config :security_groups, nil
       default_config :network_ref, nil
@@ -305,7 +307,9 @@ module Kitchen
         pub, priv = get_public_private_ips(server)
         priv ||= server.ip_addresses unless pub
         pub, priv = parse_ips(pub, priv)
-        pub.first || priv.first || fail(ActionFailed, 'Could not find an IP')
+        pub[config[:public_ip_order].to_i] ||
+          priv[config[:private_ip_order].to_i] ||
+          fail(ActionFailed, 'Could not find an IP')
       end
 
       def parse_ips(pub, priv)
