@@ -1,7 +1,10 @@
 # Encoding: UTF-8
 
 require 'bundler/setup'
+require 'rubocop/rake_task'
 require 'rspec/core/rake_task'
+
+RuboCop::RakeTask.new
 
 desc 'Display LOC stats'
 task :loc do
@@ -11,4 +14,4 @@ end
 
 RSpec::Core::RakeTask.new(:spec)
 
-task default: [:cane, :rubocop, :loc, :spec]
+task default: [:rubocop, :loc, :spec]
