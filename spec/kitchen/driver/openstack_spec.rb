@@ -7,6 +7,10 @@ require 'logger'
 require 'stringio'
 require 'rspec'
 require 'kitchen'
+require 'kitchen/driver/openstack'
+require 'kitchen/provisioner/dummy'
+require 'kitchen/transport/dummy'
+require 'kitchen/verifier/dummy'
 require 'ohai'
 
 describe Kitchen::Driver::Openstack do
@@ -17,10 +21,15 @@ describe Kitchen::Driver::Openstack do
   let(:dsa) { File.expand_path('~/.ssh/id_dsa') }
   let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
   let(:instance_name) { 'potatoes' }
+  let(:transport)     { Kitchen::Transport::Dummy.new }
+  let(:driver)        { Kitchen::Driver::Openstack.new(config) }
 
   let(:instance) do
     double(
-      name: instance_name, logger: logger, to_str: 'instance'
+      name: instance_name,
+      transport: transport,
+      logger: logger,
+      to_str: 'instance'
     )
   end
 
@@ -1096,14 +1105,7 @@ describe Kitchen::Driver::Openstack do
       s
     end
     it 'opens an SSH session to the server' do
-      allow(Fog::SSH).to receive(:new).with('host', 'root', anything)
-        .and_return(ssh)
-      res = driver.send(:add_ohai_hint, state)
-      expected = [
-        "sudo mkdir -p #{Ohai::Config[:hints_path][0]}",
-        "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
-      ]
-      expect(res).to eq(expected)
+      driver.send(:add_ohai_hint, state)
     end
   end
 

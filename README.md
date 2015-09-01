@@ -15,7 +15,9 @@
 An OpenStack Nova driver for Test Kitchen 1.0!
 
 Shamelessly copied from [Fletcher Nichol](https://github.com/fnichol)'s
-awesome work on an [EC2 driver](https://github.com/opscode/kitchen-ec2).
+awesome work on an [EC2 driver](https://github.com/test-kitchen/kitchen-ec2),
+and [Adam Leff](https://github.com/adamleff)'s
+amazing work on an [VRO driver](https://github.com/chef-partners/kitchen-vro).
 
 ## Installation
 

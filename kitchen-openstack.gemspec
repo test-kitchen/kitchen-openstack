@@ -7,8 +7,8 @@ require 'kitchen/driver/openstack_version'
 Gem::Specification.new do |spec|
   spec.name          = 'kitchen-openstack'
   spec.version       = Kitchen::Driver::OPENSTACK_VERSION
-  spec.authors       = ['Jonathan Hartman']
-  spec.email         = ['j@p4nt5.com']
+  spec.authors       = ['Jonathan Hartman','JJ Asghar']
+  spec.email         = ['j@p4nt5.com','jj@chef.io']
   spec.description   = 'A Test Kitchen OpenStack Nova driver'
   spec.summary       = spec.description
   spec.homepage      = 'https://github.com/test-kitchen/kitchen-openstack'
@@ -19,11 +19,10 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
-  spec.required_ruby_version = '>= 1.9.3'
+  spec.required_ruby_version = '>= 2.0.0'
 
-  spec.add_dependency 'test-kitchen', '~> 1.2'
-  spec.add_dependency 'fog', '~> 1.18'
-  # Newer Fogs throw a warning if unf isn't there :(
+  spec.add_dependency 'test-kitchen', '~> 1.4', '>= 1.4.1'
+  spec.add_dependency 'fog', '~> 1.33'
   spec.add_dependency 'unf'
   spec.add_dependency 'ohai'
 

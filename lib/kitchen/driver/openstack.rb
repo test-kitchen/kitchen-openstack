@@ -1,8 +1,10 @@
 # Encoding: UTF-8
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
+# Author:: JJ Asghar (<jj@chef.io>)
 #
 # Copyright (C) 2013-2015, Jonathan Hartman
+# Copyright (C) 2015, Chef Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,22 +18,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'benchmark'
-require 'fog'
+
 require 'kitchen'
-require 'etc'
-require 'ipaddr'
-require 'socket'
-require 'ohai'
+require 'fog'
 require_relative 'openstack/volume'
 
 module Kitchen
   module Driver
-    # Openstack driver for Kitchen.
-    #
-    # @author Jonathan Hartman <j@p4nt5.com>
-    class Openstack < Kitchen::Driver::SSHBase
+    class Openstack < Kitchen::Driver::Base
       @@ip_pool_lock = Mutex.new
+
+      kitchen_driver_api_version 2
+      plugin_version Kitchen::Driver::OPENSTACK_VERSION
 
       default_config :server_name, nil
       default_config :server_name_prefix, nil
@@ -85,12 +83,9 @@ module Kitchen
         config[:disable_ssl_validation] && disable_ssl_validation
         server = create_server
         state[:server_id] = server.id
-        info "OpenStack instance <#{state[:server_id]}> created."
-        server.wait_for do
-          print '.'
-          ready?
-        end
-        info "\n(server ready)"
+        info ("OpenStack instance <#{state[:server_id]}> created.")
+        wait_for_server(state)
+        info ("OpenStack instance #{state[:hostname]} with the ID of <#{state[:server_id]}> is ready.")
         if config[:floating_ip]
           attach_ip(server, config[:floating_ip])
         elsif config[:floating_ip_pool]
@@ -109,7 +104,7 @@ module Kitchen
         config[:disable_ssl_validation] && disable_ssl_validation
         server = compute.servers.get(state[:server_id])
         server.destroy unless server.nil?
-        info "OpenStack instance <#{state[:server_id]}> destroyed."
+        info("OpenStack instance <#{state[:server_id]}> destroyed.")
         state.delete(:server_id)
         state.delete(:hostname)
       end
@@ -325,11 +320,11 @@ module Kitchen
 
       def add_ohai_hint(state)
         info 'Adding OpenStack hint for ohai'
-        ssh = Fog::SSH.new(*build_ssh_args(state))
-        ssh.run([
-          %(sudo mkdir -p #{Ohai::Config[:hints_path][0]}),
-          %(sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json)
-        ])
+        mkdir_cmd = "sudo mkdir -p #{Ohai::Config[:hints_path][0]}"
+        touch_cmd = "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
+        instance.transport.connection(state).execute(
+          "#{mkdir_cmd};#{touch_cmd}"
+        )
       end
 
       def setup_ssh(server, state)
@@ -372,6 +367,14 @@ module Kitchen
       def disable_ssl_validation
         require 'excon'
         Excon.defaults[:ssl_verify_peer] = false
+      end
+
+      def wait_for_server(state)
+        instance.transport.connection(state).wait_until_ready
+      rescue
+        error("Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server...")
+        destroy(state)
+        raise
       end
 
       def find_matching(collection, name)
