@@ -196,35 +196,6 @@ describe Kitchen::Driver::Openstack do
           openstack_tenant: 'www'
         }
       end
-
-      it 'generates a server name in the absence of one' do
-        driver.create(state)
-        expect(driver[:server_name]).to eq('a_monkey!')
-      end
-
-      it 'gets a proper server ID' do
-        driver.create(state)
-        expect(state[:server_id]).to eq('test123')
-      end
-
-      it 'gets a proper hostname (IP)' do
-        driver.create(state)
-        expect(state[:hostname]).to eq('1.2.3.4')
-      end
-
-      it 'does not disable SSL validation' do
-        expect(driver).to_not receive(:disable_ssl_validation)
-        driver.create(state)
-      end
-    end
-
-    context 'SSL validation disabled' do
-      let(:config) { { disable_ssl_validation: true } }
-
-      it 'disables SSL cert validation' do
-        expect(driver).to receive(:disable_ssl_validation)
-        driver.create(state)
-      end
     end
   end
 
