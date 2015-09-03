@@ -34,6 +34,29 @@ describe Kitchen::Driver::Openstack do
     allow(File).to receive(:exist?).with(rsa).and_return(true)
   end
 
+  describe '#finalize_config' do
+    before(:each) { allow(File).to receive(:exist?).and_return(false) }
+
+    context 'both private and public key info provided' do
+      let(:config) do
+        { private_key_path: '/tmp/key', public_key_path: '/tmp/key.pub' }
+      end
+
+      it 'raises no error' do
+        expect(driver.finalize_config!(instance)).to be
+      end
+    end
+
+    context 'no key information provided provided' do
+      let(:config) { {} }
+
+      it 'raises an error' do
+        expected = Kitchen::UserError
+        expect { driver.finalize_config!(instance) }.to raise_error(expected)
+      end
+    end
+  end
+
   describe '#initialize'do
     context 'default options' do
       it 'uses the normal SSH status check' do
@@ -773,7 +796,7 @@ describe Kitchen::Driver::Openstack do
 
       it 'raises an exception' do
         expect { driver.send(:attach_ip_from_pool, server, pool) }.to \
-          raise_error
+          raise_error(Kitchen::ActionFailed)
       end
     end
   end
@@ -915,7 +938,8 @@ describe Kitchen::Driver::Openstack do
 
     context 'no IP addresses whatsoever' do
       it 'raises an exception' do
-        expect { driver.send(:get_ip, server) }.to raise_error
+        expected = Kitchen::ActionFailed
+        expect { driver.send(:get_ip, server) }.to raise_error(expected)
       end
     end
   end

@@ -1,8 +1,14 @@
-[![Gem Version](https://badge.fury.io/rb/kitchen-openstack.png)](http://badge.fury.io/rb/kitchen-openstack)
-[![Build Status](https://travis-ci.org/test-kitchen/kitchen-openstack.png?branch=master)](https://travis-ci.org/test-kitchen/kitchen-openstack)
-[![Code Climate](https://codeclimate.com/github/test-kitchen/kitchen-openstack.png)](https://codeclimate.com/github/test-kitchen/kitchen-openstack)
-[![Coverage Status](https://coveralls.io/repos/test-kitchen/kitchen-openstack/badge.png)](https://coveralls.io/r/test-kitchen/kitchen-openstack)
-[![Dependency Status](https://gemnasium.com/test-kitchen/kitchen-openstack.png)](https://gemnasium.com/test-kitchen/kitchen-openstack)
+[![Gem Version](https://img.shields.io/gem/v/kitchen-openstack.svg)][gem]
+[![Build Status](https://img.shields.io/travis/test-kitchen/kitchen-openstack.svg)][travis]
+[![Code Climate](https://img.shields.io/codeclimate/github/test-kitchen/kitchen-openstack.svg)][codeclimate]
+[![Coverage Status](https://img.shields.io/coveralls/test-kitchen/kitchen-openstack.svg)][coveralls]
+[![Dependency Status](https://img.shields.io/gemnasium/test-kitchen/kitchen-openstack.svg)][gemnasium]
+
+[gem]: https://rubygems.org/gems/kitchen-openstack
+[travis]: https://travis-ci.org/test-kitchen/kitchen-openstack
+[codeclimate]: https://codeclimate.com/github/test-kitchen/kitchen-openstack
+[coveralls]: https://coveralls.io/r/test-kitchen/kitchen-openstack
+[gemnasium]: https://gemnasium.com/test-kitchen/kitchen-openstack
 
 # Kitchen::OpenStack
 
@@ -36,7 +42,7 @@ Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
     driver:
       name: openstack
       openstack_username: [YOUR OPENSTACK USERNAME]
-      openstack_api_key: [YOUR OPENSTACK API KEY]
+      openstack_api_key: [YOUR OPENSTACK API KEY] # AKA your OPENSTACK PASSWORD
       openstack_auth_url: [YOUR OPENSTACK AUTH URL]
       require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
       image_ref: [SERVER IMAGE ID]
@@ -57,7 +63,7 @@ behavior can be overridden with additional options:
     password: [SSH PASSWORD]
     port: [SSH PORT]
     key_name: [SSH KEY NAME]
-    openstack_tenant: [YOUR OPENSTACK TENANT ID]
+    openstack_tenant: [YOUR OPENSTACK TENANT NAME]
     openstack_region: [A VALID OPENSTACK REGION]
     availability_zone: [AN OPENSTACK AVAILABILITY ZONE]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
@@ -79,10 +85,10 @@ behavior can be overridden with additional options:
       availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
       volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
-       
-If a `server_name_prefix` is specified then this prefix will be used when 
+
+If a `server_name_prefix` is specified then this prefix will be used when
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
-`myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are 
+`myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are
 specified then the `server_name` takes precedence.
 
 If a `key_name` is provided it will be used instead of any
@@ -98,6 +104,28 @@ Test Kitchen's SSH calls to the node.
 
     floating_ip: [A SPECIFIC FLOATING IP TO ASSIGN]
     floating_ip_pool: [AN OPENSTACK POOL NAME TO ASSIGN THE NEXT IP FROM]
+
+In some complex network scenarios you can have several IP addresses designated
+as public or private. Use `public_ip_order` or `private_ip_order` to control
+which one to use for further SSH connection. Default is 0 (first one)
+
+For example if you have openstack istance that has network with several IPs assigned like
+
+```
++--------------------------------------+------------+--------+------------+-------------+----------------------------------+
+| ID                                   | Name       | Status | Task State | Power State | Networks                         |
++--------------------------------------+------------+--------+------------+-------------+----------------------------------+
+| 31c98de4-026f-4d12-b03f-a8a35c6e730b | kitchen    | ACTIVE | None       | Running     | test=10.0.0.1, 10.0.1.1   |
+
+```
+
+to use second `10.0.1.1` IP address you need to specify
+
+```yaml
+  private_ip_order: 1
+
+```
+assuming that test network is configured as private.
 
 The `network_ref` option can be specified as an exact id, an exact name,
 or as a regular expression matching the name of the network. You can pass one

@@ -38,12 +38,12 @@ module Kitchen
       default_config :key_name, nil
       default_config :private_key_path do
         %w(id_rsa id_dsa).map do |k|
-          f = File.expand_path "~/.ssh/#{k}"
+          f = File.expand_path("~/.ssh/#{k}")
           f if File.exist?(f)
         end.compact.first
       end
       default_config :public_key_path do |driver|
-        driver[:private_key_path] + '.pub'
+        driver[:private_key_path] + '.pub' if driver[:private_key_path]
       end
       default_config :username, 'root'
       default_config :password, nil
@@ -55,6 +55,8 @@ module Kitchen
       default_config :openstack_network_name, nil
       default_config :floating_ip_pool, nil
       default_config :floating_ip, nil
+      default_config :private_ip_order, 0
+      default_config :public_ip_order, 0
       default_config :availability_zone, nil
       default_config :security_groups, nil
       default_config :network_ref, nil
@@ -62,7 +64,15 @@ module Kitchen
       default_config :no_ssh_tcp_check_sleep, 120
       default_config :block_device_mapping, nil
 
-      def create(state) # rubocop:disable Metrics/AbcSize
+      required_config :private_key_path
+      required_config :public_key_path do |_, value, driver|
+        if value.nil? && driver[:key_name].nil?
+          fail(UserError,
+               'Either a `:public_key_path` or `:key_name` is required')
+        end
+      end
+
+      def create(state)
         unless config[:server_name]
           if config[:server_name_prefix]
             config[:server_name] = server_name_prefix(
@@ -317,7 +327,9 @@ module Kitchen
         pub, priv = get_public_private_ips(server)
         priv ||= server.ip_addresses unless pub
         pub, priv = parse_ips(pub, priv)
-        pub.first || priv.first || fail(ActionFailed, 'Could not find an IP')
+        pub[config[:public_ip_order].to_i] ||
+          priv[config[:private_ip_order].to_i] ||
+          fail(ActionFailed, 'Could not find an IP')
       end
 
       def parse_ips(pub, priv)

@@ -1,5 +1,12 @@
 # ?.?.? / ????-??-??
 
+# 1.8.1 / 2015-07-22
+
+### Bug Fixes
+
+* PR [#88][] - Fail immediately and with a more understandable message if
+  required SSH configs can't be found
+
 # 1.8.0 / 2015-04-08
 
 ### New Features
@@ -146,6 +153,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#88]: https://github.com/test-kitchen/kitchen-openstack/pull/88
 [#74]: https://github.com/test-kitchen/kitchen-openstack/pull/74
 [#70]: https://github.com/test-kitchen/kitchen-openstack/pull/70
 [#66]: https://github.com/test-kitchen/kitchen-openstack/pull/66
