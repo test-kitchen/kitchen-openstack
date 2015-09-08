@@ -18,7 +18,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 require 'kitchen'
 require 'fog'
 require 'ohai'
@@ -275,7 +274,7 @@ module Kitchen
       def attach_ip(server, ip)
         info "Attaching floating IP <#{ip}>"
         server.associate_address ip
-        #(server.addresses['public'] ||= []) << { 'version' => 4, 'addr' => ip }
+        # (server.addresses['public'] ||= []) << { 'version' => 4, 'addr' => ip }
       end
 
       def get_public_private_ips(server)

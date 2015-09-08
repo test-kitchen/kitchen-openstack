@@ -7,8 +7,8 @@ require 'kitchen/driver/openstack_version'
 Gem::Specification.new do |spec|
   spec.name          = 'kitchen-openstack'
   spec.version       = Kitchen::Driver::OPENSTACK_VERSION
-  spec.authors       = ['Jonathan Hartman','JJ Asghar']
-  spec.email         = ['j@p4nt5.com','jj@chef.io']
+  spec.authors       = ['Jonathan Hartman', 'JJ Asghar']
+  spec.email         = ['j@p4nt5.com', 'jj@chef.io']
   spec.description   = 'A Test Kitchen OpenStack Nova driver'
   spec.summary       = spec.description
   spec.homepage      = 'https://github.com/test-kitchen/kitchen-openstack'
