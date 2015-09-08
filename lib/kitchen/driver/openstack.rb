@@ -21,6 +21,7 @@
 
 require 'kitchen'
 require 'fog'
+require 'ohai'
 require_relative 'openstack/volume'
 
 module Kitchen
@@ -80,18 +81,18 @@ module Kitchen
             config[:server_name] = default_name
           end
         end
-        config[:disable_ssl_validation] && disable_ssl_validation
+        disable_ssl_validation if config[:disable_ssl_validation]
         server = create_server
         state[:server_id] = server.id
         info ("OpenStack instance <#{state[:server_id]}> created.")
-        wait_for_server(state)
         info ("OpenStack instance #{state[:hostname]} with the ID of <#{state[:server_id]}> is ready.")
+        sleep 30
         if config[:floating_ip]
           attach_ip(server, config[:floating_ip])
         elsif config[:floating_ip_pool]
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
-        state[:hostname] = get_ip(server)
+        wait_for_server(state)
         setup_ssh(server, state)
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
@@ -101,7 +102,7 @@ module Kitchen
       def destroy(state)
         return if state[:server_id].nil?
 
-        config[:disable_ssl_validation] && disable_ssl_validation
+        disable_ssl_validation if config[:disable_ssl_validation]
         server = compute.servers.get(state[:server_id])
         server.destroy unless server.nil?
         info("OpenStack instance <#{state[:server_id]}> destroyed.")
@@ -274,7 +275,7 @@ module Kitchen
       def attach_ip(server, ip)
         info "Attaching floating IP <#{ip}>"
         server.associate_address ip
-        (server.addresses['public'] ||= []) << { 'version' => 4, 'addr' => ip }
+        #(server.addresses['public'] ||= []) << { 'version' => 4, 'addr' => ip }
       end
 
       def get_public_private_ips(server)
@@ -320,11 +321,15 @@ module Kitchen
 
       def add_ohai_hint(state)
         info 'Adding OpenStack hint for ohai'
-        mkdir_cmd = "sudo mkdir -p #{Ohai::Config[:hints_path][0]}"
-        touch_cmd = "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
+        mkdir_cmd = "sudo mkdir -p #{hints_path}"
+        touch_cmd = "sudo touch #{hints_path}/openstack.json"
         instance.transport.connection(state).execute(
-          "#{mkdir_cmd};#{touch_cmd}"
+          "#{mkdir_cmd} && #{touch_cmd}"
         )
+      end
+
+      def hints_path
+        Ohai::Config[:hints_path][0]
       end
 
       def setup_ssh(server, state)
@@ -370,6 +375,7 @@ module Kitchen
       end
 
       def wait_for_server(state)
+        state[:hostname] = get_ip(state)
         instance.transport.connection(state).wait_until_ready
       rescue
         error("Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server...")

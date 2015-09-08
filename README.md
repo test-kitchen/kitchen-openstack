@@ -53,6 +53,20 @@ Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
 The `image_ref` and `flavor_ref` options can be specified as an exact id,
 an exact name, or as a regular expression matching the name of the image or flavor.
 
+With the update to test-kitchen 1.4 there is now a `transport` layer that is modular.
+This means you'll need to add a `transport:` general section or `transport` in your
+platforms to your `kitchen.yml` if you want to leverage it.
+
+    transport:
+      username: ubuntu
+
+Or if you are using Windows
+
+    name: windows-2012r2
+    transport:
+      username: Administrator
+      password: p@ssw0rd!
+
 By default, a unique server name will be generated and the current user's SSH
 key will be used (with an RSA key taking precedence over a DSA), though that
 behavior can be overridden with additional options:
