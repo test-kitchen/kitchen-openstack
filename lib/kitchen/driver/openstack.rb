@@ -84,7 +84,6 @@ module Kitchen
         disable_ssl_validation if config[:disable_ssl_validation]
         server = create_server
         state[:server_id] = server.id
-        info ("OpenStack instance <#{state[:server_id]}> created.")
         info ("OpenStack instance #{state[:hostname]} with the ID of <#{state[:server_id]}> is ready.")
         sleep 30
         if config[:floating_ip]
@@ -95,8 +94,8 @@ module Kitchen
         wait_for_server(state)
         if bourne_shell?
           setup_ssh(server, state)
-          add_ohai_hint(state)
         end
+        add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
       end
@@ -322,12 +321,22 @@ module Kitchen
       end
 
       def add_ohai_hint(state)
-        info 'Adding OpenStack hint for ohai'
-        mkdir_cmd = "sudo mkdir -p #{hints_path}"
-        touch_cmd = "sudo touch #{hints_path}/openstack.json"
-        instance.transport.connection(state).execute(
-          "#{mkdir_cmd} && #{touch_cmd}"
-        )
+        if borne_shell?
+          info 'Adding OpenStack hint for ohai'
+          mkdir_cmd = "sudo mkdir -p #{hints_path}"
+          touch_cmd = "sudo touch #{hints_path}/openstack.json"
+          instance.transport.connection(state).execute(
+            "#{mkdir_cmd} && #{touch_cmd}"
+          )
+        end
+        if windows_os?
+          info 'Adding OpenStack hint for ohai'
+          mkdir_cmd = "mkdir #{hints_path}"
+          touch_cmd = "'' > #{hints_path}\\openstack.json"
+          instance.transport.connection(state).execute(
+            "#{mkdir_cmd} && #{touch_cmd}"
+          )
+        end
       end
 
       def hints_path
