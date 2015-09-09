@@ -101,12 +101,15 @@ behavior can be overridden with additional options:
       availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
       volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
-      winrm_wait: [DEFAULTS TO 0, BUT SOME IMAGE BRING UP WINRM MULTIPLE TIMES, THIS WAITS A NUMBER OF SECONDS]
+      winrm_wait: [DEFAULTS TO 0, BUT SOMES IMAGE BRING UP WINRM MULTIPLE TIMES, THIS WAITS A NUMBER OF SECONDS]
 
 If a `server_name_prefix` is specified then this prefix will be used when
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
 `myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are
 specified then the `server_name` takes precedence.
+
+`winrm_wait` is a workaround to deal with how WinRM comes up during machine
+creation.
 
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
