@@ -60,6 +60,7 @@ module Kitchen
       default_config :network_ref, nil
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
+      default_config :winrm_wait, 0
       default_config :block_device_mapping, nil
 
       required_config :private_key_path
@@ -377,6 +378,11 @@ module Kitchen
 
       def wait_for_server(state)
         state[:hostname] = get_ip(state)
+        if config[:winrm_wait]
+          info("Sleeping for #{config[:winrm_wait]} seconds to let WinRM start up...")
+          sleep(config[:winrm_wait])
+        end
+        info("Waiting for server to be ready...")
         instance.transport.connection(state).wait_until_ready
       rescue
         error("Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server...")

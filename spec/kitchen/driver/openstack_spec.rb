@@ -1146,6 +1146,16 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe '#wait_for_server' do
+    let(:state) { { hostname: 'hostname' } }
+
+    context 'standard WinRM sleep check' do
+      it 'calls the normal Kitchen WinRM wait' do
+        expect_any_instance_of(described_class).not_to receive(:sleep)
+      end
+    end
+  end
+
   describe '#disable_ssl_validation' do
     it 'turns off Excon SSL cert validation' do
       expect(driver.send(:disable_ssl_validation)).to eq(false)

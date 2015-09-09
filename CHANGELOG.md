@@ -3,7 +3,7 @@
 ### New Features
 
 * Re-written for the new test-kitchen underlying framework
-* WindowsRM support
+* Windows and WinRM support
 * Stole some code from PR [#80][] - from [@jmahowald][]
 
 # 1.8.1 / 2015-07-22

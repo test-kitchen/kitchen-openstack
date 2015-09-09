@@ -101,6 +101,7 @@ behavior can be overridden with additional options:
       availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
       volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
+      winrm_wait: [DEFAULTS TO 0, BUT SOME IMAGE BRING UP WINRM MULTIPLE TIMES, THIS WAITS A NUMBER OF SECONDS]
 
 If a `server_name_prefix` is specified then this prefix will be used when
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
