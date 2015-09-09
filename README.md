@@ -41,31 +41,38 @@ Or if using [chefdk](https://downloads.chef.io/chef-dk) install with:
 
 Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
 
-    driver:
-      name: openstack
-      openstack_username: [YOUR OPENSTACK USERNAME]
-      openstack_api_key: [YOUR OPENSTACK API KEY] # AKA your OPENSTACK PASSWORD
-      openstack_auth_url: [YOUR OPENSTACK AUTH URL]
-      require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
-      image_ref: [SERVER IMAGE ID]
-      flavor_ref: [SERVER FLAVOR ID]
+```yaml
+driver:
+  name: openstack
+  openstack_username: [YOUR OPENSTACK USERNAME]
+  openstack_api_key: [YOUR OPENSTACK API KEY] # AKA your OPENSTACK PASSWORD
+  openstack_auth_url: [YOUR OPENSTACK AUTH URL]
+  require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
+  image_ref: [SERVER IMAGE ID]
+  flavor_ref: [SERVER FLAVOR ID]
+```
 
 The `image_ref` and `flavor_ref` options can be specified as an exact id,
 an exact name, or as a regular expression matching the name of the image or flavor.
 
-With the update to test-kitchen 1.4 there is now a `transport` layer that is modular.
-This means you'll need to add a `transport:` general section or `transport` in your
-platforms to your `kitchen.yml` if you want to leverage it.
+Test Kitchen 1.4 supports multiple transports, and transports can be configure globally:
 
-    transport:
-      username: ubuntu
+```yaml
+transport:
+  username: ubuntu
+  password: mysecretpassword
+```
 
-Or if you are using Windows
+... or per-platform:
 
-    name: windows-2012r2
-    transport:
-      username: Administrator
-      password: p@ssw0rd!
+```yaml
+platforms:
+  name: ubuntu-14.04
+  transport:
+    password: myrootpassword
+  name: windows-2012r2
+    password: myadministratorpassword
+```
 
 By default, a unique server name will be generated and the current user's SSH
 key will be used (with an RSA key taking precedence over a DSA), though that

@@ -25,7 +25,8 @@ require_relative 'openstack/volume'
 
 module Kitchen
   module Driver
-    class Openstack < Kitchen::Driver::Base
+    # This takes from the Base Class and creates the OpenStack driver.
+    class Openstack < Kitchen::Driver::Base # rubocop:disable Metrics/ClassLength, Metrics/LineLength
       @@ip_pool_lock = Mutex.new
 
       kitchen_driver_api_version 2
@@ -84,7 +85,7 @@ module Kitchen
         disable_ssl_validation if config[:disable_ssl_validation]
         server = create_server
         state[:server_id] = server.id
-        info ("OpenStack instance #{state[:hostname]} with the ID of <#{state[:server_id]}> is ready.")
+        info "OpenStack instance with ID of <#{state[:server_id]}> is ready." # rubocop:disable Metrics/LineLength
         sleep 30
         if config[:floating_ip]
           attach_ip(server, config[:floating_ip])
@@ -92,9 +93,7 @@ module Kitchen
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
         wait_for_server(state)
-        if bourne_shell?
-          setup_ssh(server, state)
-        end
+        setup_ssh(server, state) if bourne_shell?
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
@@ -106,7 +105,7 @@ module Kitchen
         disable_ssl_validation if config[:disable_ssl_validation]
         server = compute.servers.get(state[:server_id])
         server.destroy unless server.nil?
-        info("OpenStack instance <#{state[:server_id]}> destroyed.")
+        info "OpenStack instance <#{state[:server_id]}> destroyed."
         state.delete(:server_id)
         state.delete(:hostname)
       end
@@ -189,7 +188,7 @@ module Kitchen
         when :security_groups
           config[c] if config[c].is_a?(Array)
         when :user_data
-          File.open(config[c]) { |f| f.read } if File.exist?(config[c])
+          File.open(config[c], &:read) if File.exist?(config[c])
         else
           config[c]
         end
@@ -276,7 +275,6 @@ module Kitchen
       def attach_ip(server, ip)
         info "Attaching floating IP <#{ip}>"
         server.associate_address ip
-        # (server.addresses['public'] ||= []) << { 'version' => 4, 'addr' => ip }
       end
 
       def get_public_private_ips(server)
@@ -328,8 +326,7 @@ module Kitchen
           instance.transport.connection(state).execute(
             "#{mkdir_cmd} && #{touch_cmd}"
           )
-        end
-        if windows_os?
+        elsif windows_os?
           info 'Adding OpenStack hint for ohai'
           mkdir_cmd = "mkdir #{hints_path}"
           touch_cmd = "'' > #{hints_path}\\openstack.json"
@@ -377,7 +374,7 @@ module Kitchen
                         config[:username],
                         port: config[:port])
         end
-        info '(ssh ready)'
+        info "Server #{state[:hostname]} has ssh ready..."
       end
 
       def disable_ssl_validation
@@ -388,15 +385,24 @@ module Kitchen
       def wait_for_server(state)
         state[:hostname] = get_ip(state)
         if config[:winrm_wait]
-          info("Sleeping for #{config[:winrm_wait]} seconds to let WinRM start up...")
-          sleep(config[:winrm_wait])
+          info "Sleeping for #{config[:winrm_wait]} seconds to let WinRM start up..." # rubocop:disable Metrics/LineLength
+          countdown(config[:winrm_wait])
         end
-        info("Waiting for server to be ready...")
+        info 'Waiting for server to be ready...'
         instance.transport.connection(state).wait_until_ready
       rescue
-        error("Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server...")
+        error "Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server..." # rubocop:disable Metrics/LineLength
         destroy(state)
         raise
+      end
+
+      def countdown(seconds)
+        date1 = Time.now + seconds
+        while Time.now < date1
+          t = Time.at(date1.to_i - Time.now.to_i)
+          puts t.strftime('%M:%S')
+          sleep 1
+        end
       end
 
       def find_matching(collection, name)
