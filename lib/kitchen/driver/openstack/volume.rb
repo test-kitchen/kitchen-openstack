@@ -21,7 +21,7 @@ require 'kitchen'
 
 module Kitchen
   module Driver
-    class Openstack < Kitchen::Driver::SSHBase
+    class Openstack < Kitchen::Driver::Base
       # A class to allow the Kitchen Openstack driver
       # to use Openstack volumes
       #

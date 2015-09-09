@@ -5,18 +5,7 @@ sudo: false
 
 gemfile:
   - Gemfile
-  - Gemfile.ohai-7
 
 rvm:
-  - 1.9.3
   - 2.0.0
   - ruby-head
-
-matrix:
-  exclude:
-    - rvm: 1.9.3
-      gemfile: Gemfile
-    - rvm: 2.0.0
-      gemfile: Gemfile.ohai-7
-    - rvm: ruby-head
-      gemfile: Gemfile.ohai-7

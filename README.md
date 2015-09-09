@@ -15,7 +15,9 @@
 An OpenStack Nova driver for Test Kitchen 1.0!
 
 Shamelessly copied from [Fletcher Nichol](https://github.com/fnichol)'s
-awesome work on an [EC2 driver](https://github.com/opscode/kitchen-ec2).
+awesome work on an [EC2 driver](https://github.com/test-kitchen/kitchen-ec2),
+and [Adam Leff](https://github.com/adamleff)'s
+amazing work on an [VRO driver](https://github.com/chef-partners/kitchen-vro).
 
 ## Installation
 
@@ -39,17 +41,38 @@ Or if using [chefdk](https://downloads.chef.io/chef-dk) install with:
 
 Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
 
-    driver:
-      name: openstack
-      openstack_username: [YOUR OPENSTACK USERNAME]
-      openstack_api_key: [YOUR OPENSTACK API KEY] # AKA your OPENSTACK PASSWORD
-      openstack_auth_url: [YOUR OPENSTACK AUTH URL]
-      require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
-      image_ref: [SERVER IMAGE ID]
-      flavor_ref: [SERVER FLAVOR ID]
+```yaml
+driver:
+  name: openstack
+  openstack_username: [YOUR OPENSTACK USERNAME]
+  openstack_api_key: [YOUR OPENSTACK API KEY] # AKA your OPENSTACK PASSWORD
+  openstack_auth_url: [YOUR OPENSTACK AUTH URL]
+  require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
+  image_ref: [SERVER IMAGE ID]
+  flavor_ref: [SERVER FLAVOR ID]
+```
 
 The `image_ref` and `flavor_ref` options can be specified as an exact id,
 an exact name, or as a regular expression matching the name of the image or flavor.
+
+Test Kitchen 1.4 supports multiple transports, and transports can be configure globally:
+
+```yaml
+transport:
+  username: ubuntu
+  password: mysecretpassword
+```
+
+... or per-platform:
+
+```yaml
+platforms:
+  name: ubuntu-14.04
+  transport:
+    password: myrootpassword
+  name: windows-2012r2
+    password: myadministratorpassword
+```
 
 By default, a unique server name will be generated and the current user's SSH
 key will be used (with an RSA key taking precedence over a DSA), though that
@@ -85,18 +108,25 @@ behavior can be overridden with additional options:
       availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
       volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
+      winrm_wait: [DEFAULTS TO 0, BUT THIS HELPS CONFIRM WINRM IS IN A GOOD STATE BEFORE TRYING TO CONNECT]
 
 If a `server_name_prefix` is specified then this prefix will be used when
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
 `myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are
 specified then the `server_name` takes precedence.
 
+`winrm_wait` is a workaround to deal with how WinRM comes up during machine
+creation. With `cloud-init` running on most OpenStack instances having this
+wait makes sure that the machine is in a good state to work with.
+
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
 
 If a `key_name` is provided without any `private_key_path`, unexpected
 behavior may result if your local RSA/DSA private key doesn't match that
-OpenStack key.
+OpenStack key. If you do key injection via `cloud-init` like this issue:
+[#77](https://github.com/test-kitchen/kitchen-openstack/issues/77) the best
+way is to make a "dummy-key."
 
 A specific `floating_ip` or the ID of a `floating_ip_pool` can be provided to
 bind a floating IP to the node. Any floating IP will be the IP used for

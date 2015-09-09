@@ -1,8 +1,0 @@
-# Encoding: UTF-8
-
-source 'https://rubygems.org'
-
-gem 'ohai', '~> 7.0'
-
-# Specify your gem's dependencies in kitchen-openstack.gemspec
-gemspec

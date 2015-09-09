@@ -7,6 +7,10 @@ require 'logger'
 require 'stringio'
 require 'rspec'
 require 'kitchen'
+require 'kitchen/driver/openstack'
+require 'kitchen/provisioner/dummy'
+require 'kitchen/transport/dummy'
+require 'kitchen/verifier/dummy'
 require 'ohai'
 
 describe Kitchen::Driver::Openstack do
@@ -17,10 +21,17 @@ describe Kitchen::Driver::Openstack do
   let(:dsa) { File.expand_path('~/.ssh/id_dsa') }
   let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
   let(:instance_name) { 'potatoes' }
+  let(:transport)     { Kitchen::Transport::Dummy.new }
+  let(:platform)      { Kitchen::Platform.new(name: 'fake_platform') }
+  let(:driver)        { Kitchen::Driver::Openstack.new(config) }
 
   let(:instance) do
     double(
-      name: instance_name, logger: logger, to_str: 'instance'
+      name: instance_name,
+      transport: transport,
+      logger: logger,
+      platform: platform,
+      to_str: 'instance'
     )
   end
 
@@ -184,6 +195,7 @@ describe Kitchen::Driver::Openstack do
       allow(d).to receive(:get_ip).and_return('1.2.3.4')
       allow(d).to receive(:add_ohai_hint).and_return(true)
       allow(d).to receive(:do_ssh_setup).and_return(true)
+      allow(d).to receive(:sleep)
       d
     end
 
@@ -195,6 +207,28 @@ describe Kitchen::Driver::Openstack do
           openstack_auth_url: 'http:',
           openstack_tenant: 'www'
         }
+      end
+    end
+
+    context 'when executed with a bourne shell' do
+      before do
+        allow(driver).to receive(:bourne_shell?).and_return(true)
+      end
+
+      it 'executes the ssh setup' do
+        expect(driver).to receive(:setup_ssh)
+        driver.create(state)
+      end
+    end
+
+    context 'when executed in a non-bourne shell' do
+      before do
+        allow(driver).to receive(:bourne_shell?).and_return(false)
+      end
+
+      it 'does not execute the ssh setup' do
+        expect(driver).not_to receive(:setup_ssh)
+        driver.create(state)
       end
     end
   end
@@ -812,8 +846,7 @@ describe Kitchen::Driver::Openstack do
     end
 
     it 'associates the IP address with the server' do
-      expect(driver.send(:attach_ip, server, ip)).to eq(
-        [{ 'version' => 4, 'addr' => ip }])
+      expect(driver.send(:attach_ip, server, ip)).to eq(true)
     end
   end
 
@@ -1067,14 +1100,7 @@ describe Kitchen::Driver::Openstack do
       s
     end
     it 'opens an SSH session to the server' do
-      allow(Fog::SSH).to receive(:new).with('host', 'root', anything)
-        .and_return(ssh)
-      res = driver.send(:add_ohai_hint, state)
-      expected = [
-        "sudo mkdir -p #{Ohai::Config[:hints_path][0]}",
-        "sudo touch #{Ohai::Config[:hints_path][0]}/openstack.json"
-      ]
-      expect(res).to eq(expected)
+      driver.send(:add_ohai_hint, state)
     end
   end
 
