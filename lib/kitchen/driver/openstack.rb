@@ -321,7 +321,7 @@ module Kitchen
       end
 
       def add_ohai_hint(state)
-        if borne_shell?
+        if bourne_shell?
           info 'Adding OpenStack hint for ohai'
           mkdir_cmd = "sudo mkdir -p #{hints_path}"
           touch_cmd = "sudo touch #{hints_path}/openstack.json"

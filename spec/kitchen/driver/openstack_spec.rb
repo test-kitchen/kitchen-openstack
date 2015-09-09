@@ -22,6 +22,7 @@ describe Kitchen::Driver::Openstack do
   let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
   let(:instance_name) { 'potatoes' }
   let(:transport)     { Kitchen::Transport::Dummy.new }
+  let(:platform)      { Kitchen::Platform.new(name: 'fake_platform') }
   let(:driver)        { Kitchen::Driver::Openstack.new(config) }
 
   let(:instance) do
@@ -29,6 +30,7 @@ describe Kitchen::Driver::Openstack do
       name: instance_name,
       transport: transport,
       logger: logger,
+      platform: platform,
       to_str: 'instance'
     )
   end
@@ -193,6 +195,7 @@ describe Kitchen::Driver::Openstack do
       allow(d).to receive(:get_ip).and_return('1.2.3.4')
       allow(d).to receive(:add_ohai_hint).and_return(true)
       allow(d).to receive(:do_ssh_setup).and_return(true)
+      allow(d).to receive(:sleep)
       d
     end
 
@@ -232,6 +235,28 @@ describe Kitchen::Driver::Openstack do
 
       it 'disables SSL cert validation' do
         expect(driver).to receive(:disable_ssl_validation)
+        driver.create(state)
+      end
+    end
+
+    context 'when executed with a bourne shell' do
+      before do
+        allow(driver).to receive(:bourne_shell?).and_return(true)
+      end
+
+      it 'executes the ssh setup' do
+        expect(driver).to receive(:setup_ssh)
+        driver.create(state)
+      end
+    end
+
+    context 'when executed in a non-bourne shell' do
+      before do
+        allow(driver).to receive(:bourne_shell?).and_return(false)
+      end
+
+      it 'does not execute the ssh setup' do
+        expect(driver).not_to receive(:setup_ssh)
         driver.create(state)
       end
     end
@@ -850,8 +875,7 @@ describe Kitchen::Driver::Openstack do
     end
 
     it 'associates the IP address with the server' do
-      expect(driver.send(:attach_ip, server, ip)).to eq(
-        [{ 'version' => 4, 'addr' => ip }])
+      expect(driver.send(:attach_ip, server, ip)).to eq(true)
     end
   end
 

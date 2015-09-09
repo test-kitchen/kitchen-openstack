@@ -117,7 +117,9 @@ If a `key_name` is provided it will be used instead of any
 
 If a `key_name` is provided without any `private_key_path`, unexpected
 behavior may result if your local RSA/DSA private key doesn't match that
-OpenStack key.
+OpenStack key. If you do key injection via `cloud-init` like this issue:
+[#77](https://github.com/test-kitchen/kitchen-openstack/issues/77) the best
+way is to make a "dummy-key."
 
 A specific `floating_ip` or the ID of a `floating_ip_pool` can be provided to
 bind a floating IP to the node. Any floating IP will be the IP used for
