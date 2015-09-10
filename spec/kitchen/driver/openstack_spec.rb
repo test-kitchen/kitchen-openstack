@@ -1105,43 +1105,6 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
-  describe '#setup_ssh' do
-    let(:server) { double }
-    before(:each) do
-      [:tcp_check, :do_ssh_setup].each do |m|
-        allow_any_instance_of(described_class).to receive(m)
-      end
-    end
-
-    it 'calls the TCP check' do
-      expect_any_instance_of(described_class).to receive(:tcp_check).with(state)
-      driver.send(:setup_ssh, server, state)
-    end
-  end
-
-  describe '#tcp_check' do
-    let(:state) { { hostname: 'hostname' } }
-
-    context 'standard SSH check' do
-      it 'calls the normal Kitchen SSH wait' do
-        expect_any_instance_of(described_class).not_to receive(:sleep)
-        expect_any_instance_of(described_class).to receive(:wait_for_sshd)
-          .with('hostname', 'root', port: '22')
-        driver.send(:tcp_check, state)
-      end
-    end
-
-    context 'override SSH wait' do
-      let(:config) { { no_ssh_tcp_check: true } }
-
-      it 'sleeps instead of monitoring the SSH port' do
-        expect_any_instance_of(described_class).not_to receive(:wait_for_sshd)
-        expect_any_instance_of(described_class).to receive(:sleep).with(120)
-        driver.send(:tcp_check, state)
-      end
-    end
-  end
-
   describe '#disable_ssl_validation' do
     it 'turns off Excon SSL cert validation' do
       expect(driver.send(:disable_ssl_validation)).to eq(false)
