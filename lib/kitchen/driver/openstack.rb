@@ -93,9 +93,7 @@ module Kitchen
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
         wait_for_server(state)
-        if bourne_shell?
-          setup_ssh(server, state)
-        end
+        setup_ssh(server, state) if bourne_shell?
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
