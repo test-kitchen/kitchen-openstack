@@ -61,7 +61,7 @@ module Kitchen
       default_config :network_ref, nil
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
-      default_config :winrm_wait, 0
+      default_config :winrm_wait, nil
       default_config :block_device_mapping, nil
 
       required_config :private_key_path
@@ -341,7 +341,6 @@ module Kitchen
       end
 
       def setup_ssh(server, state)
-        tcp_check(state)
         if config[:key_name]
           info "Using OpenStack keypair <#{config[:key_name]}>"
         end
@@ -362,19 +361,6 @@ module Kitchen
           %(echo "#{pub_key}" >> ~/.ssh/authorized_keys),
           %(passwd -l #{config[:username]})
         ])
-      end
-
-      def tcp_check(state)
-        # allow driver config to bypass SSH tcp check -- because
-        # it doesn't respect ssh_config values that might be required
-        if config[:no_ssh_tcp_check]
-          sleep(config[:no_ssh_tcp_check_sleep])
-        else
-          wait_for_sshd(state[:hostname],
-                        config[:username],
-                        port: config[:port])
-        end
-        info "Server #{state[:hostname]} has ssh ready..."
       end
 
       def disable_ssl_validation
