@@ -118,7 +118,7 @@ module Kitchen
           provider: 'OpenStack'
         }
         required_server_settings.each { |s| server_def[s] = config[s] }
-        optional_server_settings.each { |s| server_def[s] = config[s] }
+        optional_server_settings.each { |s| server_def[s] = config[s] if config[s] } # rubocop:disable Metrics/LineLength
         server_def
       end
 
@@ -127,7 +127,9 @@ module Kitchen
       end
 
       def optional_server_settings
-        [:openstack_tenant, :openstack_region, :openstack_service_name]
+        Fog::Compute::OpenStack.recognized.select do |k|
+          k.to_s.start_with?('openstack')
+        end - required_server_settings
       end
 
       def network

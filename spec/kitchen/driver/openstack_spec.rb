@@ -330,10 +330,10 @@ describe Kitchen::Driver::Openstack do
 
   describe '#optional_server_settings' do
     it 'returns the optional settings for an OpenStack server' do
-      expected = [
-        :openstack_tenant, :openstack_region, :openstack_service_name
+      excluded = [
+        :openstack_username, :openstack_api_key, :openstack_auth_url
       ]
-      expect(driver.send(:optional_server_settings)).to eq(expected)
+      expect(driver.send(:optional_server_settings)).not_to include(*excluded)
     end
   end
 
