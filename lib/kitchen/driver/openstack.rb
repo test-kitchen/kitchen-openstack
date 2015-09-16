@@ -21,6 +21,7 @@
 require 'kitchen'
 require 'fog'
 require 'ohai'
+require_relative 'openstack_version'
 require_relative 'openstack/volume'
 
 module Kitchen
