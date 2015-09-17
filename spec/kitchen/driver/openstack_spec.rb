@@ -232,6 +232,14 @@ describe Kitchen::Driver::Openstack do
         driver.create(state)
       end
     end
+
+    context 'when a server is already created' do
+      it 'does not create a new instance' do
+        state[:server_id] = '123'
+        expect(driver).not_to receive(:create_server)
+        driver.create(state)
+      end
+    end
   end
 
   describe '#destroy' do
