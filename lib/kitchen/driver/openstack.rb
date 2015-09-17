@@ -73,15 +73,24 @@ module Kitchen
         end
       end
 
+      # Set the proper server name in the config
+      def config_server_name
+        return if config[:server_name]
+
+        if config[:server_name_prefix]
+          config[:server_name] = server_name_prefix(
+            config[:server_name_prefix]
+          )
+        else
+          config[:server_name] = default_name
+        end
+      end
+
       def create(state)
-        unless config[:server_name]
-          if config[:server_name_prefix]
-            config[:server_name] = server_name_prefix(
-              config[:server_name_prefix]
-            )
-          else
-            config[:server_name] = default_name
-          end
+        config_server_name
+        if state[:server_id]
+          info "#{config[:server_name]} (#{state[:server_id]}) already exists."
+          return
         end
         disable_ssl_validation if config[:disable_ssl_validation]
         server = create_server
