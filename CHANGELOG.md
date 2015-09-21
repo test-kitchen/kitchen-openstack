@@ -6,6 +6,9 @@
 * Windows and WinRM support
 * Stole some code from PR [#80][] - from [@jmahowald][]
 * Resolve for issue [#96][]
+* Don't create instance if name is already created [#100][] - from [@dpetzel][]
+* Load openstack_version for plugin_version [#99][] - from [@BobbyRyterski][]
+* Support all Fog OpenStack options [#98][] - from [@BobbyRyterski][]
 
 # 1.8.1 / 2015-07-22
 
