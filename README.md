@@ -55,6 +55,9 @@ driver:
 The `image_ref` and `flavor_ref` options can be specified as an exact id,
 an exact name, or as a regular expression matching the name of the image or flavor.
 
+All of Fog's `openstack` options (`openstack_domain_name`, `openstack_project_name`,
+...) are supported. This includes support for the OpenStack Identity v3 API.
+
 Test Kitchen 1.4 supports multiple transports, and transports can be configure globally:
 
 ```yaml
