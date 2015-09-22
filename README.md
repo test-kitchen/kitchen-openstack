@@ -77,6 +77,18 @@ platforms:
     password: myadministratorpassword
 ```
 
+Transports also control key based authentication:
+
+```yaml
+transport:
+  username: ubuntu
+  ssh_key: /path/to/key # probably the same as private_key_path
+```
+
+See issues [#77](https://github.com/test-kitchen/kitchen-openstack/issues/77)
+and [#101](https://github.com/test-kitchen/kitchen-openstack/issues/101)
+for more information on using SSH keys.
+
 By default, a unique server name will be generated and the current user's SSH
 key will be used (with an RSA key taking precedence over a DSA), though that
 behavior can be overridden with additional options:
@@ -88,7 +100,6 @@ behavior can be overridden with additional options:
     username: [SSH USER]
     password: [SSH PASSWORD]
     port: [SSH PORT]
-    key_name: [SSH KEY NAME]
     openstack_tenant: [YOUR OPENSTACK TENANT NAME]
     openstack_region: [A VALID OPENSTACK REGION]
     availability_zone: [AN OPENSTACK AVAILABILITY ZONE]
