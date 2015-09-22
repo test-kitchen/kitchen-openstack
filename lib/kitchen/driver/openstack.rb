@@ -334,7 +334,7 @@ module Kitchen
         if bourne_shell?
           info 'Adding OpenStack hint for ohai'
           mkdir_cmd = "sudo mkdir -p #{hints_path}"
-          touch_cmd = "sudo cat '{}' >> #{hints_path}/openstack.json"
+          touch_cmd = "sudo bash -c 'echo {} > #{hints_path}/openstack.json'"
           instance.transport.connection(state).execute(
             "#{mkdir_cmd} && #{touch_cmd}"
           )
