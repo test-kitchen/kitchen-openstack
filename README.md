@@ -100,6 +100,7 @@ behavior can be overridden with additional options:
     username: [SSH USER]
     password: [SSH PASSWORD]
     port: [SSH PORT]
+    key_name: [SSH KEY NAME]
     openstack_tenant: [YOUR OPENSTACK TENANT NAME]
     openstack_region: [A VALID OPENSTACK REGION]
     availability_zone: [AN OPENSTACK AVAILABILITY ZONE]
