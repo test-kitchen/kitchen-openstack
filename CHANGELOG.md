@@ -9,6 +9,8 @@
 * Don't create instance if name is already created [#100][] - from [@dpetzel][]
 * Load openstack_version for plugin_version [#99][] - from [@BobbyRyterski][]
 * Support all Fog OpenStack options [#98][] - from [@BobbyRyterski][]
+* Fix for ohai running hint not running as root [#104][] - from [@spion06][]
+* Updates to the readme [#102][] - from [@BobbyRyterski][]
 
 # 1.8.1 / 2015-07-22
 
