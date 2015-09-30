@@ -1,16 +1,22 @@
-# 2.0.0 / ????-??-??
+# 2.0.0 / 2015-09-30
 
 ### New Features
 
-* Re-written for the new test-kitchen underlying framework
 * Windows and WinRM support
-* Stole some code from PR [#80][] - from [@jmahowald][]
-* Resolve for issue [#96][]
-* Don't create instance if name is already created [#100][] - from [@dpetzel][]
-* Load openstack_version for plugin_version [#99][] - from [@BobbyRyterski][]
-* Support all Fog OpenStack options [#98][] - from [@BobbyRyterski][]
-* Fix for ohai running hint not running as root [#104][] - from [@spion06][]
-* Updates to the readme [#102][] - from [@BobbyRyterski][]
+* Re-written for the new test-kitchen [1.4](http://kitchen.ci/blog/test-kitchen-1-4-0-release-notes/)
+
+### Bug Fixes
+
+* PR [#80][] - Stole some code from [@jmahowald][]
+* PR [#96][] - Resolve for issue PR
+* PR [#100][] - Don't create instance if name is already created - from [@dpetzel][]
+* PR [#99][] - Load openstack_version for plugin_version  - from [@BobbyRyterski][]
+* PR [#98][] - Support all Fog OpenStack options PR [#98][] - from [@BobbyRyterski][]
+* PR [#104][] - Fix for ohai running hint not running as root - from [@spion06][]
+
+### Improvements
+
+* Updates to the readme PR [#102][] - from [@BobbyRyterski][]
 
 # 1.8.1 / 2015-07-22
 
@@ -165,7 +171,15 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+
+[#104]: https://github.com/test-kitchen/kitchen-openstack/pull/104
+[#102]: https://github.com/test-kitchen/kitchen-openstack/pull/102
+[#100]: https://github.com/test-kitchen/kitchen-openstack/pull/100
+[#99]: https://github.com/test-kitchen/kitchen-openstack/pull/99
+[#98]: https://github.com/test-kitchen/kitchen-openstack/pull/98
+[#96]: https://github.com/test-kitchen/kitchen-openstack/pull/96
 [#88]: https://github.com/test-kitchen/kitchen-openstack/pull/88
+[#80]: https://github.com/test-kitchen/kitchen-openstack/pull/80
 [#74]: https://github.com/test-kitchen/kitchen-openstack/pull/74
 [#70]: https://github.com/test-kitchen/kitchen-openstack/pull/70
 [#66]: https://github.com/test-kitchen/kitchen-openstack/pull/66
@@ -199,6 +213,10 @@ certain specified NICs; via [@monsterzz][]
 [#7]: https://github.com/test-kitchen/kitchen-openstack/pull/7
 [#2]: https://github.com/test-kitchen/kitchen-openstack/pull/2
 
+[@jmahowald]: https://github.com/jmahowald
+[@dpetzel]: https://github.com/dpetzel
+[@BobbyRyterski]: https://github.com/BobbyRyterski
+[@spion06]: https://github.com/spion06
 [@LiamHaworth]: https://github.com/LiamHaworth
 [@ftclausen]: https://github.com/ftclausen
 [@fortable1999]: https://github.com/fortable1999
