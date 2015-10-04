@@ -159,7 +159,6 @@ module Kitchen
 
       def create_server
         server_def = init_configuration
-
         if config[:network_ref]
           networks = [].concat([config[:network_ref]])
           server_def[:nics] = networks.flatten.map do |net|
@@ -303,20 +302,25 @@ module Kitchen
       end
 
       def get_ip(server)
-        unless config[:floating_ip].nil?
-          debug "Using floating ip: #{config[:floating_ip]}"
-          return config[:floating_ip]
+        if config[:private_network_only] && config[:openstack_network_name]
+          update_server = compute.get_server_details(server[:server_id])  # refresh the server object with the stuff from the cloud.
+          pub = update_server[:body]['server']['addresses'][config[:openstack_network_name]][0]['addr']
+        else
+          unless config[:floating_ip].nil?
+            debug "Using floating ip: #{config[:floating_ip]}"
+            return config[:floating_ip]
+          end
+          if config[:openstack_network_name]
+            debug "Using configured net: #{config[:openstack_network_name]}"
+            return server.addresses[config[:openstack_network_name]].first['addr']
+          end
+          pub, priv = get_public_private_ips(server)
+          priv ||= server.ip_addresses unless pub
+          pub, priv = parse_ips(pub, priv)
+          pub[config[:public_ip_order].to_i] ||
+            priv[config[:private_ip_order].to_i] ||
+            fail(ActionFailed, 'Could not find an IP')
         end
-        if config[:openstack_network_name]
-          debug "Using configured net: #{config[:openstack_network_name]}"
-          return server.addresses[config[:openstack_network_name]].first['addr']
-        end
-        pub, priv = get_public_private_ips(server)
-        priv ||= server.ip_addresses unless pub
-        pub, priv = parse_ips(pub, priv)
-        pub[config[:public_ip_order].to_i] ||
-          priv[config[:private_ip_order].to_i] ||
-          fail(ActionFailed, 'Could not find an IP')
       end
 
       def parse_ips(pub, priv)
