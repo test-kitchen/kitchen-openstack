@@ -110,8 +110,7 @@ behavior can be overridden with additional options:
     openstack_region: [A VALID OPENSTACK REGION]
     availability_zone: [AN OPENSTACK AVAILABILITY ZONE]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
-    openstack_network_name: [YOUR OPENSTACK NETWORK NAME USED TO CONNECT]
-    private_network_only: [IF YOU WANT TO CONNECT VIA A PRIVATE NETWORK, YOU NEED TO DELCLARE openstack_network_name of the PRIVATE NETWORK, set to TRUE]
+    openstack_network_name: [YOUR OPENSTACK NETWORK NAME USED TO CONNECT, SUCH AS A PRIVATE NETWORK ONLY]
     security_groups:
       - [A LIST OF...]
       - [...SECURITY GROUPS TO JOIN]

@@ -2,11 +2,11 @@
 
 ### New Features
 
-* PR [#XX][] - The ability to bootstrap on only a private network paired with [@thomascate][] to get this done
+* PR [#106][] - The ability to bootstrap on only a private network paired with [@thomascate][] and [@BobbyRyterski][]
 
 ### Bug Fixes
 
-* PR [#XX][] - Updated the README with better formatting
+* PR [#106][] - Updated the README with better formatting
 
 # 2.0.0 / 2015-09-30
 
@@ -26,7 +26,7 @@
 
 ### Improvements
 
-* PR [#102]][] - Updates to the readme - from [@BobbyRyterski][]
+* PR [#102][] - Updates to the readme - from [@BobbyRyterski][]
 
 # 1.8.1 / 2015-07-22
 
@@ -182,6 +182,7 @@ certain specified NICs; via [@monsterzz][]
 * Initial release! Woo!
 
 
+[#106]: https://github.com/test-kitchen/kitchen-openstack/pull/106
 [#104]: https://github.com/test-kitchen/kitchen-openstack/pull/104
 [#102]: https://github.com/test-kitchen/kitchen-openstack/pull/102
 [#100]: https://github.com/test-kitchen/kitchen-openstack/pull/100
