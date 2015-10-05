@@ -308,7 +308,9 @@ module Kitchen
         end
 
         # make sure we have the latest info
-        server.reload
+        info 'Waiting for network information to be available...'
+        w = server.wait_for { reload && !addresses.empty? }
+        debug "Waited #{w[:duration]} seconds for network information."
 
         # should also work for private networks
         if config[:openstack_network_name]
