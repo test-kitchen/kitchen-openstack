@@ -874,7 +874,8 @@ describe Kitchen::Driver::Openstack do
       double(addresses: addresses,
              public_ip_addresses: public_ip_addresses,
              private_ip_addresses: private_ip_addresses,
-             ip_addresses: ip_addresses)
+             ip_addresses: ip_addresses,
+             reload: true)
     end
 
     context 'both public and private IPs' do
@@ -930,15 +931,28 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
+    context 'when a floating ip is provided' do
+      let(:config) { { floating_ip: '1.2.3.4' } }
+      let(:server) { double('server') }
+
+      it 'returns the floating ip and skips the reload method' do
+        allow(driver).to receive(:config).and_return(config)
+
+        expect(server).to_not receive(:reload)
+        expect(driver.send(:get_ip, server)).to eq('1.2.3.4')
+      end
+    end
+
     context 'an OpenStack deployment without the floating IP extension' do
-      let(:server) do
-        s = double('server')
-        allow(s).to receive(:addresses).and_return(addresses)
-        allow(s).to receive(:public_ip_addresses).and_raise(
+      let(:server) { double('server') }
+
+      before do
+        allow(server).to receive(:addresses).and_return(addresses)
+        allow(server).to receive(:public_ip_addresses).and_raise(
           Fog::Compute::OpenStack::NotFound)
-        allow(s).to receive(:private_ip_addresses).and_raise(
-          Fog::Compute::OpenStack::NotFound)
-        s
+        allow(server).to receive(:private_ip_addresses).and_raise(
+                           Fog::Compute::OpenStack::NotFound)
+        allow(server).to receive(:reload)
       end
 
       context 'both public and private IPs in the addresses hash' do
@@ -951,6 +965,22 @@ describe Kitchen::Driver::Openstack do
         let(:parsed_ips) { [%w(6.6.6.6 7.7.7.7), %w(8.8.8.8 9.9.9.9)] }
 
         it 'selects the first public IP' do
+          expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
+        end
+      end
+
+      context 'when openstack_network_name is provided' do
+        let(:addresses) do
+          {
+            'public' => [{ 'addr' => '6.6.6.6' }, { 'addr' => '7.7.7.7' }],
+            'private' => [{ 'addr' => '8.8.8.8' }, { 'addr' => '9.9.9.9' }]
+          }
+        end
+        let(:config) { { openstack_network_name: 'public' } }
+
+        it 'should respond with the first address from the addresses' do
+          allow(driver).to receive(:config).and_return(config)
+
           expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
         end
       end
