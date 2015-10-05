@@ -102,7 +102,7 @@ module Kitchen
         elsif config[:floating_ip_pool]
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
-        wait_for_server(state)
+        wait_for_server(server, state)
         setup_ssh(server, state) if bourne_shell?
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
@@ -302,25 +302,26 @@ module Kitchen
       end
 
       def get_ip(server)
-        if config[:private_network_only] && config[:openstack_network_name]
-          update_server = compute.get_server_details(server[:server_id])  # refresh the server object with the stuff from the cloud.
-          pub = update_server[:body]['server']['addresses'][config[:openstack_network_name]][0]['addr']
-        else
-          unless config[:floating_ip].nil?
-            debug "Using floating ip: #{config[:floating_ip]}"
-            return config[:floating_ip]
-          end
-          if config[:openstack_network_name]
-            debug "Using configured net: #{config[:openstack_network_name]}"
-            return server.addresses[config[:openstack_network_name]].first['addr']
-          end
-          pub, priv = get_public_private_ips(server)
+        if config[:floating_ip]
+          debug "Using floating ip: #{config[:floating_ip]}"
+          return config[:floating_ip]
+        end
+
+        # make sure we have the latest info
+        server.reload
+
+        # should also work for private networks
+        if config[:openstack_network_name]
+          debug "Using configured net: #{config[:openstack_network_name]}"
+          return server.addresses[config[:openstack_network_name]].first['addr']
+        end
+
+        pub, priv = get_public_private_ips(server)
           priv ||= server.ip_addresses unless pub
           pub, priv = parse_ips(pub, priv)
           pub[config[:public_ip_order].to_i] ||
             priv[config[:private_ip_order].to_i] ||
             fail(ActionFailed, 'Could not find an IP')
-        end
       end
 
       def parse_ips(pub, priv)
@@ -384,8 +385,8 @@ module Kitchen
         Excon.defaults[:ssl_verify_peer] = false
       end
 
-      def wait_for_server(state)
-        state[:hostname] = get_ip(state)
+      def wait_for_server(server, state)
+        state[:hostname] = get_ip(server)
         if config[:winrm_wait]
           info "Sleeping for #{config[:winrm_wait]} seconds to let WinRM start up..." # rubocop:disable Metrics/LineLength
           countdown(config[:winrm_wait])
