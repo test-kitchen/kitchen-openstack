@@ -317,11 +317,11 @@ module Kitchen
         end
 
         pub, priv = get_public_private_ips(server)
-          priv ||= server.ip_addresses unless pub
-          pub, priv = parse_ips(pub, priv)
-          pub[config[:public_ip_order].to_i] ||
-            priv[config[:private_ip_order].to_i] ||
-            fail(ActionFailed, 'Could not find an IP')
+        priv ||= server.ip_addresses unless pub
+        pub, priv = parse_ips(pub, priv)
+        pub[config[:public_ip_order].to_i] ||
+          priv[config[:private_ip_order].to_i] ||
+          fail(ActionFailed, 'Could not find an IP')
       end
 
       def parse_ips(pub, priv)

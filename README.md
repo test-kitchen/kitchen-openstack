@@ -20,7 +20,7 @@ Shamelessly copied from [Fletcher Nichol](https://github.com/fnichol)'s awesome 
 
 Add this line to your application's Gemfile:
 
-```bash
+```ruby
 gem 'kitchen-openstack'
 ```
 
