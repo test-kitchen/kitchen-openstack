@@ -951,7 +951,7 @@ describe Kitchen::Driver::Openstack do
         allow(server).to receive(:public_ip_addresses).and_raise(
           Fog::Compute::OpenStack::NotFound)
         allow(server).to receive(:private_ip_addresses).and_raise(
-                           Fog::Compute::OpenStack::NotFound)
+          Fog::Compute::OpenStack::NotFound)
         allow(server).to receive(:reload)
       end
 
