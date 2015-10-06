@@ -875,7 +875,7 @@ describe Kitchen::Driver::Openstack do
              public_ip_addresses: public_ip_addresses,
              private_ip_addresses: private_ip_addresses,
              ip_addresses: ip_addresses,
-             reload: true)
+             wait_for: { duration: 0 })
     end
 
     context 'both public and private IPs' do
@@ -933,26 +933,21 @@ describe Kitchen::Driver::Openstack do
 
     context 'when a floating ip is provided' do
       let(:config) { { floating_ip: '1.2.3.4' } }
-      let(:server) { double('server') }
 
-      it 'returns the floating ip and skips the reload method' do
+      it 'returns the floating ip and skips reloading' do
         allow(driver).to receive(:config).and_return(config)
 
-        expect(server).to_not receive(:reload)
+        expect(server).to_not receive(:wait_for)
         expect(driver.send(:get_ip, server)).to eq('1.2.3.4')
       end
     end
 
     context 'an OpenStack deployment without the floating IP extension' do
-      let(:server) { double('server') }
-
       before do
-        allow(server).to receive(:addresses).and_return(addresses)
         allow(server).to receive(:public_ip_addresses).and_raise(
           Fog::Compute::OpenStack::NotFound)
         allow(server).to receive(:private_ip_addresses).and_raise(
           Fog::Compute::OpenStack::NotFound)
-        allow(server).to receive(:reload)
       end
 
       context 'both public and private IPs in the addresses hash' do
