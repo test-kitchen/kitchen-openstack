@@ -389,9 +389,9 @@ module Kitchen
       end
 
       def wait_for_server(state)
-        if config[:winrm_wait]
-          info "Sleeping for #{config[:winrm_wait]} seconds to let WinRM start up..." # rubocop:disable Metrics/LineLength
-          countdown(config[:winrm_wait])
+        if config[:server_wait]
+          info "Sleeping for #{config[:server_wait]} seconds to let your server to start up..." # rubocop:disable Metrics/LineLength
+          countdown(config[:server_wait])
         end
         info 'Waiting for server to be ready...'
         instance.transport.connection(state).wait_until_ready

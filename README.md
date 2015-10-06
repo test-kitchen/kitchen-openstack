@@ -111,6 +111,7 @@ behavior can be overridden with additional options:
     availability_zone: [AN OPENSTACK AVAILABILITY ZONE]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
     openstack_network_name: [YOUR OPENSTACK NETWORK NAME USED TO CONNECT, SUCH AS A PRIVATE NETWORK ONLY]
+    server_wait: [DEFAULTS TO 0, BUT THIS SETS A WAIT SO YOUR VM IS IN A GOOD STATE BEFORE TRYING TO CONNECT]
     security_groups:
       - [A LIST OF...]
       - [...SECURITY GROUPS TO JOIN]
@@ -128,7 +129,6 @@ behavior can be overridden with additional options:
       availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
       volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
-      winrm_wait: [DEFAULTS TO 0, BUT THIS HELPS CONFIRM WINRM IS IN A GOOD STATE BEFORE TRYING TO CONNECT]
 ```
 
 If a `server_name_prefix` is specified then this prefix will be used when
@@ -136,9 +136,13 @@ generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
 `myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are
 specified then the `server_name` takes precedence.
 
-`winrm_wait` is a workaround to deal with how WinRM comes up during machine
-creation. With `cloud-init` running on most OpenStack instances having this
-wait makes sure that the machine is in a good state to work with.
+`server_wait` is a workaround to deal with how some VMs with `cloud-init`.
+Some clouds need this some, most OpenStack instances don't. This is a stop gap
+wait makes sure that the machine is in a good state to work with. Ideally the
+transport layer in Test-Kitchen will have a more intelligent way to deal with this.
+You may want to add this for **WinRM** instances due to the multiple restarts that
+happen on creation and boot. A good default is `300` seconds to make sure it's
+in a good state.
 
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
