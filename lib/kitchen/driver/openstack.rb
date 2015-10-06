@@ -388,7 +388,7 @@ module Kitchen
         Excon.defaults[:ssl_verify_peer] = false
       end
 
-      def wait_for_server(server, state)
+      def wait_for_server(state)
         if config[:winrm_wait]
           info "Sleeping for #{config[:winrm_wait]} seconds to let WinRM start up..." # rubocop:disable Metrics/LineLength
           countdown(config[:winrm_wait])
