@@ -197,6 +197,7 @@ describe Kitchen::Driver::Openstack do
       allow(d).to receive(:do_ssh_setup).and_return(true)
       allow(d).to receive(:sleep)
       allow(d).to receive(:wait_for_ssh_key_access).and_return('SSH key authetication successful') # rubocop:disable Metrics/LineLength
+      allow(d).to receive(:disable_ssl_validation).and_return(false)
       d
     end
 
@@ -208,28 +209,6 @@ describe Kitchen::Driver::Openstack do
           openstack_auth_url: 'http:',
           openstack_tenant: 'www'
         }
-      end
-    end
-
-    context 'when executed with a bourne shell' do
-      before do
-        allow(driver).to receive(:bourne_shell?).and_return(true)
-      end
-
-      it 'executes the ssh setup' do
-        expect(driver).to receive(:setup_ssh)
-        driver.create(state)
-      end
-    end
-
-    context 'when executed in a non-bourne shell' do
-      before do
-        allow(driver).to receive(:bourne_shell?).and_return(false)
-      end
-
-      it 'does not execute the ssh setup' do
-        expect(driver).not_to receive(:setup_ssh)
-        driver.create(state)
       end
     end
 
@@ -1102,6 +1081,17 @@ describe Kitchen::Driver::Openstack do
       allow(driver).to receive(:open).with(config[:public_key_path])
         .and_return(read)
     end
+
+    context 'when executed in a non-bourne shell' do
+      before do
+        allow(driver).to receive(:bourne_shell?).and_return(false)
+      end
+
+      it 'does not execute the ssh setup' do
+        expect(driver).not_to receive(:setup_ssh)
+      end
+    end
+
 
     it 'opens an SSH session to the server' do
       expect(Fog::SSH).to receive(:new).with(state[:hostname],
