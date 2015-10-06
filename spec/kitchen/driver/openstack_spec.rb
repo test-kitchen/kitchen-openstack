@@ -1092,7 +1092,6 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
-
     it 'opens an SSH session to the server' do
       expect(Fog::SSH).to receive(:new).with(state[:hostname],
                                              'root',
