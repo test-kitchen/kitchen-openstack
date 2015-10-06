@@ -102,6 +102,7 @@ module Kitchen
         elsif config[:floating_ip_pool]
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
+        state[:hostname] = get_ip(server)
         wait_for_server(server, state)
         setup_ssh(server, state) if bourne_shell?
         add_ohai_hint(state)
@@ -386,7 +387,6 @@ module Kitchen
       end
 
       def wait_for_server(server, state)
-        state[:hostname] = get_ip(server)
         if config[:winrm_wait]
           info "Sleeping for #{config[:winrm_wait]} seconds to let WinRM start up..." # rubocop:disable Metrics/LineLength
           countdown(config[:winrm_wait])
