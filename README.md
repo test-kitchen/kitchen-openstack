@@ -388,7 +388,7 @@ Apache 2.0 (see [LICENSE][license])
 [author]:           https://github.com/RoboticCheese
 [maintainer]:       https://github.com/jjasghar
 [issues]:           https://github.com/test-kitchen/kitchen-openstack/issues
-[license]:          https://github.com/test-kitchen/kitchen-openstack/blob/master/LICENSE
+[license]:          https://github.com/test-kitchen/kitchen-openstack/blob/master/LICENSE.txt
 [repo]:             https://github.com/test-kitchen/kitchen-openstack
 [driver_usage]:     https://github.com/test-kitchen/kitchen-openstack
 [chef_omnibus_dl]:  http://www.chef.io/chef/install/
