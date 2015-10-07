@@ -988,6 +988,17 @@ describe Kitchen::Driver::Openstack do
         expect { driver.send(:get_ip, server) }.to raise_error(expected)
       end
     end
+
+    context 'when network information is not found' do
+      before do
+        allow(server).to receive(:wait_for).and_raise(Fog::Errors::TimeoutError)
+      end
+
+      it 'raises an exception' do
+        expected = Kitchen::ActionFailed
+        expect { driver.send(:get_ip, server) }.to raise_error(expected)
+      end
+    end
   end
 
   describe '#parse_ips' do

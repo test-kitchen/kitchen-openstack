@@ -310,8 +310,12 @@ module Kitchen
 
         # make sure we have the latest info
         info 'Waiting for network information to be available...'
-        w = server.wait_for { reload && !addresses.empty? }
-        debug "Waited #{w[:duration]} seconds for network information."
+        begin
+          w = server.wait_for { !addresses.empty? }
+          debug "Waited #{w[:duration]} seconds for network information."
+        rescue Fog::Errors::TimeoutError
+          raise ActionFailed, 'Could not get network information (timed out)'
+        end
 
         # should also work for private networks
         if config[:openstack_network_name]
