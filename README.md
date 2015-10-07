@@ -393,6 +393,7 @@ Apache 2.0 (see [LICENSE][license])
 [driver_usage]:     https://github.com/test-kitchen/kitchen-openstack
 [chef_omnibus_dl]:  http://www.chef.io/chef/install/
 [chefdk_dl]:        https://downloads.chef.io/chef-dk
+[kitchen_ci]:       http://kitchen.ci
 
 [openstack_web]:    http://www.openstack.org
 [fog_web]:          http://fog.io
