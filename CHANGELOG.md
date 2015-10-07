@@ -7,6 +7,7 @@
 ### Bug Fixes
 
 * PR [#106][] - Updated the README with better formatting
+* PR [#111][] - Updated README.
 
 # 2.0.0 / 2015-09-30
 
@@ -181,7 +182,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
-
+[#111]: https://github.com/test-kitchen/kitchen-openstack/pull/111
 [#106]: https://github.com/test-kitchen/kitchen-openstack/pull/106
 [#104]: https://github.com/test-kitchen/kitchen-openstack/pull/104
 [#102]: https://github.com/test-kitchen/kitchen-openstack/pull/102
