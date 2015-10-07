@@ -14,29 +14,33 @@
 
 An OpenStack Nova driver for Test Kitchen 1.0!
 
-Shamelessly copied from [Fletcher Nichol](https://github.com/fnichol)'s
-awesome work on an [EC2 driver](https://github.com/test-kitchen/kitchen-ec2),
-and [Adam Leff](https://github.com/adamleff)'s
-amazing work on an [VRO driver](https://github.com/chef-partners/kitchen-vro).
+Shamelessly copied from [Fletcher Nichol](https://github.com/fnichol)'s awesome work on an [EC2 driver](https://github.com/test-kitchen/kitchen-ec2), and [Adam Leff](https://github.com/adamleff)'s amazing work on an [VRO driver](https://github.com/chef-partners/kitchen-vro).
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'kitchen-openstack'
+```ruby
+gem 'kitchen-openstack'
+```
 
 And then execute:
 
-    $ bundle
+```bash
+$ bundle
+```
 
 Or install it yourself as:
 
-    $ gem install kitchen-openstack
+```bash
+$ gem install kitchen-openstack
+```
 
 Or if using [chefdk](https://downloads.chef.io/chef-dk) install with:
 
-    $ chef gem install kitchen-openstack
-
+```bash
+$ chef gem install kitchen-openstack
+```
 ## Usage
 
 Provide, at a minimum, the required driver options in your `.kitchen.yml` file:
@@ -93,6 +97,7 @@ By default, a unique server name will be generated and the current user's SSH
 key will be used (with an RSA key taking precedence over a DSA), though that
 behavior can be overridden with additional options:
 
+```yaml
     server_name: [A UNIQUE SERVER NAME]
     server_name_prefix: [STATIC PREFIX FOR RANDOM SERVER NAME]
     private_key_path: [PATH TO YOUR PRIVATE SSH KEY]
@@ -105,7 +110,8 @@ behavior can be overridden with additional options:
     openstack_region: [A VALID OPENSTACK REGION]
     availability_zone: [AN OPENSTACK AVAILABILITY ZONE]
     openstack_service_name: [YOUR OPENSTACK COMPUTE SERVICE NAME]
-    openstack_network_name: [YOUR OPENSTACK NETWORK NAME USED TO CONNECT]
+    openstack_network_name: [YOUR OPENSTACK NETWORK NAME USED TO CONNECT, SUCH AS A PRIVATE NETWORK ONLY]
+    server_wait: [DEFAULTS TO 0, BUT THIS SETS A WAIT SO YOUR VM IS IN A GOOD STATE BEFORE TRYING TO CONNECT]
     security_groups:
       - [A LIST OF...]
       - [...SECURITY GROUPS TO JOIN]
@@ -123,16 +129,20 @@ behavior can be overridden with additional options:
       availability_zone: [THE BLOCK STORAGE AVAILABILITY ZONE, DEFAULTS TO nova]
       volume_type: [THE VOLUME TYPE, THIS IS OPTIONAL]
       delete_on_termination: [WILL DELETE VOLUME ON INSTANCE DESTROY WHEN true, OTHERWISE SET TO false]
-      winrm_wait: [DEFAULTS TO 0, BUT THIS HELPS CONFIRM WINRM IS IN A GOOD STATE BEFORE TRYING TO CONNECT]
+```
 
 If a `server_name_prefix` is specified then this prefix will be used when
 generating random names of the form `<NAME PREFIX>-<RANDOM STRING>` e.g.
 `myproject-asdfghjk`. If both `server_name_prefix` and `server_name` are
 specified then the `server_name` takes precedence.
 
-`winrm_wait` is a workaround to deal with how WinRM comes up during machine
-creation. With `cloud-init` running on most OpenStack instances having this
-wait makes sure that the machine is in a good state to work with.
+`server_wait` is a workaround to deal with how some VMs with `cloud-init`.
+Some clouds need this some, most OpenStack instances don't. This is a stop gap
+wait makes sure that the machine is in a good state to work with. Ideally the
+transport layer in Test-Kitchen will have a more intelligent way to deal with this.
+You may want to add this for **WinRM** instances due to the multiple restarts that
+happen on creation and boot. A good default is `300` seconds to make sure it's
+in a good state.
 
 If a `key_name` is provided it will be used instead of any
 `public_key_path` that is specified.
@@ -147,8 +157,10 @@ A specific `floating_ip` or the ID of a `floating_ip_pool` can be provided to
 bind a floating IP to the node. Any floating IP will be the IP used for
 Test Kitchen's SSH calls to the node.
 
+```yaml
     floating_ip: [A SPECIFIC FLOATING IP TO ASSIGN]
     floating_ip_pool: [AN OPENSTACK POOL NAME TO ASSIGN THE NEXT IP FROM]
+```
 
 In some complex network scenarios you can have several IP addresses designated
 as public or private. Use `public_ip_order` or `private_ip_order` to control
@@ -168,20 +180,23 @@ to use second `10.0.1.1` IP address you need to specify
 
 ```yaml
   private_ip_order: 1
-
 ```
 assuming that test network is configured as private.
 
 The `network_ref` option can be specified as an exact id, an exact name,
 or as a regular expression matching the name of the network. You can pass one
 
-    network_ref: MYNET1
+```yaml
+  network_ref: MYNET1
+```
 
 or many networks
 
+```yaml
     network_ref:
       - MYNET1
       - MYNET2
+```
 
 The `openstack_network_name` is used to select IP address for SSH connection.
 It's recommended to specify this option in case of multiple networks used for
@@ -190,7 +205,9 @@ instance to provide more control over network connectivity.
 Please note that `network_ref` relies on Network Services (`Fog::Network`) and
 it can be unavailable in your OpenStack installation.
 
-    disable_ssl_validation: true
+```yaml
+  disable_ssl_validation: true
+```
 
 Only disable SSL cert validation if you absolutely know what you are doing,
 but are stuck with an OpenStack deployment without valid SSL certs.

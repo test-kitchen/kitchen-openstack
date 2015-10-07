@@ -197,6 +197,7 @@ describe Kitchen::Driver::Openstack do
       allow(d).to receive(:do_ssh_setup).and_return(true)
       allow(d).to receive(:sleep)
       allow(d).to receive(:wait_for_ssh_key_access).and_return('SSH key authetication successful') # rubocop:disable Metrics/LineLength
+      allow(d).to receive(:disable_ssl_validation).and_return(false)
       d
     end
 
@@ -208,28 +209,6 @@ describe Kitchen::Driver::Openstack do
           openstack_auth_url: 'http:',
           openstack_tenant: 'www'
         }
-      end
-    end
-
-    context 'when executed with a bourne shell' do
-      before do
-        allow(driver).to receive(:bourne_shell?).and_return(true)
-      end
-
-      it 'executes the ssh setup' do
-        expect(driver).to receive(:setup_ssh)
-        driver.create(state)
-      end
-    end
-
-    context 'when executed in a non-bourne shell' do
-      before do
-        allow(driver).to receive(:bourne_shell?).and_return(false)
-      end
-
-      it 'does not execute the ssh setup' do
-        expect(driver).not_to receive(:setup_ssh)
-        driver.create(state)
       end
     end
 
@@ -874,7 +853,8 @@ describe Kitchen::Driver::Openstack do
       double(addresses: addresses,
              public_ip_addresses: public_ip_addresses,
              private_ip_addresses: private_ip_addresses,
-             ip_addresses: ip_addresses)
+             ip_addresses: ip_addresses,
+             wait_for: { duration: 0 })
     end
 
     context 'both public and private IPs' do
@@ -930,15 +910,23 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
+    context 'when a floating ip is provided' do
+      let(:config) { { floating_ip: '1.2.3.4' } }
+
+      it 'returns the floating ip and skips reloading' do
+        allow(driver).to receive(:config).and_return(config)
+
+        expect(server).to_not receive(:wait_for)
+        expect(driver.send(:get_ip, server)).to eq('1.2.3.4')
+      end
+    end
+
     context 'an OpenStack deployment without the floating IP extension' do
-      let(:server) do
-        s = double('server')
-        allow(s).to receive(:addresses).and_return(addresses)
-        allow(s).to receive(:public_ip_addresses).and_raise(
+      before do
+        allow(server).to receive(:public_ip_addresses).and_raise(
           Fog::Compute::OpenStack::NotFound)
-        allow(s).to receive(:private_ip_addresses).and_raise(
+        allow(server).to receive(:private_ip_addresses).and_raise(
           Fog::Compute::OpenStack::NotFound)
-        s
       end
 
       context 'both public and private IPs in the addresses hash' do
@@ -951,6 +939,22 @@ describe Kitchen::Driver::Openstack do
         let(:parsed_ips) { [%w(6.6.6.6 7.7.7.7), %w(8.8.8.8 9.9.9.9)] }
 
         it 'selects the first public IP' do
+          expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
+        end
+      end
+
+      context 'when openstack_network_name is provided' do
+        let(:addresses) do
+          {
+            'public' => [{ 'addr' => '6.6.6.6' }, { 'addr' => '7.7.7.7' }],
+            'private' => [{ 'addr' => '8.8.8.8' }, { 'addr' => '9.9.9.9' }]
+          }
+        end
+        let(:config) { { openstack_network_name: 'public' } }
+
+        it 'should respond with the first address from the addresses' do
+          allow(driver).to receive(:config).and_return(config)
+
           expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
         end
       end
@@ -979,6 +983,17 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'no IP addresses whatsoever' do
+      it 'raises an exception' do
+        expected = Kitchen::ActionFailed
+        expect { driver.send(:get_ip, server) }.to raise_error(expected)
+      end
+    end
+
+    context 'when network information is not found' do
+      before do
+        allow(server).to receive(:wait_for).and_raise(Fog::Errors::TimeoutError)
+      end
+
       it 'raises an exception' do
         expected = Kitchen::ActionFailed
         expect { driver.send(:get_ip, server) }.to raise_error(expected)
@@ -1076,6 +1091,16 @@ describe Kitchen::Driver::Openstack do
     before(:each) do
       allow(driver).to receive(:open).with(config[:public_key_path])
         .and_return(read)
+    end
+
+    context 'when executed in a non-bourne shell' do
+      before do
+        allow(driver).to receive(:bourne_shell?).and_return(false)
+      end
+
+      it 'does not execute the ssh setup' do
+        expect(driver).not_to receive(:setup_ssh)
+      end
     end
 
     it 'opens an SSH session to the server' do

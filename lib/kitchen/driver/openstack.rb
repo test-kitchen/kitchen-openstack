@@ -102,6 +102,7 @@ module Kitchen
         elsif config[:floating_ip_pool]
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
+        state[:hostname] = get_ip(server)
         wait_for_server(state)
         setup_ssh(server, state) if bourne_shell?
         add_ohai_hint(state)
@@ -159,7 +160,6 @@ module Kitchen
 
       def create_server
         server_def = init_configuration
-
         if config[:network_ref]
           networks = [].concat([config[:network_ref]])
           server_def[:nics] = networks.flatten.map do |net|
@@ -303,14 +303,26 @@ module Kitchen
       end
 
       def get_ip(server)
-        unless config[:floating_ip].nil?
+        if config[:floating_ip]
           debug "Using floating ip: #{config[:floating_ip]}"
           return config[:floating_ip]
         end
+
+        # make sure we have the latest info
+        info 'Waiting for network information to be available...'
+        begin
+          w = server.wait_for { !addresses.empty? }
+          debug "Waited #{w[:duration]} seconds for network information."
+        rescue Fog::Errors::TimeoutError
+          raise ActionFailed, 'Could not get network information (timed out)'
+        end
+
+        # should also work for private networks
         if config[:openstack_network_name]
           debug "Using configured net: #{config[:openstack_network_name]}"
           return server.addresses[config[:openstack_network_name]].first['addr']
         end
+
         pub, priv = get_public_private_ips(server)
         priv ||= server.ip_addresses unless pub
         pub, priv = parse_ips(pub, priv)
@@ -381,10 +393,9 @@ module Kitchen
       end
 
       def wait_for_server(state)
-        state[:hostname] = get_ip(state)
-        if config[:winrm_wait]
-          info "Sleeping for #{config[:winrm_wait]} seconds to let WinRM start up..." # rubocop:disable Metrics/LineLength
-          countdown(config[:winrm_wait])
+        if config[:server_wait]
+          info "Sleeping for #{config[:server_wait]} seconds to let your server to start up..." # rubocop:disable Metrics/LineLength
+          countdown(config[:server_wait])
         end
         info 'Waiting for server to be ready...'
         instance.transport.connection(state).wait_until_ready
