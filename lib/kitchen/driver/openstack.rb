@@ -103,7 +103,7 @@ module Kitchen
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
         state[:hostname] = get_ip(server)
-        wait_for_server(server, state)
+        wait_for_server(state)
         setup_ssh(server, state) if bourne_shell?
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
