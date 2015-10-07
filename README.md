@@ -6,7 +6,7 @@
 [![Coverage Status](https://img.shields.io/coveralls/test-kitchen/kitchen-openstack.svg)][coveralls]
 [![Dependency Status](https://img.shields.io/gemnasium/test-kitchen/kitchen-openstack.svg)][gemnasium]
 
-A [Test Kitchen][kitchenci] Driver for [OpenStack][openstack_web].
+A [Test Kitchen][kitchen_ci] Driver for [OpenStack][openstack_web].
 
 This driver uses the [fog gem][fog_web] to provision and destroy nova instances. Use an OpenStack cloud for your infrastructure testing!
 
