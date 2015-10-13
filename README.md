@@ -160,6 +160,7 @@ connections you want declare this.
 Some clouds need this some, most OpenStack instances don't. This is a stop gap
 wait makes sure that the machine is in a good state to work with. Ideally the
 transport layer in Test-Kitchen will have a more intelligent way to deal with this.
+There will be a dot that appears every 10 seconds as the timer counts down.
 You may want to add this for **WinRM** instances due to the multiple restarts that
 happen on creation and boot. A good default is `300` seconds to make sure it's
 in a good state.
