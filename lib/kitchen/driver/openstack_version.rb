@@ -3,6 +3,7 @@
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
 # Copyright (C) 2013-2015, Jonathan Hartman
+# Copyright (C) 2015, Chef Software Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +22,6 @@ module Kitchen
   #
   # @author Jonathan Hartman <j@p4nt5.com>
   module Driver
-    OPENSTACK_VERSION = '2.1.0.pre'
+    OPENSTACK_VERSION = '2.1.0.pre.1'
   end
 end

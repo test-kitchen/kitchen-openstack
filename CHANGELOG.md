@@ -3,6 +3,7 @@
 ### New Features
 
 * PR [#106][] - The ability to bootstrap on only a private network paired with [@thomascate][] and [@BobbyRyterski][]
+* PR [#115][] - Converting to dots
 
 ### Bug Fixes
 
@@ -182,6 +183,7 @@ certain specified NICs; via [@monsterzz][]
 
 * Initial release! Woo!
 
+[#115]: https://github.com/test-kitchen/kitchen-openstack/pull/115
 [#111]: https://github.com/test-kitchen/kitchen-openstack/pull/111
 [#106]: https://github.com/test-kitchen/kitchen-openstack/pull/106
 [#104]: https://github.com/test-kitchen/kitchen-openstack/pull/104
