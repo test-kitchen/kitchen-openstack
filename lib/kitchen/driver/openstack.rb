@@ -96,6 +96,7 @@ module Kitchen
         server = create_server
         state[:server_id] = server.id
         info "OpenStack instance with ID of <#{state[:server_id]}> is ready." # rubocop:disable Metrics/LineLength
+        # this is due to the glance_caching issues. Annoying yes, but necessary.
         sleep 30
         if config[:floating_ip]
           attach_ip(server, config[:floating_ip])
@@ -408,9 +409,8 @@ module Kitchen
       def countdown(seconds)
         date1 = Time.now + seconds
         while Time.now < date1
-          t = Time.at(date1.to_i - Time.now.to_i)
-          puts t.strftime('%M:%S')
-          sleep 1
+          Kernel.print '.'
+          sleep 10
         end
       end
 
