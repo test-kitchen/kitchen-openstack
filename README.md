@@ -154,6 +154,9 @@ Your OpenStack compute service name.
 Your OpenStack network name used to connect to, if you have only private network
 connections you want declare this.
 
+### glance\_cache\_wait\_timeout
+When OpenStack downloads the image into cache, it takes extra time to provision.  Timeout controls maximum amount of time to wait for machine to move from the Build/Spawn phase to Active.
+
 ### server\_wait
 
 `server_wait` is a workaround to deal with how some VMs with `cloud-init`.
@@ -253,6 +256,9 @@ The volume type, this is optional.
 This will delete the volume on the instance when `destroy` happens, if set to true.
 Otherwise set this to `false`.
 
+#### creation\_timeout
+Timeout to wait for volume to become available.  If a large volume is provisioned, it might take time to provision it on the backend.  Maximum amount of time to wait for volume to be created and be available.
+
 #### Example
 
 ```yaml
@@ -262,6 +268,7 @@ block_device_mappings:
   device_name: vda
   availability_zone: nova
   delete_on_termination: false
+  creation_timeout: 120
 ```
 
 ## Network and Communication Configuration

@@ -27,15 +27,14 @@ module Kitchen
       #
       # @author Liam Haworth <liam.haworth@bluereef.com.au>
       class Volume
-        def volume(openstack_server)
-          Fog::Volume.new(openstack_server)
+        @@default_creation_timeout = 60
+
+        def initialize(logger)
+          @logger = logger
         end
 
-        def volume_ready?(vol_id, os)
-          resp = volume(os).get_volume_details(vol_id)
-          status = resp[:body]['volume']['status']
-          fail "Failed to make volume <#{vol_id}>" if status == 'error'
-          status == 'available'
+        def volume(openstack_server)
+          Fog::Volume.new(openstack_server)
         end
 
         def create_volume(config, os)
@@ -46,12 +45,31 @@ module Kitchen
           vanilla_options.select { |o| bdm[o] }.each do |key|
             opt[key] = bdm[key]
           end
+          @logger.info 'Creating Volume...'
           resp = volume(os).create_volume("#{config[:server_name]}-volume",
                                           "#{config[:server_name]} volume",
                                           bdm[:volume_size],
                                           opt)
           vol_id = resp[:body]['volume']['id']
-          sleep(1) until volume_ready?(vol_id, os)
+
+          # Get Volume Model to make waiting for ready easy
+          vol_model = volume(os).volumes.first { |x| x.id == vol_id }
+
+          # Use default creation timeout or user supplied
+          creation_timeout = @@default_creation_timeout
+          if bdm.key?(:creation_timeout)
+            creation_timeout = bdm[:creation_timeout]
+          end
+
+          @logger.debug "Waiting for volume to be ready for #{creation_timeout} seconds" # rubocop:disable Metrics/LineLength
+          vol_model.wait_for(creation_timeout) do
+            sleep(1)
+            fail('Failed to make volume') if status.downcase == 'error'
+            ready?
+          end
+
+          @logger.debug 'Volume Ready'
+
           vol_id
         end
 
