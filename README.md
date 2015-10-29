@@ -175,6 +175,24 @@ A list of `security_groups` to join:
 security_groups:
    - [A LIST OF...]
    - [...SECURITY GROUPS TO JOIN]
+   ```
+
+### user\_data
+
+If your vms have `cloud-init` enabled you can use the `user_data` in your
+kitchen.yml to inject commands at boot time.
+
+```
+    driver_config:
+      user_data: userdata.txt
+```
+
+Then create a `userdata.txt` in the same directory as your .kitchen.yml,
+for example:
+
+```
+#!/bin/sh
+echo "do whatever you want to pre-configure your machine"
 ```
 
 ### network\_ref
