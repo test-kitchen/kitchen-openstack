@@ -353,11 +353,10 @@ module Kitchen
           )
         elsif windows_os?
           info 'Adding OpenStack hint for ohai'
-          mkdir_cmd = "mkdir #{hints_path}"
-          touch_cmd = "'{}' > #{hints_path}\\openstack.json"
+          touch_cmd = "New-Item #{hints_path}\\openstack.json -Value '{}' -Force -Type file"
           instance.transport.connection(state).execute(
-            "#{mkdir_cmd} && #{touch_cmd}"
-          )
+            "#{touch_cmd}"
+          ) 
         end
       end
 
