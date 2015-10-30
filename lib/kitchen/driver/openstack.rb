@@ -356,7 +356,7 @@ module Kitchen
           mkdir_cmd = "mkdir #{hints_path}"
           touch_cmd = "'{}' > #{hints_path}\\openstack.json"
           instance.transport.connection(state).execute(
-            "#{mkdir_cmd} && #{touch_cmd}"
+            "#{mkdir_cmd}; #{touch_cmd}"
           )
         end
       end
