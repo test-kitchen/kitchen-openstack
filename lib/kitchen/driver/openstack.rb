@@ -23,6 +23,7 @@ require 'fog'
 require 'ohai'
 require_relative 'openstack_version'
 require_relative 'openstack/volume'
+require 'excon'
 
 module Kitchen
   module Driver
@@ -65,6 +66,9 @@ module Kitchen
       default_config :winrm_wait, nil
       default_config :glance_cache_wait_timeout, 600
       default_config :block_device_mapping, nil
+      default_config :console_log_expression, nil
+      default_config :console_log_match_count, 1
+      default_config :console_log_wait_timeout, 600
 
       required_config :private_key_path
       required_config :public_key_path do |_, value, driver|
@@ -111,7 +115,7 @@ module Kitchen
           attach_ip_from_pool(server, config[:floating_ip_pool])
         end
         state[:hostname] = get_ip(server)
-        wait_for_server(state)
+        wait_for_server(server, state)
         setup_ssh(server, state) if bourne_shell?
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
@@ -400,11 +404,34 @@ module Kitchen
         Excon.defaults[:ssl_verify_peer] = false
       end
 
-      def wait_for_server(state)
-        if config[:server_wait]
-          info "Sleeping for #{config[:server_wait]} seconds to let your server to start up..." # rubocop:disable Metrics/LineLength
-          countdown(config[:server_wait])
+      def wait_for_server_console(server)
+        info 'Looking for Console Logs before checking the Transport'
+        expression = config[:console_log_expression]
+
+        # Since we are sleeping 2 seconds in between
+        timeout = config[:console_log_wait_timeout] / 2
+
+        x = 0
+        matched = false
+        while x < timeout
+          matches = get_server_log(server).scan(/#{expression}/).size
+          if (matches >= config[:console_log_match_count])
+            info 'Found console log line based on regular expression'
+            matched = true
+            break
+          else
+            debug "Not found yet, continuing: #{x}/#{timeout}"
+          end
+          x += 1
+          sleep 2
         end
+
+        fail "Failed to find desired console log line:#{expression}" unless matched # rubocop:disable Metrics/LineLength
+      end
+
+      def wait_for_server(server, state)
+        wait_for_server_console(server) if config[:console_log_expression]
+
         info 'Waiting for server to be ready...'
         instance.transport.connection(state).wait_until_ready
       rescue
@@ -434,6 +461,15 @@ module Kitchen
           collection.each { |single| return single if single.name == name }
         end
         nil
+      end
+
+      def get_server_log(server)
+        server_console_data = server.console.data[:body]['output']
+
+        return server_console_data
+      rescue Excon::Errors::SocketError
+        warn 'Got Socket Error - returning null array'
+        return ''
       end
     end
   end

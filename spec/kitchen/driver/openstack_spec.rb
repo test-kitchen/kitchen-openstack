@@ -1233,18 +1233,25 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#wait_for_server' do
-    let(:config) { { server_wait: 0 } }
+    let(:config) { { server_wait: 0, console_log_expression: '.*' } }
     let(:state) { { hostname: 'host' } }
+    let(:server) do
+      double(id: 'test123', wait_for: true, public_ip_addresses: %w(1.2.3.4))
+    end
+
+    before do
+      allow(driver).to receive(:get_server_log).and_return('Hello')
+    end
 
     it 'waits for connection to be available' do
-      expect(driver.send(:wait_for_server, state)).to be(nil)
+      expect(driver.send(:wait_for_server, server, state)).to be(nil)
     end
 
     it 'Fails when calling transport but still destroys the created system' do
       allow(instance.transport).to receive(:connection).and_raise(ArgumentError)
       expect(driver).to receive(:destroy)
 
-      expect { driver.send(:wait_for_server, state) }
+      expect { driver.send(:wait_for_server, server, state) }
         .to raise_error(ArgumentError)
     end
   end
@@ -1280,6 +1287,81 @@ describe Kitchen::Driver::Openstack do
     end
     it 'returns just the BDM config' do
       expect(driver.send(:get_bdm, config)).to eq(config[:block_device_mapping])
+    end
+  end
+
+  describe '#get_server_log' do
+    context 'When executed with  output'
+    let(:data) do
+      {
+        body: {
+          'output' => 'Testing'
+        }
+      }
+    end
+    let(:console) do
+      double(data: data)
+    end
+    let(:server) do
+      double(
+        console: console
+      )
+    end
+
+    it 'returns the body output as a string' do
+      expect(driver.send(:get_server_log, server)).to eq('Testing')
+    end
+
+    it 'should throw an exception if socket error is raised' do
+      allow(server.console).to receive(:data)\
+        .and_raise(Excon::Errors::SocketError.new(Excon::Errors::Error.new))
+
+      expect(driver.send(:get_server_log, server)).to eq('')
+    end
+  end
+
+  describe '#wait_for_server_console' do
+    let(:server) { { empty: 'empty ' } }
+
+    before do
+      allow(driver).to receive(:get_server_log)
+        .and_return('Line 1 \n Line 2 \n Line 3 \n Line 1', 'Line 4', 'Line 5')
+    end
+
+    context ' with simple regex' do
+      let(:config) { { console_log_expression: 'Line 5' } }
+
+      it 'iterates until it finds the line it is looking for' do
+        expect(driver).to receive(:sleep).with(2).exactly(2).times
+
+        driver.send(:wait_for_server_console, server)
+      end
+    end
+
+    context 'with low timeout value' do
+      let(:config) do
+        {
+          console_log_expression: 'sdadsafd',
+          console_log_wait_timeout: 2
+        }
+      end
+      it 'fails to find line not existing' do
+        expect { driver.send(:wait_for_server_console, server) }
+          .to raise_error(RuntimeError)
+      end
+    end
+
+    context 'with complex regex matching new lines' do
+      let(:config) do
+        {
+          console_log_expression: '(?m).*1.*Line 2.*',
+          console_log_wait_timeout: 2
+        }
+      end
+
+      it 'uses the expression as a regular expression'do
+        driver.send(:wait_for_server_console, server)
+      end
     end
   end
 
