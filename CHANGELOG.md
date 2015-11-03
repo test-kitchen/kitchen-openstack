@@ -1,5 +1,17 @@
 # Change Log
 
+
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v2.1.0...HEAD)
+
+**Closed issues:**
+
+- kitchen create on Windows 2012/WinRM fails: "Expressions are only allowed as the first element of a pipeline." [\#122](https://github.com/test-kitchen/kitchen-openstack/issues/122)
+
+**Merged pull requests:**
+
+- Ohai hint file is now created with the correct encoding on Windows [\#124](https://github.com/test-kitchen/kitchen-openstack/pull/124) ([stuartpreston](https://github.com/stuartpreston))
+- Added info about user\_data [\#121](https://github.com/test-kitchen/kitchen-openstack/pull/121) ([jjasghar](https://github.com/jjasghar))
+
 ## [v2.1.0](https://github.com/test-kitchen/kitchen-openstack/tree/v2.1.0) (2015-10-19)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v2.1.0.pre.1...v2.1.0)
 
