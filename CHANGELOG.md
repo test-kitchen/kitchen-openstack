@@ -1,7 +1,8 @@
 # Change Log
 
 
-[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v2.1.0...HEAD)
+## [v2.1.1](https://github.com/test-kitchen/kitchen-openstack/tree/v2.1.1) (2015-11-03)
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v2.1.0...v2.1.1)
 
 **Closed issues:**
 
