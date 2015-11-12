@@ -118,8 +118,15 @@ If a `key_name` is provided it will be used instead of any
 If a `key_name` is provided without any `private_key_path`, unexpected
 behavior may result if your local RSA/DSA private key doesn't match that
 OpenStack key. If you do key injection via `cloud-init` like this issue:
-[#77](https://github.com/test-kitchen/kitchen-openstack/issues/77) the best
-way is to make a "dummy-key."
+[#77](https://github.com/test-kitchen/kitchen-openstack/issues/77). The
+`key_name` should be a blank string if you need to skip it. Example:
+
+```yml
+driver:
+  [-- snip --]
+  key_name: ""
+  user_data: cloud_init
+```
 
 ### username
 
