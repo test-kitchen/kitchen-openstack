@@ -161,6 +161,15 @@ Your OpenStack compute service name.
 Your OpenStack network name used to connect to, if you have only private network
 connections you want declare this.
 
+### glance\_cache\_wait
+
+`glance_cache_wait` is necessary evil to make sure glance caches the OS image on the
+compute node you've pointed to. For most images you won't need to change this,
+but for larger images you may want to change this number.
+
+The default is `30`.
+
+
 ### server\_wait
 
 `server_wait` is a workaround to deal with how some VMs with `cloud-init`.
