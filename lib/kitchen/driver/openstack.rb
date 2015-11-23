@@ -63,6 +63,7 @@ module Kitchen
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
       default_config :winrm_wait, nil
+      default_config :glance_cache_wait_timeout, 600
       default_config :block_device_mapping, nil
 
       required_config :private_key_path
@@ -96,8 +97,14 @@ module Kitchen
         server = create_server
         state[:server_id] = server.id
         info "OpenStack instance with ID of <#{state[:server_id]}> is ready." # rubocop:disable Metrics/LineLength
+
         # this is due to the glance_caching issues. Annoying yes, but necessary.
-        sleep 30
+        debug "Waiting for VM to be in ACTIVE state for a max time of:#{config[:glance_cache_wait_timeout]} seconds" # rubocop:disable Metrics/LineLength
+        server.wait_for(config[:glance_cache_wait_timeout]) do
+          sleep(1)
+          ready?
+        end
+
         if config[:floating_ip]
           attach_ip(server, config[:floating_ip])
         elsif config[:floating_ip_pool]
@@ -152,7 +159,7 @@ module Kitchen
       end
 
       def volume
-        Volume.new
+        Volume.new(logger)
       end
 
       def get_bdm(config)

@@ -20,10 +20,11 @@ describe Kitchen::Driver::Openstack::Volume do
       openstack_service_name: 'the_service'
     }
   end
-
+  let(:logger_io) { StringIO.new }
+  let(:logger)    { Kitchen::Logger.new(logdev: logger_io) }
   describe '#volume' do
     let(:vol_driver) do
-      described_class.new
+      described_class.new(logger)
     end
 
     it 'creates a new block device connection' do
@@ -31,38 +32,14 @@ describe Kitchen::Driver::Openstack::Volume do
       expect(vol_driver.send(:volume, os)).to eq(os)
     end
   end
-
-  describe '#volume_ready?' do
-    let(:volume_details) do
-      {
-        body: { 'volume' => { 'status' => 'available' } }
-      }
-    end
-
-    let(:volume) do
-      double(
-        get_volume_details: volume_details
-      )
-    end
-
-    let(:vol_driver) do
-      d = described_class.new
-      allow(d).to receive(:volume).and_return(volume)
-      d
-    end
-
-    it 'checks if the volume is ready' do
-      expect(vol_driver.send(:volume_ready?, '333', os)).to eq(true)
-    end
-  end
-
   describe '#create_volume' do
     let(:config) do
       {
         server_name: 'applejack',
         block_device_mapping: {
           snapshot_id: '444',
-          volume_size: '5'
+          volume_size: '5',
+          creation_timeout: '30'
         }
       }
     end
@@ -73,20 +50,47 @@ describe Kitchen::Driver::Openstack::Volume do
       }
     end
 
+    let(:volume_model) do
+      {
+        id: '555',
+        status: 'ACTIVE'
+        # wait_for: true
+        # ready?: true
+      }
+    end
+
     let(:volume) do
       double(
-        create_volume: create_volume
+        create_volume: create_volume,
+        volumes: [volume_model]
       )
     end
 
+    let(:wait_for) do
+      {
+        ready?: true,
+        status: 'ACTIVE'
+      }
+    end
+
     let(:vol_driver) do
-      d = described_class.new
+      d = described_class.new(logger)
       allow(d).to receive(:volume).and_return(volume)
-      allow(d).to receive(:volume_ready?).and_return(true)
+      allow(d).to receive(:volume_model).and_return(true)
       d
     end
 
     it 'creates a volume' do
+      # This seems like a hack
+      # how would we do this on the volume_model instead?
+      # This makes rspec work
+      # but the vol_driver doesnt have these methods properties?
+      allow(vol_driver).to receive(:status).and_return('ACTIVE')
+      allow(vol_driver).to receive(:ready?).and_return(true)
+      allow(volume_model).to receive(:wait_for)
+        .with(an_instance_of(String)).and_yield
+
+      # allow(vol_driver).a
       expect(vol_driver.send(:create_volume, config, os)).to eq('555')
     end
   end
@@ -106,7 +110,7 @@ describe Kitchen::Driver::Openstack::Volume do
     end
 
     let(:vol_driver) do
-      d = described_class.new
+      d = described_class.new(logger)
       allow(d).to receive(:create_volume).and_return('555')
       d
     end

@@ -12,6 +12,8 @@ require 'kitchen/provisioner/dummy'
 require 'kitchen/transport/dummy'
 require 'kitchen/verifier/dummy'
 require 'ohai'
+require 'excon'
+require 'fog'
 
 describe Kitchen::Driver::Openstack do
   let(:logged_output) { StringIO.new }
@@ -201,22 +203,53 @@ describe Kitchen::Driver::Openstack do
       d
     end
 
+    context 'when a server is already created' do
+      it 'does not create a new instance' do
+        state[:server_id] = '1'
+        expect(driver).not_to receive(:create_server)
+        driver.create(state)
+      end
+    end
+
     context 'required options provided' do
       let(:config) do
         {
           openstack_username: 'hello',
           openstack_api_key: 'world',
           openstack_auth_url: 'http:',
-          openstack_tenant: 'www'
+          openstack_tenant: 'www',
+          glance_cache_wait_timeout: 600,
+          disable_ssl_validation: false
         }
       end
-    end
+      let(:server) do
+        double(id: 'test123', wait_for: true, public_ip_addresses: %w(1.2.3.4))
+      end
 
-    context 'when a server is already created' do
-      it 'does not create a new instance' do
-        state[:server_id] = '123'
-        expect(driver).not_to receive(:create_server)
-        driver.create(state)
+      let(:driver) do
+        d = described_class.new(config)
+        allow(d).to receive(:config_server_name).and_return('a_monkey!')
+        allow(d).to receive(:create_server).and_return(server)
+        allow(server).to receive(:id).and_return('test123')
+
+        # Inside the yield block we are calling ready?  So we fake it here
+        allow(d).to receive(:ready?).and_return(true)
+        allow(server).to receive(:wait_for)
+          .with(an_instance_of(Fixnum)).and_yield
+
+        allow(d).to receive(:get_ip).and_return('1.2.3.4')
+        allow(d).to receive(:bourne_shell?).and_return(false)
+        d
+      end
+
+      it 'returns nil, but modifies the state' do
+        expect(driver.send(:create, state)).to eq(nil)
+        expect(state[:server_id]).to eq('test123')
+      end
+
+      it 'throws an Action error when trying to create_server' do
+        allow(driver).to receive(:create_server).and_raise(Fog::Errors::Error)
+        expect { driver.send(:create, state) }.to raise_error(Kitchen::ActionFailed) # rubocop:disable Metrics/LineLength
       end
     end
   end
@@ -1081,6 +1114,38 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe '#setup_ssh' do
+    let(:config) { { public_key_path: '/pub_key' } }
+    let(:config) do
+      {
+        public_key_path: '/pub_key',
+        key_name: 'OpenStackKey'
+      }
+    end
+
+    let(:server) { double(password: 'aloha') }
+    let(:state) { { hostname: 'host' } }
+    let(:read) { double(read: 'a_key') }
+    let(:ssh) { double(run: true) }
+
+    before(:each) do
+      allow(driver).to receive(:open).with(config[:public_key_path])
+        .and_return(read)
+    end
+
+    context 'sets the ssh_key state' do
+      before do
+        allow(driver).to receive(:bourne_shell?).and_return(false)
+        allow(driver).to receive(:do_ssh_setup).and_return(nil)
+      end
+
+      it 'does not execute the ssh setup' do
+        expect(driver).not_to receive(:do_ssh_setup)
+        driver.send(:setup_ssh, server, state)
+      end
+    end
+  end
+
   describe '#do_ssh_setup' do
     let(:config) { { public_key_path: '/pub_key' } }
     let(:server) { double(password: 'aloha') }
@@ -1136,11 +1201,97 @@ describe Kitchen::Driver::Openstack do
     it 'opens an SSH session to the server' do
       driver.send(:add_ohai_hint, state)
     end
+
+    it 'opens an Winrm session to the server' do
+      allow(driver).to receive(:bourne_shell?).and_return(false)
+      allow(driver).to receive(:windows_os?).and_return(true)
+      driver.send(:add_ohai_hint, state)
+    end
   end
 
   describe '#disable_ssl_validation' do
     it 'turns off Excon SSL cert validation' do
       expect(driver.send(:disable_ssl_validation)).to eq(false)
+    end
+  end
+
+  describe '#countdown' do
+    it 'counts down to future time with 0 seconds with almost no time' do
+      current = Time.now
+      driver.send(:countdown, 0)
+      after = Time.now
+      expect(after - current).to be >= 0
+      expect(after - current).to be < 10
+    end
+
+    it 'counts down to future time with 1 seconds with at least 9 seconds' do
+      current = Time.now
+      driver.send(:countdown, 1)
+      after = Time.now
+      expect(after - current).to be >= 9
+    end
+  end
+
+  describe '#wait_for_server' do
+    let(:config) { { server_wait: 0 } }
+    let(:state) { { hostname: 'host' } }
+
+    it 'waits for connection to be available' do
+      expect(driver.send(:wait_for_server, state)).to be(nil)
+    end
+
+    it 'Fails when calling transport but still destroys the created system' do
+      allow(instance.transport).to receive(:connection).and_raise(ArgumentError)
+      expect(driver).to receive(:destroy)
+
+      expect { driver.send(:wait_for_server, state) }
+        .to raise_error(ArgumentError)
+    end
+  end
+
+  describe '#get_bdm' do
+    let(:logger) { Logger.new(logged_output) }
+    let(:config) do
+      {
+        openstack_username: 'a',
+        openstack_api_key: 'b',
+        openstack_auth_url: 'http://',
+        openstack_tenant: 'me',
+        openstack_region: 'ORD',
+        openstack_service_name: 'stack',
+        image_ref: '22',
+        flavor_ref: '33',
+        public_key_path: '/tmp',
+        username: 'admin',
+        port: '2222',
+        server_name: 'puppy',
+        server_name_prefix: 'parsnip',
+        private_key_path: '/path/to/id_rsa',
+        floating_ip_pool: 'swimmers',
+        floating_ip: '11111',
+        network_ref: '0xCAFFE',
+        block_device_mapping: {
+          volume_id: '55',
+          volume_size: '5',
+          device_name: 'vda',
+          delete_on_termination: true
+        }
+      }
+    end
+    it 'returns just the BDM config' do
+      expect(driver.send(:get_bdm, config)).to eq(config[:block_device_mapping])
+    end
+  end
+
+  describe '#config_server_name' do
+    let(:config) do
+      {
+        server_name_prefix: 'parsnip'
+      }
+    end
+
+    it 'returns random string prefixed by servername_prefix attribute' do
+      expect(driver.send(:config_server_name)).to include('parsnip')
     end
   end
 end
