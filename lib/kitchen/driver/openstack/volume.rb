@@ -64,7 +64,7 @@ module Kitchen
           @logger.debug "Waiting for volume to be ready for #{creation_timeout} seconds" # rubocop:disable Metrics/LineLength
           vol_model.wait_for(creation_timeout) do
             sleep(1)
-            fail('Failed to make volume') if status.downcase == 'error'
+            fail('Failed to make volume') if status.casecmp('error'.downcase).zero? # rubocop:disable Metrics/LineLength, SignalException
             ready?
           end
 

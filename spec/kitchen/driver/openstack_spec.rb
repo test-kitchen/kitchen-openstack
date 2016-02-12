@@ -70,7 +70,7 @@ describe Kitchen::Driver::Openstack do
     end
   end
 
-  describe '#initialize'do
+  describe '#initialize' do
     context 'default options' do
       it 'uses the normal SSH status check' do
         expect(driver[:no_ssh_tcp_check]).to eq(false)
@@ -736,7 +736,7 @@ describe Kitchen::Driver::Openstack do
       let(:hostname) { 'ab.c' * 20 }
 
       it 'limits the generated name to 63 characters' do
-        expect(driver.send(:default_name).length).to be <= (63)
+        expect(driver.send(:default_name).length).to be <= 63
       end
     end
 
@@ -794,7 +794,7 @@ describe Kitchen::Driver::Openstack do
 
       it 'limits the generated name to 63 characters' do
         expect(driver.send(:server_name_prefix, long_prefix).length)
-          .to be <= (63)
+          .to be <= 63
       end
     end
 

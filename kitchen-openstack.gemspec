@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
-  spec.add_development_dependency 'rubocop', '0.34.1'
+  spec.add_development_dependency 'rubocop', '~> 0.36'
   spec.add_development_dependency 'cane'
   spec.add_development_dependency 'countloc'
   spec.add_development_dependency 'rspec'
