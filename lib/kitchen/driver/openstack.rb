@@ -66,7 +66,7 @@ module Kitchen
       required_config :private_key_path
       required_config :public_key_path do |_, value, driver|
         if value.nil? && driver[:key_name].nil?
-          fail(UserError,
+          fail(UserError, # rubocop:disable SignalException
                'Either a `:public_key_path` or `:key_name` is required')
         end
       end
@@ -212,21 +212,21 @@ module Kitchen
 
       def find_image(image_ref)
         image = find_matching(compute.images, image_ref)
-        fail(ActionFailed, 'Image not found') unless image
+        fail(ActionFailed, 'Image not found') unless image # rubocop:disable Metrics/LineLength, SignalException
         debug "Selected image: #{image.id} #{image.name}"
         image
       end
 
       def find_flavor(flavor_ref)
         flavor = find_matching(compute.flavors, flavor_ref)
-        fail(ActionFailed, 'Flavor not found') unless flavor
+        fail(ActionFailed, 'Flavor not found') unless flavor # rubocop:disable Metrics/LineLength, SignalException
         debug "Selected flavor: #{flavor.id} #{flavor.name}"
         flavor
       end
 
       def find_network(network_ref)
         net = find_matching(network.networks.all, network_ref)
-        fail(ActionFailed, 'Network not found') unless net
+        fail(ActionFailed, 'Network not found') unless net # rubocop:disable Metrics/LineLength, SignalException
         debug "Selected net: #{net.id} #{net.name}"
         net
       end
@@ -281,7 +281,7 @@ module Kitchen
             i.ip if i.fixed_ip.nil? && i.instance_id.nil? && i.pool == pool
           end.compact
           if free_addrs.empty?
-            fail ActionFailed, "No available IPs in pool <#{pool}>"
+            fail ActionFailed, "No available IPs in pool <#{pool}>" # rubocop:disable Metrics/LineLength, SignalException
           end
           config[:floating_ip] = free_addrs[0]
           attach_ip(server, free_addrs[0])
@@ -332,7 +332,7 @@ module Kitchen
         pub, priv = parse_ips(pub, priv)
         pub[config[:public_ip_order].to_i] ||
           priv[config[:private_ip_order].to_i] ||
-          fail(ActionFailed, 'Could not find an IP')
+          fail(ActionFailed, 'Could not find an IP') # rubocop:disable Metrics/LineLength, SignalException
       end
 
       def parse_ips(pub, priv)
