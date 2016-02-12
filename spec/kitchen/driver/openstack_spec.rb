@@ -120,11 +120,6 @@ describe Kitchen::Driver::Openstack do
         end
       end
 
-      it 'defaults to SSH with root user on port 22' do
-        expect(driver[:username]).to eq('root')
-        expect(driver[:port]).to eq('22')
-      end
-
       nils = [
         :server_name,
         :openstack_tenant,
@@ -1110,83 +1105,6 @@ describe Kitchen::Driver::Openstack do
         it 'returns empty lists' do
           expect(driver.send(:parse_ips, nil, nil)).to eq([[], []])
         end
-      end
-    end
-  end
-
-  describe '#setup_ssh' do
-    let(:config) { { public_key_path: '/pub_key' } }
-    let(:config) do
-      {
-        public_key_path: '/pub_key',
-        key_name: 'OpenStackKey'
-      }
-    end
-
-    let(:server) { double(password: 'aloha') }
-    let(:state) { { hostname: 'host' } }
-    let(:read) { double(read: 'a_key') }
-    let(:ssh) { double(run: true) }
-
-    before(:each) do
-      allow(driver).to receive(:open).with(config[:public_key_path])
-        .and_return(read)
-    end
-
-    context 'sets the ssh_key state' do
-      before do
-        allow(driver).to receive(:bourne_shell?).and_return(false)
-        allow(driver).to receive(:do_ssh_setup).and_return(nil)
-      end
-
-      it 'does not execute the ssh setup' do
-        expect(driver).not_to receive(:do_ssh_setup)
-        driver.send(:setup_ssh, server, state)
-      end
-    end
-  end
-
-  describe '#do_ssh_setup' do
-    let(:config) { { public_key_path: '/pub_key' } }
-    let(:server) { double(password: 'aloha') }
-    let(:state) { { hostname: 'host' } }
-    let(:read) { double(read: 'a_key') }
-    let(:ssh) { double(run: true) }
-
-    before(:each) do
-      allow(driver).to receive(:open).with(config[:public_key_path])
-        .and_return(read)
-    end
-
-    context 'when executed in a non-bourne shell' do
-      before do
-        allow(driver).to receive(:bourne_shell?).and_return(false)
-      end
-
-      it 'does not execute the ssh setup' do
-        expect(driver).not_to receive(:setup_ssh)
-      end
-    end
-
-    it 'opens an SSH session to the server' do
-      expect(Fog::SSH).to receive(:new).with(state[:hostname],
-                                             'root',
-                                             password: 'aloha').and_return(ssh)
-      expect(ssh).to receive(:run).with([
-        'mkdir .ssh',
-        'echo "a_key" >> ~/.ssh/authorized_keys',
-        'passwd -l root'
-      ])
-      driver.send(:do_ssh_setup, state, config, server)
-    end
-
-    context 'a configured SSH password' do
-      let(:config) { super().merge(password: '12345') }
-
-      it 'uses the configured password' do
-        expect(Fog::SSH).to receive(:new)
-          .with(state[:hostname], 'root', password: '12345').and_return(ssh)
-        driver.send(:do_ssh_setup, state, config, server)
       end
     end
   end
