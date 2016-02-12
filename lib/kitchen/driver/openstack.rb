@@ -4,7 +4,7 @@
 # Author:: JJ Asghar (<jj@chef.io>)
 #
 # Copyright (C) 2013-2015, Jonathan Hartman
-# Copyright (C) 2015, Chef Inc
+# Copyright (C) 2015-2016, Chef Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,8 +45,6 @@ module Kitchen
       default_config :public_key_path do |driver|
         driver[:private_key_path] + '.pub' if driver[:private_key_path]
       end
-      default_config :username, 'root'
-      default_config :password, nil
       default_config :port, '22'
       default_config :use_ipv6, false
       default_config :openstack_tenant, nil
@@ -62,7 +60,6 @@ module Kitchen
       default_config :network_ref, nil
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
-      default_config :winrm_wait, nil
       default_config :glance_cache_wait_timeout, 600
       default_config :block_device_mapping, nil
 
@@ -112,7 +109,6 @@ module Kitchen
         end
         state[:hostname] = get_ip(server)
         wait_for_server(state)
-        setup_ssh(server, state) if bourne_shell?
         add_ohai_hint(state)
       rescue Fog::Errors::Error, Excon::Errors::Error => ex
         raise ActionFailed, ex.message
@@ -370,29 +366,6 @@ module Kitchen
 
       def hints_path
         Ohai::Config[:hints_path][0]
-      end
-
-      def setup_ssh(server, state)
-        if config[:key_name]
-          info "Using OpenStack keypair <#{config[:key_name]}>"
-        end
-        info "Using public SSH key <#{config[:public_key_path]}>"
-        info "Using private SSH key <#{config[:private_key_path]}>"
-        state[:ssh_key] = config[:private_key_path]
-        do_ssh_setup(state, config, server) unless config[:key_name]
-      end
-
-      def do_ssh_setup(state, config, server)
-        info "Setting up SSH access for key <#{config[:public_key_path]}>"
-        ssh = Fog::SSH.new(state[:hostname],
-                           config[:username],
-                           password: config[:password] || server.password)
-        pub_key = open(config[:public_key_path]).read
-        ssh.run([
-          %(mkdir .ssh),
-          %(echo "#{pub_key}" >> ~/.ssh/authorized_keys),
-          %(passwd -l #{config[:username]})
-        ])
       end
 
       def disable_ssl_validation

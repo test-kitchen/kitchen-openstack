@@ -128,14 +128,6 @@ driver:
   user_data: cloud_init
 ```
 
-### username
-
-**Deprecated** SSH User name, you should be using transport now.
-
-### password
-
-**Deprecated** SSH password, you should be using transport now.
-
 ### port
 
 Set the SSH port for the remote access.
