@@ -228,7 +228,7 @@ to be set to `true`.
 
 ## Disk Configuration
 
-### <a name="config-block_device_mappings"></a> block\_device\_mappings
+### <a name="config-block_device_mapping"></a> block\_device\_mapping
 
 #### make\_volume
 
@@ -269,7 +269,7 @@ Timeout to wait for volume to become available.  If a large volume is provisione
 #### Example
 
 ```yaml
-block_device_mappings:
+block_device_mapping:
   make_volume: true
   snapshot_id: 00000-111111-0000222-000
   device_name: vda
