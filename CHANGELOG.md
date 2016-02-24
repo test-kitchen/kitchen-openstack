@@ -1,7 +1,27 @@
 # Change Log
 
-## [2.2.0](https://github.com/test-kitchen/kitchen-openstack/tree/v2.2.0)
+## [v3.0.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.0.0) (2016-02-24)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.0.0.pre.1...v3.0.0)
+
+**Merged pull requests:**
+
+- 3.0.0 Release of kitchen-openstack [\#136](https://github.com/test-kitchen/kitchen-openstack/pull/136) ([jjasghar](https://github.com/jjasghar))
+
+## [v3.0.0.pre.1](https://github.com/test-kitchen/kitchen-openstack/tree/v3.0.0.pre.1) (2016-02-12)
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v2.2.0...v3.0.0.pre.1)
+
+**Closed issues:**
+
+- transport\#username is not working for me [\#135](https://github.com/test-kitchen/kitchen-openstack/issues/135)
+- kitchen-openstack unable to retrieve network information [\#134](https://github.com/test-kitchen/kitchen-openstack/issues/134)
+- Password value in transport is not used in driver [\#133](https://github.com/test-kitchen/kitchen-openstack/issues/133)
+- SSL\_connect SYSCALL returned=5 errno=0 state=SSLv2/v3 read server hello A \(OpenSSL::SSL::SSLError\) [\#132](https://github.com/test-kitchen/kitchen-openstack/issues/132)
+- Volume: create new, attach existing, make from snapshot \(seems not working\) [\#131](https://github.com/test-kitchen/kitchen-openstack/issues/131)
+- Boot from Image \(into new volume\) [\#130](https://github.com/test-kitchen/kitchen-openstack/issues/130)
+- Put the yml files for each instance in .kitchen/kitchen-openstack [\#116](https://github.com/test-kitchen/kitchen-openstack/issues/116)
+
+## [v2.2.0](https://github.com/test-kitchen/kitchen-openstack/tree/v2.2.0) (2015-12-16)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v2.2.0.pre.1...v2.2.0)
 
 **Implemented enhancements:**
