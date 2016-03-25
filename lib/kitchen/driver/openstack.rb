@@ -375,7 +375,7 @@ module Kitchen
 
       def wait_for_server(state)
         if config[:server_wait]
-          info "Sleeping for #{config[:server_wait]} seconds to let your server to start up..." # rubocop:disable Metrics/LineLength
+          info "Sleeping for #{config[:server_wait]} seconds to let your server start up..." # rubocop:disable Metrics/LineLength
           countdown(config[:server_wait])
         end
         info 'Waiting for server to be ready...'
