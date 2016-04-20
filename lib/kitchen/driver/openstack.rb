@@ -324,7 +324,13 @@ module Kitchen
         # should also work for private networks
         if config[:openstack_network_name]
           debug "Using configured net: #{config[:openstack_network_name]}"
-          return server.addresses[config[:openstack_network_name]].first['addr']
+          addresses = server.addresses[config[:openstack_network_name]]
+          if config[:use_ipv6]
+            addresses = addresses.select { |i| i['version'] == 6 }
+          else
+            addresses = addresses.select { |i| i['version'] == 4 }
+          end
+          return addresses.first['addr']
         end
 
         pub, priv = get_public_private_ips(server)
