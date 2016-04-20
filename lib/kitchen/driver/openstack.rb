@@ -324,13 +324,8 @@ module Kitchen
         # should also work for private networks
         if config[:openstack_network_name]
           debug "Using configured net: #{config[:openstack_network_name]}"
-          addresses = server.addresses[config[:openstack_network_name]]
-          if config[:use_ipv6]
-            addresses = addresses.select { |i| i['version'] == 6 }
-          else
-            addresses = addresses.select { |i| i['version'] == 4 }
-          end
-          return addresses.first['addr']
+          return filter_ips(server.addresses[config[:openstack_network_name]])
+                 .first['addr']
         end
 
         pub, priv = get_public_private_ips(server)
@@ -339,6 +334,14 @@ module Kitchen
         pub[config[:public_ip_order].to_i] ||
           priv[config[:private_ip_order].to_i] ||
           fail(ActionFailed, 'Could not find an IP') # rubocop:disable Metrics/LineLength, SignalException
+      end
+
+      def filter_ips(addresses)
+        if config[:use_ipv6]
+          return addresses.select { |i| IPAddr.new(i['addr']).ipv6? }
+        else
+          return addresses.select { |i| IPAddr.new(i['addr']).ipv4? }
+        end
       end
 
       def parse_ips(pub, priv)

@@ -306,6 +306,10 @@ to use second `10.0.1.1` IP address you need to specify
 ```
 assuming that test network is configured as private.
 
+### use_ipv6
+
+If true use IPv6 addresses to for SSH connections. If false, the default, use
+IPv4 addresses for SSH connections. 
 
 ### network\_ref
 
