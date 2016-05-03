@@ -717,6 +717,29 @@ describe Kitchen::Driver::Openstack do
         driver.send(:create_server)
       end
     end
+
+    context 'config drive enabled' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          public_key_path: 'tarpals',
+          config_drive: true
+        }
+      end
+
+      it 'enables config drive' do
+        expect(servers).to receive(:create).with(
+          name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          availability_zone: nil,
+          public_key_path: 'tarpals',
+          config_drive: true)
+        driver.send(:create_server)
+      end
+    end
   end
 
   describe '#default_name' do

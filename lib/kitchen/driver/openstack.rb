@@ -179,7 +179,8 @@ module Kitchen
           :security_groups,
           :public_key_path,
           :key_name,
-          :user_data
+          :user_data,
+          :config_drive
         ].each do |c|
           server_def[c] = optional_config(c) if config[c]
         end
