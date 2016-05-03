@@ -198,6 +198,7 @@ echo "do whatever you want to pre-configure your machine"
 ```
 
 ### config\_drive
+
 If your vms require config drive.
 
 ```
