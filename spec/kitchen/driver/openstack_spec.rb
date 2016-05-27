@@ -987,6 +987,38 @@ describe Kitchen::Driver::Openstack do
         end
       end
 
+      context 'when openstack_network_name is provided and use_ipv6 is false' do
+        let(:addresses) do
+          {
+            'public' => [{ 'addr' => '4::1' }, { 'addr' => '7.7.7.7' }],
+            'private' => [{ 'addr' => '5::1' }, { 'addr' => '9.9.9.9' }]
+          }
+        end
+        let(:config) { { openstack_network_name: 'public' } }
+
+        it 'should respond with the first IPv4 address from the addresses' do
+          allow(driver).to receive(:config).and_return(config)
+
+          expect(driver.send(:get_ip, server)).to eq('7.7.7.7')
+        end
+      end
+
+      context 'when openstack_network_name is provided and use_ipv6 is true' do
+        let(:addresses) do
+          {
+            'public' => [{ 'addr' => '4::1' }, { 'addr' => '7.7.7.7' }],
+            'private' => [{ 'addr' => '5::1' }, { 'addr' => '9.9.9.9' }]
+          }
+        end
+        let(:config) { { openstack_network_name: 'public', use_ipv6: true } }
+
+        it 'should respond with the first IPv6 address from the addresses' do
+          allow(driver).to receive(:config).and_return(config)
+
+          expect(driver.send(:get_ip, server)).to eq('4::1')
+        end
+      end
+
       context 'only public IPs in the address hash' do
         let(:addresses) do
           { 'public' => [{ 'addr' => '6.6.6.6' }, { 'addr' => '7.7.7.7' }] }
