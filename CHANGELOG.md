@@ -1,11 +1,25 @@
 # Change Log
 
-## [v3.0.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.0.0) (2016-02-24)
+## [v3.1.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.1.0)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.0.0...v3.1.0)
+
+**Closed issues:**
+
+- `use\_ipv6` setting not respected when using `openstack\_network\_name` [\#141](https://github.com/test-kitchen/kitchen-openstack/issues/141)
+
+**Merged pull requests:**
+
+- Add config drive [\#144](https://github.com/test-kitchen/kitchen-openstack/pull/144) ([bradkwadsworth](https://github.com/bradkwadsworth))
+- Update to check IP version when using `openstack\_network\_name`. [\#142](https://github.com/test-kitchen/kitchen-openstack/pull/142) ([nmische](https://github.com/nmische))
+- minor grammar tweak to sleep message [\#140](https://github.com/test-kitchen/kitchen-openstack/pull/140) ([dpetzel](https://github.com/dpetzel))
+
+## [v3.0.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.0.0) (2016-02-24)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.0.0.pre.1...v3.0.0)
 
 **Merged pull requests:**
 
+- 3.0.0 prep work [\#139](https://github.com/test-kitchen/kitchen-openstack/pull/139) ([jjasghar](https://github.com/jjasghar))
 - 3.0.0 Release of kitchen-openstack [\#136](https://github.com/test-kitchen/kitchen-openstack/pull/136) ([jjasghar](https://github.com/jjasghar))
 
 ## [v3.0.0.pre.1](https://github.com/test-kitchen/kitchen-openstack/tree/v3.0.0.pre.1) (2016-02-12)

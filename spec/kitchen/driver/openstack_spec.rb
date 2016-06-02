@@ -713,7 +713,8 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-          user_data: data)
+          user_data: data
+        )
         driver.send(:create_server)
       end
     end
@@ -736,7 +737,8 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-          config_drive: true)
+          config_drive: true
+        )
         driver.send(:create_server)
       end
     end
@@ -975,9 +977,11 @@ describe Kitchen::Driver::Openstack do
     context 'an OpenStack deployment without the floating IP extension' do
       before do
         allow(server).to receive(:public_ip_addresses).and_raise(
-          Fog::Compute::OpenStack::NotFound)
+          Fog::Compute::OpenStack::NotFound
+        )
         allow(server).to receive(:private_ip_addresses).and_raise(
-          Fog::Compute::OpenStack::NotFound)
+          Fog::Compute::OpenStack::NotFound
+        )
       end
 
       context 'both public and private IPs in the addresses hash' do
