@@ -62,6 +62,7 @@ module Kitchen
       default_config :no_ssh_tcp_check_sleep, 120
       default_config :glance_cache_wait_timeout, 600
       default_config :block_device_mapping, nil
+      default_config :metadata, {}
 
       required_config :private_key_path
       required_config :public_key_path do |_, value, driver|
@@ -180,7 +181,8 @@ module Kitchen
           :public_key_path,
           :key_name,
           :user_data,
-          :config_drive
+          :config_drive,
+          :metadata
         ].each do |c|
           server_def[c] = optional_config(c) if config[c]
         end
