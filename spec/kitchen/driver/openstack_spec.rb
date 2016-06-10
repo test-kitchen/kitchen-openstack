@@ -408,7 +408,8 @@ describe Kitchen::Driver::Openstack do
           volume_id: '333',
           volume_device_name: 'vda',
           delete_on_termination: 'true'
-        }
+        },
+        metadata: {}
       }
     end
     let(:servers) do
@@ -466,7 +467,8 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: nil,
-          public_key_path: 'tarpals'
+          public_key_path: 'tarpals',
+          metadata: {}
         }
       end
       before(:each) do
@@ -487,7 +489,8 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'montgomery',
-          key_name: 'tarpals'
+          key_name: 'tarpals',
+          metadata: {}
         }
       end
 
@@ -510,7 +513,8 @@ describe Kitchen::Driver::Openstack do
           availability_zone: nil,
           public_key_path: 'montgomery',
           key_name: 'tarpals',
-          security_groups: ['ping-and-ssh']
+          security_groups: ['ping-and-ssh'],
+          metadata: {}
         }
       end
 
@@ -532,7 +536,8 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: 'elsewhere',
           public_key_path: 'montgomery',
-          key_name: 'tarpals'
+          key_name: 'tarpals',
+          metadata: {}
         }
       end
 
@@ -561,7 +566,8 @@ describe Kitchen::Driver::Openstack do
                                                  image_ref: '111',
                                                  flavor_ref: '1',
                                                  availability_zone: nil,
-                                                 public_key_path: 'tarpals')
+                                                 public_key_path: 'tarpals',
+                                                 metadata: {})
         driver.send(:create_server)
       end
     end
@@ -581,7 +587,8 @@ describe Kitchen::Driver::Openstack do
                                                  image_ref: '222',
                                                  flavor_ref: '2',
                                                  availability_zone: nil,
-                                                 public_key_path: 'tarpals')
+                                                 public_key_path: 'tarpals',
+                                                 metadata: {})
         driver.send(:create_server)
       end
     end
@@ -602,7 +609,8 @@ describe Kitchen::Driver::Openstack do
                                                  image_ref: '222',
                                                  flavor_ref: '1',
                                                  availability_zone: nil,
-                                                 public_key_path: 'tarpals')
+                                                 public_key_path: 'tarpals',
+                                                 metadata: {})
         driver.send(:create_server)
       end
     end
@@ -628,7 +636,8 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-          nics: networks
+          nics: networks,
+          metadata: {}
         )
         driver.send(:create_server)
       end
@@ -655,7 +664,8 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-          nics: networks
+          nics: networks,
+          metadata: {}
         )
         driver.send(:create_server)
       end
@@ -683,7 +693,8 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-          nics: networks
+          nics: networks,
+          metadata: {}
         )
         driver.send(:create_server)
       end
@@ -713,7 +724,8 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-          user_data: data
+          user_data: data,
+          metadata: {}
         )
         driver.send(:create_server)
       end
@@ -737,11 +749,35 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           public_key_path: 'tarpals',
-          config_drive: true
+          config_drive: true,
+          metadata: {}
         )
         driver.send(:create_server)
       end
     end
+
+    context 'specifies metadata' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_ref: 'fedora',
+          flavor_ref: 'small',
+          public_key_path: 'tarpals',
+          metadata: {'hi': 'there'}
+        }
+      end
+
+      it 'passes the metadata on creation' do
+        expect(servers).to receive(:create).with(name: 'hello',
+                                                 image_ref: '222',
+                                                 flavor_ref: '2',
+                                                 availability_zone: nil,
+                                                 public_key_path: 'tarpals',
+                                                 metadata: {'hi': 'there'})
+        driver.send(:create_server)
+      end
+    end
+
   end
 
   describe '#default_name' do
