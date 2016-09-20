@@ -287,9 +287,10 @@ Any floating IP will be the IP used for Test Kitchen's Remote calls to the node.
 
 ### floating\_ip\_pool
 
-A `floating_ip_pool` can be provided to acquire the first free floating ip from
+A `floating_ip_pool` can be provided to allocate new floating IP from
 the pool to attach to the instance. It will be the IP used for Test Kitchen's
-Remote calls to the node.
+Remote calls to the node. Floating IP will be released once the instance
+is destroyed.
 
 ### \[public\|private\]\_ip\_order
 
