@@ -119,7 +119,17 @@ module Kitchen
 
         disable_ssl_validation if config[:disable_ssl_validation]
         server = compute.servers.get(state[:server_id])
-        server.destroy unless server.nil?
+
+        unless server.nil?
+          if config[:floating_ip_pool]
+            ip = get_ip(server)
+            floating_ip_id = network.list_floating_ips(floating_ip_address: ip)
+                                    .body['floatingips'][0]['id']
+            network.delete_floating_ip(floating_ip_id)
+            info "OpenStack Floating IP <#{ip}> released."
+          end
+          server.destroy
+        end
         info "OpenStack instance <#{state[:server_id]}> destroyed."
         state.delete(:server_id)
         state.delete(:hostname)
@@ -277,15 +287,11 @@ module Kitchen
 
       def attach_ip_from_pool(server, pool)
         @@ip_pool_lock.synchronize do
+          resp = network.create_floating_ip(pool)
+          ip = resp.body['floatingip']['floating_ip_address']
           info "Attaching floating IP from <#{pool}> pool"
-          free_addrs = compute.addresses.map do |i|
-            i.ip if i.fixed_ip.nil? && i.instance_id.nil? && i.pool == pool
-          end.compact
-          if free_addrs.empty?
-            fail ActionFailed, "No available IPs in pool <#{pool}>" # rubocop:disable Metrics/LineLength, SignalException
-          end
-          config[:floating_ip] = free_addrs[0]
-          attach_ip(server, free_addrs[0])
+          config[:floating_ip] = ip
+          attach_ip(server, ip)
         end
       end
 
@@ -338,10 +344,12 @@ module Kitchen
       end
 
       def filter_ips(addresses)
-        if config[:use_ipv6]
-          return addresses.select { |i| IPAddr.new(i['addr']).ipv6? }
-        else
-          return addresses.select { |i| IPAddr.new(i['addr']).ipv4? }
+        addresses.select do |i|
+          if config[:use_ipv6]
+            IPAddr.new(i['addr']).ipv6?
+          else
+            IPAddr.new(i['addr']).ipv4?
+          end
         end
       end
 

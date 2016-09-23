@@ -230,7 +230,7 @@ describe Kitchen::Driver::Openstack do
         # Inside the yield block we are calling ready?  So we fake it here
         allow(d).to receive(:ready?).and_return(true)
         allow(server).to receive(:wait_for)
-          .with(an_instance_of(Fixnum)).and_yield
+          .with(an_instance_of(Integer)).and_yield
 
         allow(d).to receive(:get_ip).and_return('1.2.3.4')
         allow(d).to receive(:bourne_shell?).and_return(false)
@@ -852,27 +852,18 @@ describe Kitchen::Driver::Openstack do
     let(:address) do
       double(ip: ip, fixed_ip: nil, instance_id: nil, pool: pool)
     end
-    let(:compute) { double(addresses: [address]) }
+    let(:network_response) do
+      double(body: { 'floatingip' => { 'floating_ip_address' => ip } })
+    end
+    let(:network) { double(create_floating_ip: network_response) }
 
     before(:each) do
       allow(driver).to receive(:attach_ip).with(server, ip).and_return('bing!')
-      allow(driver).to receive(:compute).and_return(compute)
+      allow(driver).to receive(:network).and_return(network)
     end
 
     it 'determines an IP to attempt to attach' do
       expect(driver.send(:attach_ip_from_pool, server, pool)).to eq('bing!')
-    end
-
-    context 'no free addresses in the specified pool' do
-      let(:address) do
-        double(ip: ip, fixed_ip: nil, instance_id: nil,
-               pool: 'some_other_pool')
-      end
-
-      it 'raises an exception' do
-        expect { driver.send(:attach_ip_from_pool, server, pool) }.to \
-          raise_error(Kitchen::ActionFailed)
-      end
     end
   end
 
