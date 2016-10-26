@@ -20,8 +20,6 @@ describe Kitchen::Driver::Openstack do
   let(:logger) { Logger.new(logged_output) }
   let(:config) { Hash.new }
   let(:state) { Hash.new }
-  let(:dsa) { File.expand_path('~/.ssh/id_dsa') }
-  let(:rsa) { File.expand_path('~/.ssh/id_rsa') }
   let(:instance_name) { 'potatoes' }
   let(:transport)     { Kitchen::Transport::Dummy.new }
   let(:platform)      { Kitchen::Platform.new(name: 'fake_platform') }
@@ -43,31 +41,10 @@ describe Kitchen::Driver::Openstack do
     allow_any_instance_of(described_class).to receive(:instance)
       .and_return(instance)
     allow(File).to receive(:exist?).and_call_original
-    allow(File).to receive(:exist?).with(dsa).and_return(true)
-    allow(File).to receive(:exist?).with(rsa).and_return(true)
   end
 
   describe '#finalize_config' do
     before(:each) { allow(File).to receive(:exist?).and_return(false) }
-
-    context 'both private and public key info provided' do
-      let(:config) do
-        { private_key_path: '/tmp/key', public_key_path: '/tmp/key.pub' }
-      end
-
-      it 'raises no error' do
-        expect(driver.finalize_config!(instance)).to be
-      end
-    end
-
-    context 'no key information provided provided' do
-      let(:config) { {} }
-
-      it 'raises an error' do
-        expected = Kitchen::UserError
-        expect { driver.finalize_config!(instance) }.to raise_error(expected)
-      end
-    end
   end
 
   describe '#initialize' do
@@ -78,46 +55,6 @@ describe Kitchen::Driver::Openstack do
 
       it 'sets a default TCP check wait time' do
         expect(driver[:no_ssh_tcp_check_sleep]).to eq(120)
-      end
-
-      context 'both DSA and RSA SSH keys available for the user' do
-        it 'prefers the local user\'s RSA private key' do
-          expect(driver[:private_key_path]).to eq(rsa)
-        end
-
-        it 'prefers the local user\'s RSA public key' do
-          expect(driver[:public_key_path]).to eq(rsa + '.pub')
-        end
-      end
-
-      context 'only a DSA SSH key available for the user' do
-        before(:each) do
-          allow(File).to receive(:exist?).and_return(false)
-          allow(File).to receive(:exist?).with(dsa).and_return(true)
-        end
-
-        it 'uses the local user\'s DSA private key' do
-          expect(driver[:private_key_path]).to eq(dsa)
-        end
-
-        it 'uses the local user\'s DSA public key' do
-          expect(driver[:public_key_path]).to eq(dsa + '.pub')
-        end
-      end
-
-      context 'only a RSA SSH key available for the user' do
-        before(:each) do
-          allow(File).to receive(:exist?).and_return(false)
-          allow(File).to receive(:exist?).with(rsa).and_return(true)
-        end
-
-        it 'uses the local user\'s RSA private key' do
-          expect(driver[:private_key_path]).to eq(rsa)
-        end
-
-        it 'uses the local user\'s RSA public key' do
-          expect(driver[:public_key_path]).to eq(rsa + '.pub')
-        end
       end
 
       nils = [
@@ -151,10 +88,10 @@ describe Kitchen::Driver::Openstack do
           openstack_tenant: 'that_one',
           openstack_region: 'atlantis',
           openstack_service_name: 'the_service',
-          private_key_path: '/path/to/id_rsa',
           floating_ip_pool: 'swimmers',
           floating_ip: '11111',
           network_ref: '0xCAFFE',
+          use_ssh_agent: true,
           block_device_mapping: {
             make_volume: true,
             snapshot_id: '44',
@@ -230,7 +167,7 @@ describe Kitchen::Driver::Openstack do
         # Inside the yield block we are calling ready?  So we fake it here
         allow(d).to receive(:ready?).and_return(true)
         allow(server).to receive(:wait_for)
-          .with(an_instance_of(Fixnum)).and_yield
+          .with(an_instance_of(Integer)).and_yield
 
         allow(d).to receive(:get_ip).and_return('1.2.3.4')
         allow(d).to receive(:bourne_shell?).and_return(false)
@@ -402,7 +339,6 @@ describe Kitchen::Driver::Openstack do
         image_ref: '111',
         flavor_ref: '1',
         availability_zone: nil,
-        public_key_path: 'tarpals',
         block_device_mapping: {
           volume_size: '5',
           volume_id: '333',
@@ -459,26 +395,6 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
-    context 'a provided public key path' do
-      let(:config) do
-        {
-          server_name: 'hello',
-          image_ref: '111',
-          flavor_ref: '1',
-          availability_zone: nil,
-          public_key_path: 'tarpals'
-        }
-      end
-      before(:each) do
-        @expected = config.merge(name: config[:server_name])
-        @expected.delete_if { |k, _| k == :server_name }
-      end
-
-      it 'passes that public key path to Fog' do
-        expect(driver.send(:create_server)).to eq(@expected)
-      end
-    end
-
     context 'a provided key name' do
       let(:config) do
         {
@@ -486,7 +402,6 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: nil,
-          public_key_path: 'montgomery',
           key_name: 'tarpals'
         }
       end
@@ -508,7 +423,6 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: nil,
-          public_key_path: 'montgomery',
           key_name: 'tarpals',
           security_groups: ['ping-and-ssh']
         }
@@ -531,7 +445,6 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: 'elsewhere',
-          public_key_path: 'montgomery',
           key_name: 'tarpals'
         }
       end
@@ -551,8 +464,7 @@ describe Kitchen::Driver::Openstack do
         {
           server_name: 'hello',
           image_ref: '111',
-          flavor_ref: '1',
-          public_key_path: 'tarpals'
+          flavor_ref: '1'
         }
       end
 
@@ -560,8 +472,7 @@ describe Kitchen::Driver::Openstack do
         expect(servers).to receive(:create).with(name: 'hello',
                                                  image_ref: '111',
                                                  flavor_ref: '1',
-                                                 availability_zone: nil,
-                                                 public_key_path: 'tarpals')
+                                                 availability_zone: nil)
         driver.send(:create_server)
       end
     end
@@ -571,8 +482,7 @@ describe Kitchen::Driver::Openstack do
         {
           server_name: 'hello',
           image_ref: 'fedora',
-          flavor_ref: 'small',
-          public_key_path: 'tarpals'
+          flavor_ref: 'small'
         }
       end
 
@@ -580,8 +490,7 @@ describe Kitchen::Driver::Openstack do
         expect(servers).to receive(:create).with(name: 'hello',
                                                  image_ref: '222',
                                                  flavor_ref: '2',
-                                                 availability_zone: nil,
-                                                 public_key_path: 'tarpals')
+                                                 availability_zone: nil)
         driver.send(:create_server)
       end
     end
@@ -592,8 +501,7 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           # pass regex as string as yml returns string values
           image_ref: '/edo/',
-          flavor_ref: '/in/',
-          public_key_path: 'tarpals'
+          flavor_ref: '/in/'
         }
       end
 
@@ -601,8 +509,7 @@ describe Kitchen::Driver::Openstack do
         expect(servers).to receive(:create).with(name: 'hello',
                                                  image_ref: '222',
                                                  flavor_ref: '1',
-                                                 availability_zone: nil,
-                                                 public_key_path: 'tarpals')
+                                                 availability_zone: nil)
         driver.send(:create_server)
       end
     end
@@ -613,7 +520,6 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
-          public_key_path: 'tarpals',
           network_ref: '1'
         }
       end
@@ -627,7 +533,6 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: nil,
-          public_key_path: 'tarpals',
           nics: networks
         )
         driver.send(:create_server)
@@ -640,7 +545,6 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
-          public_key_path: 'tarpals',
           network_ref: 'vlan1'
         }
       end
@@ -654,7 +558,6 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: nil,
-          public_key_path: 'tarpals',
           nics: networks
         )
         driver.send(:create_server)
@@ -667,7 +570,6 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
-          public_key_path: 'tarpals',
           network_ref: %w(1 2)
         }
       end
@@ -682,7 +584,6 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: nil,
-          public_key_path: 'tarpals',
           nics: networks
         )
         driver.send(:create_server)
@@ -695,7 +596,6 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
-          public_key_path: 'tarpals',
           user_data: 'cloud-init.txt'
         }
       end
@@ -712,7 +612,6 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: nil,
-          public_key_path: 'tarpals',
           user_data: data
         )
         driver.send(:create_server)
@@ -725,7 +624,6 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
-          public_key_path: 'tarpals',
           config_drive: true
         }
       end
@@ -736,7 +634,6 @@ describe Kitchen::Driver::Openstack do
           image_ref: '111',
           flavor_ref: '1',
           availability_zone: nil,
-          public_key_path: 'tarpals',
           config_drive: true
         )
         driver.send(:create_server)
@@ -1238,12 +1135,10 @@ describe Kitchen::Driver::Openstack do
         openstack_service_name: 'stack',
         image_ref: '22',
         flavor_ref: '33',
-        public_key_path: '/tmp',
         username: 'admin',
         port: '2222',
         server_name: 'puppy',
         server_name_prefix: 'parsnip',
-        private_key_path: '/path/to/id_rsa',
         floating_ip_pool: 'swimmers',
         floating_ip: '11111',
         network_ref: '0xCAFFE',
