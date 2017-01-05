@@ -27,7 +27,7 @@ require_relative 'openstack/volume'
 module Kitchen
   module Driver
     # This takes from the Base Class and creates the OpenStack driver.
-    class Openstack < Kitchen::Driver::Base # rubocop:disable Metrics/ClassLength, Metrics/LineLength
+    class Openstack < Kitchen::Driver::Base
       @@ip_pool_lock = Mutex.new
 
       kitchen_driver_api_version 2
@@ -36,15 +36,6 @@ module Kitchen
       default_config :server_name, nil
       default_config :server_name_prefix, nil
       default_config :key_name, nil
-      default_config :private_key_path do
-        %w(id_rsa id_dsa).map do |k|
-          f = File.expand_path("~/.ssh/#{k}")
-          f if File.exist?(f)
-        end.compact.first
-      end
-      default_config :public_key_path do |driver|
-        driver[:private_key_path] + '.pub' if driver[:private_key_path]
-      end
       default_config :port, '22'
       default_config :use_ipv6, false
       default_config :openstack_tenant, nil
@@ -62,14 +53,6 @@ module Kitchen
       default_config :no_ssh_tcp_check_sleep, 120
       default_config :glance_cache_wait_timeout, 600
       default_config :block_device_mapping, nil
-
-      required_config :private_key_path
-      required_config :public_key_path do |_, value, driver|
-        if value.nil? && driver[:key_name].nil?
-          fail(UserError, # rubocop:disable SignalException
-               'Either a `:public_key_path` or `:key_name` is required')
-        end
-      end
 
       # Set the proper server name in the config
       def config_server_name
@@ -177,7 +160,6 @@ module Kitchen
 
         [
           :security_groups,
-          :public_key_path,
           :key_name,
           :user_data,
           :config_drive
@@ -339,9 +321,9 @@ module Kitchen
 
       def filter_ips(addresses)
         if config[:use_ipv6]
-          return addresses.select { |i| IPAddr.new(i['addr']).ipv6? }
+          addresses.select { |i| IPAddr.new(i['addr']).ipv6? }
         else
-          return addresses.select { |i| IPAddr.new(i['addr']).ipv4? }
+          addresses.select { |i| IPAddr.new(i['addr']).ipv4? }
         end
       end
 

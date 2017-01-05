@@ -7,5 +7,6 @@ gemfile:
   - Gemfile
 
 rvm:
-  - 2.0.0
   - ruby-head
+  - 2.3.1
+  - 2.2.5

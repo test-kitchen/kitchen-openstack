@@ -4,7 +4,7 @@ lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'kitchen/driver/openstack_version'
 
-Gem::Specification.new do |spec|
+Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.name          = 'kitchen-openstack'
   spec.version       = Kitchen::Driver::OPENSTACK_VERSION
   spec.authors       = ['Jonathan Hartman', 'JJ Asghar']

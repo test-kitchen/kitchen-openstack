@@ -104,30 +104,6 @@ specified then the `server_name` takes precedence.
 
 If you want to have a static prefix for a random server name.
 
-### private\_key\_path
-
-The path to your private ssh key.
-
-### public\_key\_path
-
-The path to your public ssh key.
-
-If a `key_name` is provided it will be used instead of any
-`public_key_path` that is specified.
-
-If a `key_name` is provided without any `private_key_path`, unexpected
-behavior may result if your local RSA/DSA private key doesn't match that
-OpenStack key. If you do key injection via `cloud-init` like this issue:
-[#77](https://github.com/test-kitchen/kitchen-openstack/issues/77). The
-`key_name` should be a blank string if you need to skip it. Example:
-
-```yml
-driver:
-  [-- snip --]
-  key_name: ""
-  user_data: cloud_init
-```
-
 ### port
 
 Set the SSH port for the remote access.
@@ -225,6 +201,14 @@ The default is `false`.
 
 **Deprecated** You should be using transport now. This will sleep for so many seconds. `no_ssh_tcp_check` needs
 to be set to `true`.
+
+### private\_key\_path
+
+**Deprecated** You should be using transport now. The guest image should use `cloud-init` or some other method to fetch key from meta-data service.
+
+### public\_key\_path
+
+**Deprecated** You should be using transport now. The guest image should use `cloud-init` or some other method to fetch key from meta-data service.
 
 ## Disk Configuration
 
@@ -368,9 +352,10 @@ driver:
   require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
   image_ref: [SERVER IMAGE ID]
   flavor_ref: [SERVER FLAVOR ID]
+  key_name: [KEY NAME]
 
 transport:
-  ssh_key: /path/to/id_rsa  # probably the same as private_key_path
+  ssh_key: /path/to/id_rsa #Path to private key that matches the above openstack key_name
   connection_timeout: 10
   connection_retries: 5
   username: ubuntu
