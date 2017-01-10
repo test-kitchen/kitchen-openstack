@@ -151,7 +151,7 @@ module Kitchen
         fail(ActionFailed, 'Cannot specify both network_ref and network_id') if config[:network_id] && config[:network_ref] # rubocop:disable Metrics/LineLength, SignalException
         if config[:network_id]
           networks = [].concat([config[:network_id]])
-          server_def[:nics] = networks.flat_map do |net_id|
+          server_def[:nics] = networks.flatten.map do |net_id|
             { 'net_id' => net_id }
           end
         elsif config[:network_ref]
