@@ -49,6 +49,7 @@ module Kitchen
       default_config :availability_zone, nil
       default_config :security_groups, nil
       default_config :network_ref, nil
+      default_config :network_id, nil
       default_config :no_ssh_tcp_check, false
       default_config :no_ssh_tcp_check_sleep, 120
       default_config :glance_cache_wait_timeout, 600
@@ -147,7 +148,13 @@ module Kitchen
 
       def create_server
         server_def = init_configuration
-        if config[:network_ref]
+        fail(ActionFailed, 'Cannot specify both network_ref and network_id') if config[:network_id] && config[:network_ref] # rubocop:disable Metrics/LineLength, SignalException
+        if config[:network_id]
+          networks = [].concat([config[:network_id]])
+          server_def[:nics] = networks.flat_map do |net_id|
+            { 'net_id' => net_id }
+          end
+        elsif config[:network_ref]
           networks = [].concat([config[:network_ref]])
           server_def[:nics] = networks.flatten.map do |net|
             { 'net_id' => find_network(net).id }
@@ -174,10 +181,12 @@ module Kitchen
       end
 
       def init_configuration
+        fail(ActionFailed, 'Cannot specify both image_ref and image_id') if config[:image_id] && config[:image_ref] # rubocop:disable Metrics/LineLength, SignalException
+        fail(ActionFailed, 'Cannot specify both flavor_ref and flavor_id') if config[:flavor_id] && config[:flavor_ref] # rubocop:disable Metrics/LineLength, SignalException
         {
           name: config[:server_name],
-          image_ref: find_image(config[:image_ref]).id,
-          flavor_ref: find_flavor(config[:flavor_ref]).id,
+          image_ref: config[:image_id] || find_image(config[:image_ref]).id,
+          flavor_ref: config[:flavor_id] || find_flavor(config[:flavor_ref]).id,
           availability_zone: config[:availability_zone]
         }
       end

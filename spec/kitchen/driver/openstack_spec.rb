@@ -79,7 +79,9 @@ describe Kitchen::Driver::Openstack do
       let(:config) do
         {
           image_ref: '22',
+          image_id: '4391b03e-f7fb-46fd-a356-fa5e42f6d728',
           flavor_ref: '33',
+          flavor_id: '19a2281e-591e-4b47-be06-631c3c7704e8',
           public_key_path: '/tmp',
           username: 'admin',
           port: '2222',
@@ -91,6 +93,7 @@ describe Kitchen::Driver::Openstack do
           floating_ip_pool: 'swimmers',
           floating_ip: '11111',
           network_ref: '0xCAFFE',
+          network_id: '57d6e41a-f369-4c92-9ebe-1fbf198bc783',
           use_ssh_agent: true,
           block_device_mapping: {
             make_volume: true,
@@ -459,6 +462,76 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
+    context 'image_id specified' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_id: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          flavor_ref: '1'
+        }
+      end
+
+      it 'exact id match' do
+        expect(servers).to receive(:create).with(
+          name: 'hello',
+          image_ref: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          flavor_ref: '1',
+          availability_zone: nil)
+        driver.send(:create_server)
+      end
+    end
+
+    context 'image_id and image_ref specified' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_id: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          image_ref: '111',
+          flavor_ref: '1'
+        }
+      end
+
+      it 'raises an exception' do
+        expect { driver.send(:create_server) }.to \
+          raise_error(Kitchen::ActionFailed)
+      end
+    end
+
+    context 'flavor_id specified' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          flavor_id: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          image_ref: '111'
+        }
+      end
+
+      it 'exact id match' do
+        expect(servers).to receive(:create).with(
+          name: 'hello',
+          flavor_ref: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          image_ref: '111',
+          availability_zone: nil)
+        driver.send(:create_server)
+      end
+    end
+
+    context 'flavor_id and flavor_ref specified' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_id: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          flavor_id: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          flavor_ref: '1'
+        }
+      end
+
+      it 'raises an exception' do
+        expect { driver.send(:create_server) }.to \
+          raise_error(Kitchen::ActionFailed)
+      end
+    end
+
     context 'image/flavor specifies id' do
       let(:config) do
         {
@@ -511,6 +584,48 @@ describe Kitchen::Driver::Openstack do
                                                  flavor_ref: '1',
                                                  availability_zone: nil)
         driver.send(:create_server)
+      end
+    end
+
+    context 'network specifies network_id' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          network_id: '0922b7aa-0a2f-4e68-8ff7-2886c4fc472d'
+        }
+      end
+
+      it 'exact id match' do
+        networks = [
+          { 'net_id' => '0922b7aa-0a2f-4e68-8ff7-2886c4fc472d' }
+        ]
+        expect(servers).to receive(:create).with(
+          name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          availability_zone: nil,
+          nics: networks
+        )
+        driver.send(:create_server)
+      end
+    end
+
+    context 'network_id and network_ref specified' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_id: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          flavor_id: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
+          network_id: '0922b7aa-0a2f-4e68-8ff7-2886c4fc472d',
+          network_ref: '1'
+        }
+      end
+
+      it 'raises an exception' do
+        expect { driver.send(:create_server) }.to \
+          raise_error(Kitchen::ActionFailed)
       end
     end
 
