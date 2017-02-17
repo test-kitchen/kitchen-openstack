@@ -57,6 +57,18 @@ describe Kitchen::Driver::Openstack do
         expect(driver[:no_ssh_tcp_check_sleep]).to eq(120)
       end
 
+      it 'sets a default Openstack API read timeout' do
+        expect(driver[:read_timeout]).to eq(60)
+      end
+
+      it 'sets a default Openstack API write timeout' do
+        expect(driver[:write_timeout]).to eq(60)
+      end
+
+      it 'sets a default ssh connection timeout' do
+        expect(driver[:connect_timeout]).to eq(60)
+      end
+
       nils = [
         :server_name,
         :openstack_tenant,
@@ -92,6 +104,9 @@ describe Kitchen::Driver::Openstack do
           floating_ip: '11111',
           network_ref: '0xCAFFE',
           use_ssh_agent: true,
+          connect_timeout: 123,
+          read_timeout: 234,
+          write_timeout: 345,
           block_device_mapping: {
             make_volume: true,
             snapshot_id: '44',
@@ -261,7 +276,13 @@ describe Kitchen::Driver::Openstack do
         openstack_auth_url: 'http://',
         openstack_tenant: 'me',
         openstack_region: 'ORD',
-        openstack_service_name: 'stack'
+        openstack_service_name: 'stack',
+        connection_options:
+          {
+            read_timeout: 60,
+            write_timeout: 60,
+            connect_timeout: 60
+          }
       }
     end
 
@@ -297,7 +318,13 @@ describe Kitchen::Driver::Openstack do
         openstack_auth_url: 'http:',
         openstack_tenant: 'link',
         openstack_region: 'ord',
-        openstack_service_name: 'the_service'
+        openstack_service_name: 'the_service',
+        connection_options:
+          {
+            read_timeout: 60,
+            write_timeout: 60,
+            connect_timeout: 60
+          }
       }
     end
 
