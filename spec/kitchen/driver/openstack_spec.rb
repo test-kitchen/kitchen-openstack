@@ -15,6 +15,7 @@ require 'ohai'
 require 'excon'
 require 'fog'
 
+# rubocop: disable Metrics/BlockLength
 describe Kitchen::Driver::Openstack do
   let(:logged_output) { StringIO.new }
   let(:logger) { Logger.new(logged_output) }

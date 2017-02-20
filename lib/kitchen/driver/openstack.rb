@@ -27,6 +27,7 @@ require_relative 'openstack/volume'
 module Kitchen
   module Driver
     # This takes from the Base Class and creates the OpenStack driver.
+    # rubocop: disable Metrics/ClassLength
     class Openstack < Kitchen::Driver::Base
       @@ip_pool_lock = Mutex.new
 
@@ -61,13 +62,11 @@ module Kitchen
       def config_server_name
         return if config[:server_name]
 
-        if config[:server_name_prefix]
-          config[:server_name] = server_name_prefix(
-            config[:server_name_prefix]
-          )
-        else
-          config[:server_name] = default_name
-        end
+        config[:server_name] = if config[:server_name_prefix]
+                                 server_name_prefix(config[:server_name_prefix])
+                               else
+                                 default_name
+                               end
       end
 
       def create(state)

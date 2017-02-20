@@ -9,6 +9,7 @@ require 'rspec'
 require 'kitchen'
 require 'ohai'
 
+# rubocop: disable Metrics/BlockLength
 describe Kitchen::Driver::Openstack::Volume do
   let(:os) do
     {
