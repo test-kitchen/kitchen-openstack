@@ -267,6 +267,39 @@ describe Kitchen::Driver::Openstack do
         driver.destroy(state)
       end
     end
+
+    context 'Deallocate floating IP' do
+      let(:config) do
+        {
+          floating_ip_pool: 'swimmers',
+          allocate_floating_ip: true
+        }
+      end
+      let(:ip) { '1.1.1.1' }
+      let(:ip_id) { '123' }
+
+      let(:network_response) do
+        double(body: { 'floatingips' => [{ 'id' => ip_id }] })
+      end
+
+      let(:network) do
+        s = double('network')
+        expect(s).to receive(:list_floating_ips).with(floating_ip_address: ip).and_return(network_response) # rubocop:disable Metrics/LineLength
+        expect(s).to receive(:delete_floating_ip).with(ip_id)
+        s
+      end
+
+      let(:driver) do
+        d = super()
+        allow(d).to receive(:get_ip).and_return(ip)
+        allow(d).to receive(:compute).and_return(compute)
+        allow(d).to receive(:network).and_return(network)
+        d
+      end
+      it 'deallocates the ip' do
+        driver.destroy(state)
+      end
+    end
   end
 
   describe '#openstack_server' do
@@ -798,6 +831,29 @@ describe Kitchen::Driver::Openstack do
         expect { driver.send(:attach_ip_from_pool, server, pool) }.to \
           raise_error(Kitchen::ActionFailed)
       end
+    end
+  end
+
+  describe '#allocate_ip_from_pool' do
+    let(:server) { nil }
+    let(:pool) { 'swimmers' }
+    let(:config) { { allocate_floating_ip: true } }
+    let(:ip) { '1.1.1.1' }
+    let(:address) do
+      double(ip: ip, fixed_ip: nil, instance_id: nil, pool: pool)
+    end
+    let(:network_response) do
+      double(body: { 'floatingip' => { 'floating_ip_address' => ip } })
+    end
+    let(:network) { double(create_floating_ip: network_response) }
+
+    before(:each) do
+      allow(driver).to receive(:attach_ip).with(server, ip).and_return('bing!')
+      allow(driver).to receive(:network).and_return(network)
+    end
+
+    it 'determines an IP to attempt to attach' do
+      expect(driver.send(:attach_ip_from_pool, server, pool)).to eq('bing!')
     end
   end
 

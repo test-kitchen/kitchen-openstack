@@ -3,8 +3,12 @@ CyclomaticComplexity:
 MethodLength:
   Max: 30
 ClassLength:
-  Max: 300
+  Max: 320
 ClassVars:
+  Enabled: false
+BlockLength:
+  Enabled: false
+ConditionalAssignment:
   Enabled: false
 PerceivedComplexity:
   Max: 10
