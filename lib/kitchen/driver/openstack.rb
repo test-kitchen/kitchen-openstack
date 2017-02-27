@@ -338,7 +338,7 @@ module Kitchen
         end
 
         pub, priv = get_public_private_ips(server)
-        priv ||= server.ip_addresses unless pub
+        priv = server.ip_addresses if Array(pub).empty? && Array(priv).empty?
         pub, priv = parse_ips(pub, priv)
         pub[config[:public_ip_order].to_i] ||
           priv[config[:private_ip_order].to_i] ||
