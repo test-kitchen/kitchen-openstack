@@ -1,7 +1,25 @@
 # Change Log
 
-## [v3.1.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.1.0)
+## [v3.2.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.2.0)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.1.0...v3.2.0)
+
+**Closed issues:**
+
+- Enhancement: generate openstack keypair on create [\#150](https://github.com/test-kitchen/kitchen-openstack/issues/150)
+- kitchen-openstack should use SSH Agent [\#149](https://github.com/test-kitchen/kitchen-openstack/issues/149)
+- Permission Denied on kitchen runs after first [\#146](https://github.com/test-kitchen/kitchen-openstack/issues/146)
+- Config-drive [\#143](https://github.com/test-kitchen/kitchen-openstack/issues/143)
+- Support Identity v3 [\#137](https://github.com/test-kitchen/kitchen-openstack/issues/137)
+
+**Merged pull requests:**
+
+- Expose excon timeout configuration [\#156](https://github.com/test-kitchen/kitchen-openstack/pull/156) ([MariusCC](https://github.com/MariusCC))
+- Dynamically allocate Floating IP for the test server. [\#155](https://github.com/test-kitchen/kitchen-openstack/pull/155) ([dannytrigo](https://github.com/dannytrigo))
+- Defer ssh key handling to transport. [\#154](https://github.com/test-kitchen/kitchen-openstack/pull/154) ([cliles](https://github.com/cliles))
+- fix failing to get IP when there is no public IP. [\#152](https://github.com/test-kitchen/kitchen-openstack/pull/152) ([onceking](https://github.com/onceking))
+
+## [v3.1.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.1.0) (2016-06-02)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.0.0...v3.1.0)
 
 **Closed issues:**
@@ -10,6 +28,7 @@
 
 **Merged pull requests:**
 
+- v3.1.0 [\#145](https://github.com/test-kitchen/kitchen-openstack/pull/145) ([jjasghar](https://github.com/jjasghar))
 - Add config drive [\#144](https://github.com/test-kitchen/kitchen-openstack/pull/144) ([bradkwadsworth](https://github.com/bradkwadsworth))
 - Update to check IP version when using `openstack\_network\_name`. [\#142](https://github.com/test-kitchen/kitchen-openstack/pull/142) ([nmische](https://github.com/nmische))
 - minor grammar tweak to sleep message [\#140](https://github.com/test-kitchen/kitchen-openstack/pull/140) ([dpetzel](https://github.com/dpetzel))
