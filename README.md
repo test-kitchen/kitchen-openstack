@@ -132,6 +132,13 @@ connections you want declare this.
 ### glance\_cache\_wait\_timeout
 When OpenStack downloads the image into cache, it takes extra time to provision.  Timeout controls maximum amount of time to wait for machine to move from the Build/Spawn phase to Active.
 
+### connect\_timeout
+Connect timeout controls maximum amount of time to wait for machine to respond to ssh login request.
+
+### read\_timeout
+### write\_timeout
+Expose read/write timeout parameters passed down to HTTP connection created via [excon](https://github.com/excon/excon). Default timeouts (from excon) are 60 seconds.
+
 ### server\_wait
 
 `server_wait` is a workaround to deal with how some VMs with `cloud-init`.
@@ -271,9 +278,16 @@ Any floating IP will be the IP used for Test Kitchen's Remote calls to the node.
 
 ### floating\_ip\_pool
 
-A `floating_ip_pool` can be provided to acquire the first free floating ip from
-the pool to attach to the instance. It will be the IP used for Test Kitchen's
-Remote calls to the node.
+A `floating_ip_pool` can be provided to allocate a floating IP from
+the pool to the instance. If `allocate_floating_ip` is true, the IP will be allocated,
+otherwise the first free floating IP will be used.  It will be the IP used for
+Test Kitchen's Remote calls to the node. If allocated, the floating IP will be
+released once the instance is destroyed.
+
+### allocate\_floating\_ip
+
+If true, allocate a new IP from the specified `floating_ip_pool` and release is afterwards.
+Otherwise, if false (the default), an existing allocated IP.
 
 ### \[public\|private\]\_ip\_order
 
@@ -353,6 +367,9 @@ driver:
   image_ref: [SERVER IMAGE ID]
   flavor_ref: [SERVER FLAVOR ID]
   key_name: [KEY NAME]
+  read_timeout: 180
+  write_timeout: 180
+  connect_timeout: 180
 
 transport:
   ssh_key: /path/to/id_rsa #Path to private key that matches the above openstack key_name

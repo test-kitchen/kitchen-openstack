@@ -4,7 +4,7 @@
 # Author:: JJ Asghar (<jj@chef.io>)
 #
 # Copyright (C) 2013-2015, Jonathan Hartman
-# Copyright (C) 2015-2016, Chef Inc
+# Copyright (C) 2015-2017, Chef Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ require_relative 'openstack/volume'
 module Kitchen
   module Driver
     # This takes from the Base Class and creates the OpenStack driver.
+    # rubocop: disable Metrics/ClassLength
     class Openstack < Kitchen::Driver::Base
       @@ip_pool_lock = Mutex.new
 
@@ -43,6 +44,7 @@ module Kitchen
       default_config :openstack_service_name, nil
       default_config :openstack_network_name, nil
       default_config :floating_ip_pool, nil
+      default_config :allocate_floating_ip, false
       default_config :floating_ip, nil
       default_config :private_ip_order, 0
       default_config :public_ip_order, 0
@@ -54,18 +56,19 @@ module Kitchen
       default_config :no_ssh_tcp_check_sleep, 120
       default_config :glance_cache_wait_timeout, 600
       default_config :block_device_mapping, nil
+      default_config :connect_timeout, 60
+      default_config :read_timeout, 60
+      default_config :write_timeout, 60
 
       # Set the proper server name in the config
       def config_server_name
         return if config[:server_name]
 
-        if config[:server_name_prefix]
-          config[:server_name] = server_name_prefix(
-            config[:server_name_prefix]
-          )
-        else
-          config[:server_name] = default_name
-        end
+        config[:server_name] = if config[:server_name_prefix]
+                                 server_name_prefix(config[:server_name_prefix])
+                               else
+                                 default_name
+                               end
       end
 
       def create(state)
@@ -103,7 +106,17 @@ module Kitchen
 
         disable_ssl_validation if config[:disable_ssl_validation]
         server = compute.servers.get(state[:server_id])
-        server.destroy unless server.nil?
+
+        unless server.nil?
+          if config[:floating_ip_pool] && config[:allocate_floating_ip]
+            ip = get_ip(server)
+            floating_ip_id = network.list_floating_ips(floating_ip_address: ip)
+                                    .body['floatingips'][0]['id']
+            network.delete_floating_ip(floating_ip_id)
+            info "OpenStack Floating IP <#{ip}> released."
+          end
+          server.destroy
+        end
         info "OpenStack instance <#{state[:server_id]}> destroyed."
         state.delete(:server_id)
         state.delete(:hostname)
@@ -113,10 +126,12 @@ module Kitchen
 
       def openstack_server
         server_def = {
-          provider: 'OpenStack'
+          provider: 'OpenStack',
+          connection_options: {}
         }
         required_server_settings.each { |s| server_def[s] = config[s] }
         optional_server_settings.each { |s| server_def[s] = config[s] if config[s] } # rubocop:disable Metrics/LineLength
+        connection_options.each { |s| server_def[:connection_options][s] = config[s] if config[s] } # rubocop:disable Metrics/LineLength
         server_def
       end
 
@@ -128,6 +143,10 @@ module Kitchen
         Fog::Compute::OpenStack.recognized.select do |k|
           k.to_s.start_with?('openstack')
         end - required_server_settings
+      end
+
+      def connection_options
+        [:read_timeout, :write_timeout, :connect_timeout]
       end
 
       def network
@@ -269,14 +288,21 @@ module Kitchen
       def attach_ip_from_pool(server, pool)
         @@ip_pool_lock.synchronize do
           info "Attaching floating IP from <#{pool}> pool"
-          free_addrs = compute.addresses.map do |i|
-            i.ip if i.fixed_ip.nil? && i.instance_id.nil? && i.pool == pool
-          end.compact
-          if free_addrs.empty?
-            fail ActionFailed, "No available IPs in pool <#{pool}>" # rubocop:disable Metrics/LineLength, SignalException
+          if config[:allocate_floating_ip]
+            resp = network.create_floating_ip(pool)
+            ip = resp.body['floatingip']['floating_ip_address']
+            info "Attaching floating IP from <#{pool}> pool"
+            config[:floating_ip] = ip
+          else
+            free_addrs = compute.addresses.map do |i|
+              i.ip if i.fixed_ip.nil? && i.instance_id.nil? && i.pool == pool
+            end.compact
+            if free_addrs.empty?
+              fail ActionFailed, "No available IPs in pool <#{pool}>" # rubocop:disable Metrics/LineLength, SignalException
+            end
+            config[:floating_ip] = free_addrs[0]
           end
-          config[:floating_ip] = free_addrs[0]
-          attach_ip(server, free_addrs[0])
+          attach_ip(server, config[:floating_ip])
         end
       end
 
@@ -321,7 +347,7 @@ module Kitchen
         end
 
         pub, priv = get_public_private_ips(server)
-        priv ||= server.ip_addresses unless pub
+        priv = server.ip_addresses if Array(pub).empty? && Array(priv).empty?
         pub, priv = parse_ips(pub, priv)
         pub[config[:public_ip_order].to_i] ||
           priv[config[:private_ip_order].to_i] ||

@@ -15,6 +15,7 @@ require 'ohai'
 require 'excon'
 require 'fog'
 
+# rubocop: disable Metrics/BlockLength
 describe Kitchen::Driver::Openstack do
   let(:logged_output) { StringIO.new }
   let(:logger) { Logger.new(logged_output) }
@@ -57,6 +58,18 @@ describe Kitchen::Driver::Openstack do
         expect(driver[:no_ssh_tcp_check_sleep]).to eq(120)
       end
 
+      it 'sets a default Openstack API read timeout' do
+        expect(driver[:read_timeout]).to eq(60)
+      end
+
+      it 'sets a default Openstack API write timeout' do
+        expect(driver[:write_timeout]).to eq(60)
+      end
+
+      it 'sets a default ssh connection timeout' do
+        expect(driver[:connect_timeout]).to eq(60)
+      end
+
       nils = [
         :server_name,
         :openstack_tenant,
@@ -95,6 +108,9 @@ describe Kitchen::Driver::Openstack do
           network_ref: '0xCAFFE',
           network_id: '57d6e41a-f369-4c92-9ebe-1fbf198bc783',
           use_ssh_agent: true,
+          connect_timeout: 123,
+          read_timeout: 234,
+          write_timeout: 345,
           block_device_mapping: {
             make_volume: true,
             snapshot_id: '44',
@@ -254,6 +270,39 @@ describe Kitchen::Driver::Openstack do
         driver.destroy(state)
       end
     end
+
+    context 'Deallocate floating IP' do
+      let(:config) do
+        {
+          floating_ip_pool: 'swimmers',
+          allocate_floating_ip: true
+        }
+      end
+      let(:ip) { '1.1.1.1' }
+      let(:ip_id) { '123' }
+
+      let(:network_response) do
+        double(body: { 'floatingips' => [{ 'id' => ip_id }] })
+      end
+
+      let(:network) do
+        s = double('network')
+        expect(s).to receive(:list_floating_ips).with(floating_ip_address: ip).and_return(network_response) # rubocop:disable Metrics/LineLength
+        expect(s).to receive(:delete_floating_ip).with(ip_id)
+        s
+      end
+
+      let(:driver) do
+        d = super()
+        allow(d).to receive(:get_ip).and_return(ip)
+        allow(d).to receive(:compute).and_return(compute)
+        allow(d).to receive(:network).and_return(network)
+        d
+      end
+      it 'deallocates the ip' do
+        driver.destroy(state)
+      end
+    end
   end
 
   describe '#openstack_server' do
@@ -264,7 +313,13 @@ describe Kitchen::Driver::Openstack do
         openstack_auth_url: 'http://',
         openstack_tenant: 'me',
         openstack_region: 'ORD',
-        openstack_service_name: 'stack'
+        openstack_service_name: 'stack',
+        connection_options:
+          {
+            read_timeout: 60,
+            write_timeout: 60,
+            connect_timeout: 60
+          }
       }
     end
 
@@ -300,7 +355,13 @@ describe Kitchen::Driver::Openstack do
         openstack_auth_url: 'http:',
         openstack_tenant: 'link',
         openstack_region: 'ord',
-        openstack_service_name: 'the_service'
+        openstack_service_name: 'the_service',
+        connection_options:
+          {
+            read_timeout: 60,
+            write_timeout: 60,
+            connect_timeout: 60
+          }
       }
     end
 
@@ -885,6 +946,29 @@ describe Kitchen::Driver::Openstack do
         expect { driver.send(:attach_ip_from_pool, server, pool) }.to \
           raise_error(Kitchen::ActionFailed)
       end
+    end
+  end
+
+  describe '#allocate_ip_from_pool' do
+    let(:server) { nil }
+    let(:pool) { 'swimmers' }
+    let(:config) { { allocate_floating_ip: true } }
+    let(:ip) { '1.1.1.1' }
+    let(:address) do
+      double(ip: ip, fixed_ip: nil, instance_id: nil, pool: pool)
+    end
+    let(:network_response) do
+      double(body: { 'floatingip' => { 'floating_ip_address' => ip } })
+    end
+    let(:network) { double(create_floating_ip: network_response) }
+
+    before(:each) do
+      allow(driver).to receive(:attach_ip).with(server, ip).and_return('bing!')
+      allow(driver).to receive(:network).and_return(network)
+    end
+
+    it 'determines an IP to attempt to attach' do
+      expect(driver.send(:attach_ip_from_pool, server, pool)).to eq('bing!')
     end
   end
 
