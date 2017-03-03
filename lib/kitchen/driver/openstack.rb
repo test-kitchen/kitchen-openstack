@@ -324,6 +324,7 @@ module Kitchen
         [pub, priv]
       end
 
+      # rubocop:disable AbcSize
       def get_ip(server)
         if config[:floating_ip]
           debug "Using floating ip: #{config[:floating_ip]}"

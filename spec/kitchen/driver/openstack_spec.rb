@@ -15,7 +15,6 @@ require 'ohai'
 require 'excon'
 require 'fog'
 
-# rubocop: disable Metrics/BlockLength
 describe Kitchen::Driver::Openstack do
   let(:logged_output) { StringIO.new }
   let(:logger) { Logger.new(logged_output) }
@@ -537,7 +536,8 @@ describe Kitchen::Driver::Openstack do
           name: 'hello',
           image_ref: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
           flavor_ref: '1',
-          availability_zone: nil)
+          availability_zone: nil
+        )
         driver.send(:create_server)
       end
     end
@@ -572,7 +572,8 @@ describe Kitchen::Driver::Openstack do
           name: 'hello',
           flavor_ref: '1e1f4346-e3ea-48ba-9d1b-0002bfcb8981',
           image_ref: '111',
-          availability_zone: nil)
+          availability_zone: nil
+        )
         driver.send(:create_server)
       end
     end
@@ -662,13 +663,11 @@ describe Kitchen::Driver::Openstack do
         networks = [
           { 'net_id' => '0922b7aa-0a2f-4e68-8ff7-2886c4fc472d' }
         ]
-        expect(servers).to receive(:create).with(
-          name: 'hello',
-          image_ref: '111',
-          flavor_ref: '1',
-          availability_zone: nil,
-          nics: networks
-        )
+        expect(servers).to receive(:create).with(name: 'hello',
+                                                 image_ref: '111',
+                                                 flavor_ref: '1',
+                                                 availability_zone: nil,
+                                                 nics: networks)
         driver.send(:create_server)
       end
     end
