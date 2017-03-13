@@ -87,11 +87,23 @@ All of Fog's `openstack` options (`openstack_domain_name`, `openstack_project_na
 
 ### image\_ref
 
-**Required** Server Image ID.
+**image_ref or image_id required** Server Image Name or ID.
+
+### image\_id
+
+**image_ref or image_id required** Server Image ID.  Specifying the ID instead of reference results in a faster create time.
+
+**Note** If the image UUID changes this value will need to be updated. 
 
 ### flavor\_ref
 
-**Required** Server Flavor ID.
+**flavor_ref or flavor_id required** Server Flavor Name or ID.
+
+### flavor\_ref
+
+**flavor_ref or flavor_id required** Server Flavor ID.  Specifying the ID instead of reference results in a faster create time.
+
+**Note** If the flavor UUID changes this value will need to be updated.
 
 ### server\_name
 
@@ -190,12 +202,24 @@ If your vms require config drive.
 
 ### network\_ref
 
-**Deprecated** A list of network names or ids to create instances with.
+**Deprecated** A list of network names to create instances with.
 
 ```yaml
 network_ref:
-   - [OPENSTACK NETWORK NAMES OR...]
-   - [...ID TO CREATE INSTANCE WITH]
+   - [OPENSTACK NETWORK NAMES]
+   - [CREATE INSTANCE WITH]
+```
+
+### network\_id
+
+A list of network ids to create instances with.  Specifying the id instead of reference results in a faster create time.
+
+**Note** If the network UUID changes this value will need to be updated. 
+
+```yaml
+network_ref:
+   - [OPENSTACK NETWORK UUIDs]
+   - [TO CREATE INSTANCE WITH]
 ```
 
 ### no\_ssh\_tcp\_check
