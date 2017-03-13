@@ -1,11 +1,19 @@
 # Change Log
 
-## [v3.2.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.2.0)
+## [v3.3.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.3.0)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.2.0...v3.3.0)
+
+**Merged pull requests:**
+
+- Uuids [\#159](https://github.com/test-kitchen/kitchen-openstack/pull/159) ([boc-tothefuture](https://github.com/boc-tothefuture))
+
+## [v3.2.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.2.0) (2017-03-02)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.1.0...v3.2.0)
 
 **Closed issues:**
 
+- Expose excon timeouts to kitchen  [\#157](https://github.com/test-kitchen/kitchen-openstack/issues/157)
 - Enhancement: generate openstack keypair on create [\#150](https://github.com/test-kitchen/kitchen-openstack/issues/150)
 - kitchen-openstack should use SSH Agent [\#149](https://github.com/test-kitchen/kitchen-openstack/issues/149)
 - Permission Denied on kitchen runs after first [\#146](https://github.com/test-kitchen/kitchen-openstack/issues/146)
@@ -14,6 +22,7 @@
 
 **Merged pull requests:**
 
+- Prep for v3.2.0 [\#158](https://github.com/test-kitchen/kitchen-openstack/pull/158) ([jjasghar](https://github.com/jjasghar))
 - Expose excon timeout configuration [\#156](https://github.com/test-kitchen/kitchen-openstack/pull/156) ([MariusCC](https://github.com/MariusCC))
 - Dynamically allocate Floating IP for the test server. [\#155](https://github.com/test-kitchen/kitchen-openstack/pull/155) ([dannytrigo](https://github.com/dannytrigo))
 - Defer ssh key handling to transport. [\#154](https://github.com/test-kitchen/kitchen-openstack/pull/154) ([cliles](https://github.com/cliles))
