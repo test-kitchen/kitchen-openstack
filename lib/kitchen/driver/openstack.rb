@@ -109,11 +109,17 @@ module Kitchen
 
         unless server.nil?
           if config[:floating_ip_pool] && config[:allocate_floating_ip]
-            ip = get_ip(server)
-            floating_ip_id = network.list_floating_ips(floating_ip_address: ip)
-                                    .body['floatingips'][0]['id']
-            network.delete_floating_ip(floating_ip_id)
-            info "OpenStack Floating IP <#{ip}> released."
+            info 'Retrieve the floating IP'
+            pub, priv = get_public_private_ips(server)
+            pub, = parse_ips(pub, priv)
+            pub_ip = pub[config[:public_ip_order].to_i] || nil
+            if pub_ip
+              info "Retrieve the ID of floating IP <#{pub_ip}>"
+              floating_ip_id = network.list_floating_ips(floating_ip_address: pub_ip) # rubocop:disable Metrics/LineLength
+                                      .body['floatingips'][0]['id']
+              network.delete_floating_ip(floating_ip_id)
+              info "OpenStack Floating IP <#{pub_ip}> released."
+            end
           end
           server.destroy
         end
@@ -289,9 +295,11 @@ module Kitchen
         @@ip_pool_lock.synchronize do
           info "Attaching floating IP from <#{pool}> pool"
           if config[:allocate_floating_ip]
-            resp = network.create_floating_ip(pool)
+            network_id = network.list_networks(name: pool)
+                                .body['networks'][0]['id']
+            resp = network.create_floating_ip(network_id)
             ip = resp.body['floatingip']['floating_ip_address']
-            info "Attaching floating IP from <#{pool}> pool"
+            info "Created floating IP <#{ip}> from <#{pool}> pool"
             config[:floating_ip] = ip
           else
             free_addrs = compute.addresses.map do |i|
