@@ -49,7 +49,7 @@ driver:
   name: openstack
   openstack_username: [YOUR OPENSTACK USERNAME]
   openstack_api_key: [YOUR OPENSTACK API KEY] # AKA your OpenStack Password
-  openstack_auth_url: [YOUR OPENSTACK AUTH URL]
+  openstack_auth_url: [YOUR OPENSTACK AUTH URL] # if you are using v3, API_URL/v3/auth/tokens
   require_chef_omnibus: [e.g. 'true' or a version number if you need Chef]
   image_ref: [SERVER IMAGE ID]
   flavor_ref: [SERVER FLAVOR ID]
@@ -79,7 +79,7 @@ All of Fog's `openstack` options (`openstack_domain_name`, `openstack_project_na
 
 ### openstack\_auth\_url
 
-**Required** Your OpenStack auth url.
+**Required** Your OpenStack auth url. If you are using ID v3, you'll need to use `API_URL/v3/auth/tokens`.
 
 ### require\_chef_omnibus
 
@@ -93,7 +93,7 @@ All of Fog's `openstack` options (`openstack_domain_name`, `openstack_project_na
 
 **image_ref or image_id required** Server Image ID.  Specifying the ID instead of reference results in a faster create time.
 
-**Note** If the image UUID changes this value will need to be updated. 
+**Note** If the image UUID changes this value will need to be updated.
 
 ### flavor\_ref
 
@@ -214,7 +214,7 @@ network_ref:
 
 A list of network ids to create instances with.  Specifying the id instead of reference results in a faster create time.
 
-**Note** If the network UUID changes this value will need to be updated. 
+**Note** If the network UUID changes this value will need to be updated.
 
 ```yaml
 network_ref:
@@ -339,7 +339,7 @@ assuming that test network is configured as private.
 ### use_ipv6
 
 If true use IPv6 addresses to for SSH connections. If false, the default, use
-IPv4 addresses for SSH connections. 
+IPv4 addresses for SSH connections.
 
 ### network\_ref
 
