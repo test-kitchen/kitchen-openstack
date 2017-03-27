@@ -293,7 +293,7 @@ describe Kitchen::Driver::Openstack do
 
       let(:driver) do
         d = super()
-        allow(d).to receive(:get_ip).and_return(ip)
+        allow(d).to receive(:get_public_private_ips).and_return([ip, nil])
         allow(d).to receive(:compute).and_return(compute)
         allow(d).to receive(:network).and_return(network)
         d
@@ -952,14 +952,18 @@ describe Kitchen::Driver::Openstack do
     let(:server) { nil }
     let(:pool) { 'swimmers' }
     let(:config) { { allocate_floating_ip: true } }
+    let(:network_id) { 123 }
     let(:ip) { '1.1.1.1' }
     let(:address) do
       double(ip: ip, fixed_ip: nil, instance_id: nil, pool: pool)
     end
-    let(:network_response) do
+    let(:list_networks_response) do
+      double(body: { 'networks' => [{ 'name' => pool, 'id' => network_id }] })
+    end
+    let(:create_ip_network_response) do
       double(body: { 'floatingip' => { 'floating_ip_address' => ip } })
     end
-    let(:network) { double(create_floating_ip: network_response) }
+    let(:network) { double(list_networks: list_networks_response, create_floating_ip: create_ip_network_response) } # rubocop:disable Metrics/LineLength
 
     before(:each) do
       allow(driver).to receive(:attach_ip).with(server, ip).and_return('bing!')
