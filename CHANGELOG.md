@@ -1,7 +1,22 @@
 # Change Log
 
-## [v3.3.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.3.0)
+## [Unreleased](https://github.com/test-kitchen/kitchen-openstack/tree/v3.4.0)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.3.0...v3.4.0)
+
+**Closed issues:**
+
+- Multiple networks in network\_id causes error [\#163](https://github.com/test-kitchen/kitchen-openstack/issues/163)
+- Can't create VM [\#160](https://github.com/test-kitchen/kitchen-openstack/issues/160)
+- Why is private\_key\_path required? [\#151](https://github.com/test-kitchen/kitchen-openstack/issues/151)
+- version 3.1.0 does not properly wait for VM to be up before failing [\#147](https://github.com/test-kitchen/kitchen-openstack/issues/147)
+
+**Merged pull requests:**
+
+- Fix creation of floating IP to use network ID instead of name [\#162](https://github.com/test-kitchen/kitchen-openstack/pull/162) ([dannytrigo](https://github.com/dannytrigo))
+- Updated readme with clarity [\#161](https://github.com/test-kitchen/kitchen-openstack/pull/161) ([jjasghar](https://github.com/jjasghar))
+
+## [v3.3.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.3.0) (2017-03-13)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.2.0...v3.3.0)
 
 **Merged pull requests:**
