@@ -60,6 +60,7 @@ module Kitchen
       default_config :connect_timeout, 60
       default_config :read_timeout, 60
       default_config :write_timeout, 60
+      default_config :metadata, nil
 
       # Set the proper server name in the config
       def config_server_name
@@ -196,6 +197,7 @@ module Kitchen
           key_name
           user_data
           config_drive
+          metadata
         ].each do |c|
           server_def[c] = optional_config(c) if config[c]
         end

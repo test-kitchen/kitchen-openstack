@@ -79,6 +79,7 @@ describe Kitchen::Driver::Openstack do
         availability_zone
         security_groups
         network_ref
+        metadata
       ]
       nils.each do |i|
         it "defaults to no #{i}" do
@@ -117,6 +118,10 @@ describe Kitchen::Driver::Openstack do
             volume_size: '5',
             device_name: 'vda',
             delete_on_termination: true
+          },
+          metadata: {
+            name: 'test',
+            ohai: 'chef'
           }
         }
       end
@@ -810,6 +815,37 @@ describe Kitchen::Driver::Openstack do
           flavor_ref: '1',
           availability_zone: nil,
           config_drive: true
+        )
+        driver.send(:create_server)
+      end
+    end
+
+    context 'metadata specified' do
+      let(:config) do
+        {
+          server_name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          metadata: {
+            name: 'hello',
+            ohai: 'chef'
+          }
+        }
+      end
+      let(:data) do
+        {
+          name: 'hello',
+          ohai: 'chef'
+        }
+      end
+
+      it 'passes metadata contents' do
+        expect(servers).to receive(:create).with(
+          name: 'hello',
+          image_ref: '111',
+          flavor_ref: '1',
+          availability_zone: nil,
+          metadata: data
         )
         driver.send(:create_server)
       end
