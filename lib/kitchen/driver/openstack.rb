@@ -1,4 +1,5 @@
 # Encoding: UTF-8
+
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 # Author:: JJ Asghar (<jj@chef.io>)
@@ -142,7 +143,7 @@ module Kitchen
       end
 
       def required_server_settings
-        [:openstack_username, :openstack_api_key, :openstack_auth_url]
+        %i[openstack_username openstack_api_key openstack_auth_url]
       end
 
       def optional_server_settings
@@ -152,7 +153,7 @@ module Kitchen
       end
 
       def connection_options
-        [:read_timeout, :write_timeout, :connect_timeout]
+        %i[read_timeout write_timeout connect_timeout]
       end
 
       def network
@@ -190,11 +191,11 @@ module Kitchen
           server_def[:block_device_mapping] = get_bdm(config)
         end
 
-        [
-          :security_groups,
-          :key_name,
-          :user_data,
-          :config_drive
+        %i[
+          security_groups
+          key_name
+          user_data
+          config_drive
         ].each do |c|
           server_def[c] = optional_config(c) if config[c]
         end

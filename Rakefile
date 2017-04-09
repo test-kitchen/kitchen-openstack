@@ -15,4 +15,4 @@ end
 
 RSpec::Core::RakeTask.new(:spec)
 
-task default: [:rubocop, :loc, :spec]
+task default: %i[rubocop loc spec]

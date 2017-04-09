@@ -1,4 +1,5 @@
 # Encoding: UTF-8
+
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
@@ -40,8 +41,8 @@ module Kitchen
         def create_volume(config, os)
           opt = {}
           bdm = config[:block_device_mapping]
-          vanilla_options = [:snapshot_id, :imageRef, :volume_type,
-                             :source_volid, :availability_zone]
+          vanilla_options = %i[snapshot_id imageRef volume_type
+                               source_volid availability_zone]
           vanilla_options.select { |o| bdm[o] }.each do |key|
             opt[key] = bdm[key]
           end
