@@ -144,7 +144,7 @@ module Kitchen
       end
 
       def required_server_settings
-        %i[openstack_username openstack_api_key openstack_auth_url]
+        %i(openstack_username openstack_api_key openstack_auth_url)
       end
 
       def optional_server_settings
@@ -154,7 +154,7 @@ module Kitchen
       end
 
       def connection_options
-        %i[read_timeout write_timeout connect_timeout]
+        %i(read_timeout write_timeout connect_timeout)
       end
 
       def network
@@ -192,13 +192,13 @@ module Kitchen
           server_def[:block_device_mapping] = get_bdm(config)
         end
 
-        %i[
+        %i(
           security_groups
           key_name
           user_data
           config_drive
           metadata
-        ].each do |c|
+        ).each do |c|
           server_def[c] = optional_config(c) if config[c]
         end
 

@@ -1,7 +1,15 @@
 # Change Log
 
-## [Unreleased](https://github.com/test-kitchen/kitchen-openstack/tree/v3.4.0)
+## [v3.5.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.5.0)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.4.0...v3.5.0)
+
+**Merged pull requests:**
+
+- Add metadata support [\#166](https://github.com/test-kitchen/kitchen-openstack/pull/166) ([akitada](https://github.com/akitada))
+- Use new ohai config context [\#165](https://github.com/test-kitchen/kitchen-openstack/pull/165) ([akitada](https://github.com/akitada))
+
+## [v3.4.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.4.0) (2017-03-27)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.3.0...v3.4.0)
 
 **Closed issues:**

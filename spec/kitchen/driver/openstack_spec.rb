@@ -69,7 +69,7 @@ describe Kitchen::Driver::Openstack do
         expect(driver[:connect_timeout]).to eq(60)
       end
 
-      nils = %i[
+      nils = %i(
         server_name
         openstack_tenant
         openstack_region
@@ -80,7 +80,7 @@ describe Kitchen::Driver::Openstack do
         security_groups
         network_ref
         metadata
-      ]
+      )
       nils.each do |i|
         it "defaults to no #{i}" do
           expect(driver[i]).to eq(nil)
@@ -141,7 +141,7 @@ describe Kitchen::Driver::Openstack do
 
   describe '#create' do
     let(:server) do
-      double(id: 'test123', wait_for: true, public_ip_addresses: %w[1.2.3.4])
+      double(id: 'test123', wait_for: true, public_ip_addresses: %w(1.2.3.4))
     end
     let(:driver) do
       d = super()
@@ -178,7 +178,7 @@ describe Kitchen::Driver::Openstack do
         }
       end
       let(:server) do
-        double(id: 'test123', wait_for: true, public_ip_addresses: %w[1.2.3.4])
+        double(id: 'test123', wait_for: true, public_ip_addresses: %w(1.2.3.4))
       end
 
       let(:driver) do
@@ -335,18 +335,18 @@ describe Kitchen::Driver::Openstack do
 
   describe '#required_server_settings' do
     it 'returns the required settings for an OpenStack server' do
-      expected = %i[
+      expected = %i(
         openstack_username openstack_api_key openstack_auth_url
-      ]
+      )
       expect(driver.send(:required_server_settings)).to eq(expected)
     end
   end
 
   describe '#optional_server_settings' do
     it 'returns the optional settings for an OpenStack server' do
-      excluded = %i[
+      excluded = %i(
         openstack_username openstack_api_key openstack_auth_url
-      ]
+      )
       expect(driver.send(:optional_server_settings)).not_to include(*excluded)
     end
   end
@@ -750,7 +750,7 @@ describe Kitchen::Driver::Openstack do
           server_name: 'hello',
           image_ref: '111',
           flavor_ref: '1',
-          network_ref: %w[1 2]
+          network_ref: %w(1 2)
         }
       end
 
@@ -1046,9 +1046,9 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'both public and private IPs' do
-      let(:public_ip_addresses) { %w[1::1 1.2.3.4] }
-      let(:private_ip_addresses) { %w[5.5.5.5] }
-      let(:parsed_ips) { [%w[1.2.3.4], %w[5.5.5.5]] }
+      let(:public_ip_addresses) { %w(1::1 1.2.3.4) }
+      let(:private_ip_addresses) { %w(5.5.5.5) }
+      let(:parsed_ips) { [%w(1.2.3.4), %w(5.5.5.5)] }
 
       it 'returns a public IPv4 address' do
         expect(driver.send(:get_ip, server)).to eq('1.2.3.4')
@@ -1056,8 +1056,8 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'only public IPs' do
-      let(:public_ip_addresses) { %w[4.3.2.1 2::1] }
-      let(:parsed_ips) { [%w[4.3.2.1], []] }
+      let(:public_ip_addresses) { %w(4.3.2.1 2::1) }
+      let(:parsed_ips) { [%w(4.3.2.1), []] }
 
       it 'returns a public IPv4 address' do
         expect(driver.send(:get_ip, server)).to eq('4.3.2.1')
@@ -1065,8 +1065,8 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'only private IPs' do
-      let(:private_ip_addresses) { %w[3::1 5.5.5.5] }
-      let(:parsed_ips) { [[], %w[5.5.5.5]] }
+      let(:private_ip_addresses) { %w(3::1 5.5.5.5) }
+      let(:parsed_ips) { [[], %w(5.5.5.5)] }
 
       it 'returns a private IPv4 address' do
         expect(driver.send(:get_ip, server)).to eq('5.5.5.5')
@@ -1074,8 +1074,8 @@ describe Kitchen::Driver::Openstack do
     end
 
     context 'no predictable network name' do
-      let(:ip_addresses) { %w[3::1 5.5.5.5] }
-      let(:parsed_ips) { [[], %w[5.5.5.5]] }
+      let(:ip_addresses) { %w(3::1 5.5.5.5) }
+      let(:parsed_ips) { [[], %w(5.5.5.5)] }
 
       it 'returns the first IP that matches the IP version' do
         expect(driver.send(:get_ip, server)).to eq('5.5.5.5')
@@ -1126,7 +1126,7 @@ describe Kitchen::Driver::Openstack do
             'private' => [{ 'addr' => '8.8.8.8' }, { 'addr' => '9.9.9.9' }]
           }
         end
-        let(:parsed_ips) { [%w[6.6.6.6 7.7.7.7], %w[8.8.8.8 9.9.9.9]] }
+        let(:parsed_ips) { [%w(6.6.6.6 7.7.7.7), %w(8.8.8.8 9.9.9.9)] }
 
         it 'selects the first public IP' do
           expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
@@ -1185,7 +1185,7 @@ describe Kitchen::Driver::Openstack do
         let(:addresses) do
           { 'public' => [{ 'addr' => '6.6.6.6' }, { 'addr' => '7.7.7.7' }] }
         end
-        let(:parsed_ips) { [%w[6.6.6.6 7.7.7.7], []] }
+        let(:parsed_ips) { [%w(6.6.6.6 7.7.7.7), []] }
 
         it 'selects the first public IP' do
           expect(driver.send(:get_ip, server)).to eq('6.6.6.6')
@@ -1196,7 +1196,7 @@ describe Kitchen::Driver::Openstack do
         let(:addresses) do
           { 'private' => [{ 'addr' => '8.8.8.8' }, { 'addr' => '9.9.9.9' }] }
         end
-        let(:parsed_ips) { [[], %w[8.8.8.8 9.9.9.9]] }
+        let(:parsed_ips) { [[], %w(8.8.8.8 9.9.9.9)] }
 
         it 'selects the first private IP' do
           expect(driver.send(:get_ip, server)).to eq('8.8.8.8')
@@ -1224,10 +1224,10 @@ describe Kitchen::Driver::Openstack do
   end
 
   describe '#parse_ips' do
-    let(:pub_v4) { %w[1.1.1.1 2.2.2.2] }
-    let(:pub_v6) { %w[1::1 2::2] }
-    let(:priv_v4) { %w[3.3.3.3 4.4.4.4] }
-    let(:priv_v6) { %w[3::3 4::4] }
+    let(:pub_v4) { %w(1.1.1.1 2.2.2.2) }
+    let(:pub_v6) { %w(1::1 2::2) }
+    let(:priv_v4) { %w(3.3.3.3 4.4.4.4) }
+    let(:priv_v6) { %w(3::3 4::4) }
     let(:pub) { pub_v4 + pub_v6 }
     let(:priv) { priv_v4 + priv_v6 }
 
