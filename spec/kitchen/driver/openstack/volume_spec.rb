@@ -1,59 +1,59 @@
 # Encoding: UTF-8
 
-require_relative '../../../spec_helper'
-require_relative '../../../../lib/kitchen/driver/openstack/volume'
+require_relative "../../../spec_helper"
+require_relative "../../../../lib/kitchen/driver/openstack/volume"
 
-require 'logger'
-require 'stringio'
-require 'rspec'
-require 'kitchen'
-require 'ohai'
+require "logger"
+require "stringio"
+require "rspec"
+require "kitchen"
+require "ohai"
 
 describe Kitchen::Driver::Openstack::Volume do
   let(:os) do
     {
-      openstack_username: 'twilight',
-      openstack_api_key: 'sparkle',
-      openstack_auth_url: 'http:',
-      openstack_tenant: 'trixie',
-      openstack_region: 'syd',
-      openstack_service_name: 'the_service'
+      openstack_username: "twilight",
+      openstack_api_key: "sparkle",
+      openstack_auth_url: "http:",
+      openstack_tenant: "trixie",
+      openstack_region: "syd",
+      openstack_service_name: "the_service",
     }
   end
   let(:logger_io) { StringIO.new }
   let(:logger)    { Kitchen::Logger.new(logdev: logger_io) }
-  describe '#volume' do
+  describe "#volume" do
     let(:vol_driver) do
       described_class.new(logger)
     end
 
-    it 'creates a new block device connection' do
+    it "creates a new block device connection" do
       allow(Fog::Volume).to receive(:new) { |arg| arg }
       expect(vol_driver.send(:volume, os)).to eq(os)
     end
   end
-  describe '#create_volume' do
+  describe "#create_volume" do
     let(:config) do
       {
-        server_name: 'applejack',
+        server_name: "applejack",
         block_device_mapping: {
-          snapshot_id: '444',
-          volume_size: '5',
-          creation_timeout: '30'
-        }
+          snapshot_id: "444",
+          volume_size: "5",
+          creation_timeout: "30",
+        },
       }
     end
 
     let(:create_volume) do
       {
-        body: { 'volume' => { 'id' => '555' } }
+        body: { "volume" => { "id" => "555" } },
       }
     end
 
     let(:volume_model) do
       {
-        id: '555',
-        status: 'ACTIVE'
+        id: "555",
+        status: "ACTIVE"
         # wait_for: true
         # ready?: true
       }
@@ -69,7 +69,7 @@ describe Kitchen::Driver::Openstack::Volume do
     let(:wait_for) do
       {
         ready?: true,
-        status: 'ACTIVE'
+        status: "ACTIVE",
       }
     end
 
@@ -80,42 +80,42 @@ describe Kitchen::Driver::Openstack::Volume do
       d
     end
 
-    it 'creates a volume' do
+    it "creates a volume" do
       # This seems like a hack
       # how would we do this on the volume_model instead?
       # This makes rspec work
       # but the vol_driver doesnt have these methods properties?
-      allow(vol_driver).to receive(:status).and_return('ACTIVE')
+      allow(vol_driver).to receive(:status).and_return("ACTIVE")
       allow(vol_driver).to receive(:ready?).and_return(true)
       allow(volume_model).to receive(:wait_for)
         .with(an_instance_of(String)).and_yield
 
       # allow(vol_driver).a
-      expect(vol_driver.send(:create_volume, config, os)).to eq('555')
+      expect(vol_driver.send(:create_volume, config, os)).to eq("555")
     end
   end
 
-  describe '#get_bdm' do
+  describe "#get_bdm" do
     let(:config) do
       {
         block_device_mapping: {
           make_volue: true,
-          snapshot_id: '333',
-          volume_id: '555',
-          volume_size: '5',
-          volume_device_name: 'vda',
-          delete_on_termination: true
-        }
+          snapshot_id: "333",
+          volume_id: "555",
+          volume_size: "5",
+          volume_device_name: "vda",
+          delete_on_termination: true,
+        },
       }
     end
 
     let(:vol_driver) do
       d = described_class.new(logger)
-      allow(d).to receive(:create_volume).and_return('555')
+      allow(d).to receive(:create_volume).and_return("555")
       d
     end
 
-    it 'returns the block device mapping config' do
+    it "returns the block device mapping config" do
       expects = config[:block_device_mapping]
       expects.delete_if { |k, _| k == :make_volume }
       expects.delete_if { |k, _| k == :snapshot_id }

@@ -23,6 +23,6 @@ module Kitchen
   #
   # @author Jonathan Hartman <j@p4nt5.com>
   module Driver
-    OPENSTACK_VERSION = '3.5.0'.freeze
+    OPENSTACK_VERSION = "3.5.0".freeze
   end
 end

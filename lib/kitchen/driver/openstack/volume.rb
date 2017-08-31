@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'fog'
-require 'kitchen'
+require "fog/openstack"
+require "kitchen"
 
 module Kitchen
   module Driver
@@ -41,17 +41,17 @@ module Kitchen
         def create_volume(config, os)
           opt = {}
           bdm = config[:block_device_mapping]
-          vanilla_options = %i(snapshot_id imageRef volume_type
-                               source_volid availability_zone)
+          vanilla_options = %i{snapshot_id imageRef volume_type
+                               source_volid availability_zone}
           vanilla_options.select { |o| bdm[o] }.each do |key|
             opt[key] = bdm[key]
           end
-          @logger.info 'Creating Volume...'
+          @logger.info "Creating Volume..."
           resp = volume(os).create_volume("#{config[:server_name]}-volume",
                                           "#{config[:server_name]} volume",
                                           bdm[:volume_size],
                                           opt)
-          vol_id = resp[:body]['volume']['id']
+          vol_id = resp[:body]["volume"]["id"]
 
           # Get Volume Model to make waiting for ready easy
           vol_model = volume(os).volumes.first { |x| x.id == vol_id }
@@ -62,14 +62,14 @@ module Kitchen
             creation_timeout = bdm[:creation_timeout]
           end
 
-          @logger.debug "Waiting for volume to be ready for #{creation_timeout} seconds" # rubocop:disable Metrics/LineLength
+          @logger.debug "Waiting for volume to be ready for #{creation_timeout} seconds"
           vol_model.wait_for(creation_timeout) do
             sleep(1)
-            fail('Failed to make volume') if status.casecmp('error'.downcase).zero? # rubocop:disable Metrics/LineLength, SignalException
+            raise("Failed to make volume") if status.casecmp("error".downcase) == 0
             ready?
           end
 
-          @logger.debug 'Volume Ready'
+          @logger.debug "Volume Ready"
 
           vol_id
         end
