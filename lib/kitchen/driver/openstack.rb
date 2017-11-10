@@ -19,16 +19,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'kitchen'
-require 'fog'
-require 'ohai'
-require_relative 'openstack_version'
-require_relative 'openstack/volume'
+require "kitchen"
+require "fog/openstack"
+require "ohai"
+require_relative "openstack_version"
+require_relative "openstack/volume"
 
 module Kitchen
   module Driver
     # This takes from the Base Class and creates the OpenStack driver.
-    # rubocop: disable Metrics/ClassLength
     class Openstack < Kitchen::Driver::Base
       @@ip_pool_lock = Mutex.new
 
@@ -38,7 +37,7 @@ module Kitchen
       default_config :server_name, nil
       default_config :server_name_prefix, nil
       default_config :key_name, nil
-      default_config :port, '22'
+      default_config :port, "22"
       default_config :use_ipv6, false
       default_config :openstack_tenant, nil
       default_config :openstack_region, nil
@@ -82,10 +81,10 @@ module Kitchen
         disable_ssl_validation if config[:disable_ssl_validation]
         server = create_server
         state[:server_id] = server.id
-        info "OpenStack instance with ID of <#{state[:server_id]}> is ready." # rubocop:disable Metrics/LineLength
+        info "OpenStack instance with ID of <#{state[:server_id]}> is ready."
 
         # this is due to the glance_caching issues. Annoying yes, but necessary.
-        debug "Waiting for VM to be in ACTIVE state for a max time of:#{config[:glance_cache_wait_timeout]} seconds" # rubocop:disable Metrics/LineLength
+        debug "Waiting for VM to be in ACTIVE state for a max time of:#{config[:glance_cache_wait_timeout]} seconds"
         server.wait_for(config[:glance_cache_wait_timeout]) do
           sleep(1)
           ready?
@@ -111,14 +110,14 @@ module Kitchen
 
         unless server.nil?
           if config[:floating_ip_pool] && config[:allocate_floating_ip]
-            info 'Retrieve the floating IP'
+            info "Retrieve the floating IP"
             pub, priv = get_public_private_ips(server)
             pub, = parse_ips(pub, priv)
             pub_ip = pub[config[:public_ip_order].to_i] || nil
             if pub_ip
               info "Retrieve the ID of floating IP <#{pub_ip}>"
-              floating_ip_id = network.list_floating_ips(floating_ip_address: pub_ip) # rubocop:disable Metrics/LineLength
-                                      .body['floatingips'][0]['id']
+              floating_ip_id = network.list_floating_ips(floating_ip_address: pub_ip)
+                                      .body["floatingips"][0]["id"]
               network.delete_floating_ip(floating_ip_id)
               info "OpenStack Floating IP <#{pub_ip}> released."
             end
@@ -134,27 +133,27 @@ module Kitchen
 
       def openstack_server
         server_def = {
-          provider: 'OpenStack',
-          connection_options: {}
+          provider: "OpenStack",
+          connection_options: {},
         }
         required_server_settings.each { |s| server_def[s] = config[s] }
-        optional_server_settings.each { |s| server_def[s] = config[s] if config[s] } # rubocop:disable Metrics/LineLength
-        connection_options.each { |s| server_def[:connection_options][s] = config[s] if config[s] } # rubocop:disable Metrics/LineLength
+        optional_server_settings.each { |s| server_def[s] = config[s] if config[s] }
+        connection_options.each { |s| server_def[:connection_options][s] = config[s] if config[s] }
         server_def
       end
 
       def required_server_settings
-        %i(openstack_username openstack_api_key openstack_auth_url)
+        %i{openstack_username openstack_api_key openstack_auth_url}
       end
 
       def optional_server_settings
         Fog::Compute::OpenStack.recognized.select do |k|
-          k.to_s.start_with?('openstack')
+          k.to_s.start_with?("openstack")
         end - required_server_settings
       end
 
       def connection_options
-        %i(read_timeout write_timeout connect_timeout)
+        %i{read_timeout write_timeout connect_timeout}
       end
 
       def network
@@ -175,16 +174,16 @@ module Kitchen
 
       def create_server
         server_def = init_configuration
-        fail(ActionFailed, 'Cannot specify both network_ref and network_id') if config[:network_id] && config[:network_ref] # rubocop:disable Metrics/LineLength, SignalException
+        fail(ActionFailed, "Cannot specify both network_ref and network_id") if config[:network_id] && config[:network_ref] # rubocop:disable SignalException
         if config[:network_id]
           networks = [].concat([config[:network_id]])
           server_def[:nics] = networks.flatten.map do |net_id|
-            { 'net_id' => net_id }
+            { "net_id" => net_id }
           end
         elsif config[:network_ref]
           networks = [].concat([config[:network_ref]])
           server_def[:nics] = networks.flatten.map do |net|
-            { 'net_id' => find_network(net).id }
+            { "net_id" => find_network(net).id }
           end
         end
 
@@ -192,13 +191,13 @@ module Kitchen
           server_def[:block_device_mapping] = get_bdm(config)
         end
 
-        %i(
+        %i{
           security_groups
           key_name
           user_data
           config_drive
           metadata
-        ).each do |c|
+        }.each do |c|
           server_def[c] = optional_config(c) if config[c]
         end
 
@@ -209,13 +208,13 @@ module Kitchen
       end
 
       def init_configuration
-        fail(ActionFailed, 'Cannot specify both image_ref and image_id') if config[:image_id] && config[:image_ref] # rubocop:disable Metrics/LineLength, SignalException
-        fail(ActionFailed, 'Cannot specify both flavor_ref and flavor_id') if config[:flavor_id] && config[:flavor_ref] # rubocop:disable Metrics/LineLength, SignalException
+        fail(ActionFailed, "Cannot specify both image_ref and image_id") if config[:image_id] && config[:image_ref] # rubocop:disable SignalException
+        fail(ActionFailed, "Cannot specify both flavor_ref and flavor_id") if config[:flavor_id] && config[:flavor_ref] # rubocop:disable SignalException
         {
           name: config[:server_name],
           image_ref: config[:image_id] || find_image(config[:image_ref]).id,
           flavor_ref: config[:flavor_id] || find_flavor(config[:flavor_ref]).id,
-          availability_zone: config[:availability_zone]
+          availability_zone: config[:availability_zone],
         }
       end
 
@@ -232,21 +231,21 @@ module Kitchen
 
       def find_image(image_ref)
         image = find_matching(compute.images, image_ref)
-        fail(ActionFailed, 'Image not found') unless image # rubocop:disable Metrics/LineLength, SignalException
+        fail(ActionFailed, "Image not found") unless image # rubocop:disable SignalException
         debug "Selected image: #{image.id} #{image.name}"
         image
       end
 
       def find_flavor(flavor_ref)
         flavor = find_matching(compute.flavors, flavor_ref)
-        fail(ActionFailed, 'Flavor not found') unless flavor # rubocop:disable Metrics/LineLength, SignalException
+        fail(ActionFailed, "Flavor not found") unless flavor # rubocop:disable SignalException
         debug "Selected flavor: #{flavor.id} #{flavor.name}"
         flavor
       end
 
       def find_network(network_ref)
         net = find_matching(network.networks.all, network_ref)
-        fail(ActionFailed, 'Network not found') unless net # rubocop:disable Metrics/LineLength, SignalException
+        fail(ActionFailed, "Network not found") unless net # rubocop:disable SignalException
         debug "Selected net: #{net.id} #{net.name}"
         net
       end
@@ -261,11 +260,11 @@ module Kitchen
       # Total:        63
       def default_name
         [
-          instance.name.gsub(/\W/, '')[0..14],
-          (Etc.getlogin || 'nologin').gsub(/\W/, '')[0..14],
-          Socket.gethostname.gsub(/\W/, '')[0..22],
-          Array.new(7) { rand(36).to_s(36) }.join
-        ].join('-')
+          instance.name.gsub(/\W/, "")[0..14],
+          (Etc.getlogin || "nologin").gsub(/\W/, "")[0..14],
+          Socket.gethostname.gsub(/\W/, "")[0..22],
+          Array.new(7) { rand(36).to_s(36) }.join,
+        ].join("-")
       end
 
       def server_name_prefix(server_name_prefix)
@@ -279,18 +278,18 @@ module Kitchen
         # Max:              63
         #
         if server_name_prefix.length > 54
-          warn 'Server name prefix too long, truncated to 54 characters'
+          warn "Server name prefix too long, truncated to 54 characters"
           server_name_prefix = server_name_prefix[0..53]
         end
 
-        server_name_prefix.gsub!(/\W/, '')
+        server_name_prefix.gsub!(/\W/, "")
 
         if server_name_prefix.empty?
-          warn 'Server name prefix empty or invalid; using fully generated name'
+          warn "Server name prefix empty or invalid; using fully generated name"
           default_name
         else
-          random_suffix = ('a'..'z').to_a.sample(8).join
-          server_name_prefix + '-' + random_suffix
+          random_suffix = ("a".."z").to_a.sample(8).join
+          server_name_prefix + "-" + random_suffix
         end
       end
 
@@ -299,9 +298,9 @@ module Kitchen
           info "Attaching floating IP from <#{pool}> pool"
           if config[:allocate_floating_ip]
             network_id = network.list_networks(name: pool)
-                                .body['networks'][0]['id']
+                                .body["networks"][0]["id"]
             resp = network.create_floating_ip(network_id)
-            ip = resp.body['floatingip']['floating_ip_address']
+            ip = resp.body["floatingip"]["floating_ip_address"]
             info "Created floating IP <#{ip}> from <#{pool}> pool"
             config[:floating_ip] = ip
           else
@@ -309,7 +308,7 @@ module Kitchen
               i.ip if i.fixed_ip.nil? && i.instance_id.nil? && i.pool == pool
             end.compact
             if free_addrs.empty?
-              fail ActionFailed, "No available IPs in pool <#{pool}>" # rubocop:disable Metrics/LineLength, SignalException
+              fail ActionFailed, "No available IPs in pool <#{pool}>" # rubocop:disable SignalException
             end
             config[:floating_ip] = free_addrs[0]
           end
@@ -329,13 +328,12 @@ module Kitchen
         rescue Fog::Compute::OpenStack::NotFound, Excon::Errors::Forbidden
           # See Fog issue: https://github.com/fog/fog/issues/2160
           addrs = server.addresses
-          addrs['public'] && pub = addrs['public'].map { |i| i['addr'] }
-          addrs['private'] && priv = addrs['private'].map { |i| i['addr'] }
+          addrs["public"] && pub = addrs["public"].map { |i| i["addr"] }
+          addrs["private"] && priv = addrs["private"].map { |i| i["addr"] }
         end
         [pub, priv]
       end
 
-      # rubocop:disable AbcSize
       def get_ip(server)
         if config[:floating_ip]
           debug "Using floating ip: #{config[:floating_ip]}"
@@ -343,19 +341,19 @@ module Kitchen
         end
 
         # make sure we have the latest info
-        info 'Waiting for network information to be available...'
+        info "Waiting for network information to be available..."
         begin
           w = server.wait_for { !addresses.empty? }
           debug "Waited #{w[:duration]} seconds for network information."
         rescue Fog::Errors::TimeoutError
-          raise ActionFailed, 'Could not get network information (timed out)'
+          raise ActionFailed, "Could not get network information (timed out)"
         end
 
         # should also work for private networks
         if config[:openstack_network_name]
           debug "Using configured net: #{config[:openstack_network_name]}"
           return filter_ips(server.addresses[config[:openstack_network_name]])
-                 .first['addr']
+                 .first["addr"]
         end
 
         pub, priv = get_public_private_ips(server)
@@ -363,14 +361,14 @@ module Kitchen
         pub, priv = parse_ips(pub, priv)
         pub[config[:public_ip_order].to_i] ||
           priv[config[:private_ip_order].to_i] ||
-          fail(ActionFailed, 'Could not find an IP') # rubocop:disable Metrics/LineLength, SignalException
+          fail(ActionFailed, "Could not find an IP") # rubocop:disable SignalException
       end
 
       def filter_ips(addresses)
         if config[:use_ipv6]
-          addresses.select { |i| IPAddr.new(i['addr']).ipv6? }
+          addresses.select { |i| IPAddr.new(i["addr"]).ipv6? }
         else
-          addresses.select { |i| IPAddr.new(i['addr']).ipv4? }
+          addresses.select { |i| IPAddr.new(i["addr"]).ipv4? }
         end
       end
 
@@ -387,14 +385,14 @@ module Kitchen
 
       def add_ohai_hint(state)
         if bourne_shell?
-          info 'Adding OpenStack hint for ohai'
+          info "Adding OpenStack hint for ohai"
           mkdir_cmd = "sudo mkdir -p #{hints_path}"
           touch_cmd = "sudo bash -c 'echo {} > #{hints_path}/openstack.json'"
           instance.transport.connection(state).execute(
             "#{mkdir_cmd} && #{touch_cmd}"
           )
         elsif windows_os?
-          info 'Adding OpenStack hint for ohai'
+          info "Adding OpenStack hint for ohai"
           touch_cmd = "New-Item #{hints_path}\\openstack.json"
           touch_cmd_args = "-Value '{}' -Force -Type file"
           instance.transport.connection(state).execute(
@@ -408,19 +406,19 @@ module Kitchen
       end
 
       def disable_ssl_validation
-        require 'excon'
+        require "excon"
         Excon.defaults[:ssl_verify_peer] = false
       end
 
       def wait_for_server(state)
         if config[:server_wait]
-          info "Sleeping for #{config[:server_wait]} seconds to let your server start up..." # rubocop:disable Metrics/LineLength
+          info "Sleeping for #{config[:server_wait]} seconds to let your server start up..."
           countdown(config[:server_wait])
         end
-        info 'Waiting for server to be ready...'
+        info "Waiting for server to be ready..."
         instance.transport.connection(state).wait_until_ready
       rescue
-        error "Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server..." # rubocop:disable Metrics/LineLength
+        error "Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server..."
         destroy(state)
         raise
       end
@@ -428,14 +426,14 @@ module Kitchen
       def countdown(seconds)
         date1 = Time.now + seconds
         while Time.now < date1
-          Kernel.print '.'
+          Kernel.print "."
           sleep 10
         end
       end
 
       def find_matching(collection, name)
         name = name.to_s
-        if name.start_with?('/') && name.end_with?('/')
+        if name.start_with?("/") && name.end_with?("/")
           regex = Regexp.new(name[1...-1])
           # check for regex name match
           collection.each { |single| return single if regex =~ single.name }
