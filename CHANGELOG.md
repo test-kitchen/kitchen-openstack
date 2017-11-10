@@ -1,7 +1,20 @@
 # Change Log
 
-## [v3.5.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.5.0)
+## [v3.5.1](https://github.com/test-kitchen/kitchen-openstack/tree/v3.5.1)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.5.0...v3.5.1)
+
+**Closed issues:**
+
+- block\_device\_mapping crashes on nodename nor servname provided [\#176](https://github.com/test-kitchen/kitchen-openstack/issues/176)
+- Same floating IP to different server [\#175](https://github.com/test-kitchen/kitchen-openstack/issues/175)
+- Cannot create windows machines [\#172](https://github.com/test-kitchen/kitchen-openstack/issues/172)
+
+**Merged pull requests:**
+
+- Switch from fog to fog-openstack to slim deps and speed runtime [\#174](https://github.com/test-kitchen/kitchen-openstack/pull/174) ([tas50](https://github.com/tas50))
+
+## [v3.5.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.5.0) (2017-04-12)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.4.0...v3.5.0)
 
 **Merged pull requests:**
