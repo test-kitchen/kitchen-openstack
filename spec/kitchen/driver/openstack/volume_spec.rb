@@ -16,7 +16,7 @@ describe Kitchen::Driver::Openstack::Volume do
       openstack_domain_id: "default",
       openstack_api_key: "sparkle",
       openstack_auth_url: "http:",
-      openstack_tenant: "trixie",
+      openstack_project_name: "trixie",
       openstack_region: "syd",
       openstack_service_name: "the_service",
     }

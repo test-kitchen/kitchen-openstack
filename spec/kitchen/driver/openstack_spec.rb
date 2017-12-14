@@ -71,7 +71,7 @@ describe Kitchen::Driver::Openstack do
 
       nils = %i{
         server_name
-        openstack_tenant
+        openstack_project_name
         openstack_region
         openstack_service_name
         floating_ip_pool
@@ -100,7 +100,7 @@ describe Kitchen::Driver::Openstack do
           port: "2222",
           server_name: "puppy",
           server_name_prefix: "parsnip",
-          openstack_tenant: "that_one",
+          openstack_project_name: "that_one",
           openstack_region: "atlantis",
           openstack_service_name: "the_service",
           floating_ip_pool: "swimmers",
@@ -173,7 +173,7 @@ describe Kitchen::Driver::Openstack do
           openstack_domain_id: "default",
           openstack_api_key: "world",
           openstack_auth_url: "http:",
-          openstack_tenant: "www",
+          openstack_project_name: "www",
           glance_cache_wait_timeout: 600,
           disable_ssl_validation: false,
         }
@@ -317,7 +317,7 @@ describe Kitchen::Driver::Openstack do
         openstack_domain_id: "default",
         openstack_api_key: "b",
         openstack_auth_url: "http://",
-        openstack_tenant: "me",
+        openstack_project_name: "me",
         openstack_region: "ORD",
         openstack_service_name: "stack",
         connection_options:
@@ -360,7 +360,7 @@ describe Kitchen::Driver::Openstack do
         openstack_domain_id: "default",
         openstack_api_key: "potato",
         openstack_auth_url: "http:",
-        openstack_tenant: "link",
+        openstack_project_name: "link",
         openstack_region: "ord",
         openstack_service_name: "the_service",
         connection_options:
@@ -1372,7 +1372,7 @@ describe Kitchen::Driver::Openstack do
         openstack_domain_id: "default",
         openstack_api_key: "b",
         openstack_auth_url: "http://",
-        openstack_tenant: "me",
+        openstack_project_name: "me",
         openstack_region: "ORD",
         openstack_service_name: "stack",
         image_ref: "22",

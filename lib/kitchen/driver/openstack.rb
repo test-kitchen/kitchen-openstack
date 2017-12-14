@@ -39,7 +39,7 @@ module Kitchen
       default_config :key_name, nil
       default_config :port, "22"
       default_config :use_ipv6, false
-      default_config :openstack_tenant, nil
+      default_config :openstack_project_name, nil
       default_config :openstack_region, nil
       default_config :openstack_service_name, nil
       default_config :openstack_network_name, nil
