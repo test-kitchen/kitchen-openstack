@@ -170,6 +170,7 @@ describe Kitchen::Driver::Openstack do
       let(:config) do
         {
           openstack_username: "hello",
+          openstack_domain_id: "default",
           openstack_api_key: "world",
           openstack_auth_url: "http:",
           openstack_tenant: "www",
@@ -313,6 +314,7 @@ describe Kitchen::Driver::Openstack do
     let(:config) do
       {
         openstack_username: "a",
+        openstack_domain_id: "default",
         openstack_api_key: "b",
         openstack_auth_url: "http://",
         openstack_tenant: "me",
@@ -336,7 +338,7 @@ describe Kitchen::Driver::Openstack do
   describe "#required_server_settings" do
     it "returns the required settings for an OpenStack server" do
       expected = %i{
-        openstack_username openstack_api_key openstack_auth_url
+        openstack_username openstack_api_key openstack_auth_url openstack_domain_id
       }
       expect(driver.send(:required_server_settings)).to eq(expected)
     end
@@ -345,7 +347,7 @@ describe Kitchen::Driver::Openstack do
   describe "#optional_server_settings" do
     it "returns the optional settings for an OpenStack server" do
       excluded = %i{
-        openstack_username openstack_api_key openstack_auth_url
+        openstack_username openstack_api_key openstack_auth_url openstack_domain_id
       }
       expect(driver.send(:optional_server_settings)).not_to include(*excluded)
     end
@@ -355,6 +357,7 @@ describe Kitchen::Driver::Openstack do
     let(:config) do
       {
         openstack_username: "monkey",
+        openstack_domain_id: "default",
         openstack_api_key: "potato",
         openstack_auth_url: "http:",
         openstack_tenant: "link",
@@ -1366,6 +1369,7 @@ describe Kitchen::Driver::Openstack do
     let(:config) do
       {
         openstack_username: "a",
+        openstack_domain_id: "default",
         openstack_api_key: "b",
         openstack_auth_url: "http://",
         openstack_tenant: "me",

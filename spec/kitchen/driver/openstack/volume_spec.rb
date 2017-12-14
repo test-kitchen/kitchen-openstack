@@ -13,6 +13,7 @@ describe Kitchen::Driver::Openstack::Volume do
   let(:os) do
     {
       openstack_username: "twilight",
+      openstack_domain_id: "default",
       openstack_api_key: "sparkle",
       openstack_auth_url: "http:",
       openstack_tenant: "trixie",

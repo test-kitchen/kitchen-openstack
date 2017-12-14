@@ -143,7 +143,7 @@ module Kitchen
       end
 
       def required_server_settings
-        %i{openstack_username openstack_api_key openstack_auth_url}
+        %i{openstack_username openstack_api_key openstack_auth_url openstack_domain_id}
       end
 
       def optional_server_settings
