@@ -1,7 +1,20 @@
 # Change Log
 
-## [v3.5.1](https://github.com/test-kitchen/kitchen-openstack/tree/v3.5.1)
+## [v3.6.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.0)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.5.1...v3.6.0)
+
+**Closed issues:**
+
+- Is there a way to re-use volume? [\#181](https://github.com/test-kitchen/kitchen-openstack/issues/181)
+- private method `select' called for nil:NilClass [\#177](https://github.com/test-kitchen/kitchen-openstack/issues/177)
+- The request you have made requires authentication [\#167](https://github.com/test-kitchen/kitchen-openstack/issues/167)
+
+**Merged pull requests:**
+
+- Support for v3 [\#179](https://github.com/test-kitchen/kitchen-openstack/pull/179) ([andybrucenet](https://github.com/andybrucenet))
+
+## [v3.5.1](https://github.com/test-kitchen/kitchen-openstack/tree/v3.5.1) (2017-11-10)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.5.0...v3.5.1)
 
 **Closed issues:**
