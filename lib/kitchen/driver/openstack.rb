@@ -123,6 +123,11 @@ module Kitchen
             end
           end
           server.destroy
+          if config[:block_device_mapping]
+            attached_volume = volume.volume(openstack_server).volumes.find { |x| x.id == get_bdm(config)[:volume_id] }
+            info "Dettaching volume..."
+            attached_volume.wait_for { ready? }
+          end
         end
         info "OpenStack instance <#{state[:server_id]}> destroyed."
         state.delete(:server_id)
