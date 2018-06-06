@@ -261,7 +261,7 @@ module Kitchen
       def default_name
         [
           instance.name.gsub(/\W/, "")[0..14],
-          (Etc.getlogin || "nologin").gsub(/\W/, "")[0..14],
+          (Etc.getpwuid.name || "nologin").gsub(/\W/, "")[0..14],
           Socket.gethostname.gsub(/\W/, "")[0..22],
           Array.new(7) { rand(36).to_s(36) }.join,
         ].join("-")
