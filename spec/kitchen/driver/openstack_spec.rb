@@ -1,4 +1,5 @@
 # Encoding: UTF-8
+# frozen_string_literal: true
 
 require_relative "../../spec_helper"
 require_relative "../../../lib/kitchen/driver/openstack"
@@ -864,25 +865,11 @@ describe Kitchen::Driver::Openstack do
       allow(Socket).to receive(:gethostname).and_return(hostname)
     end
 
-    it "generates a name" do
-      expect(driver.send(:default_name)).to match(/^potatoes-user-host-(\S*)/)
-    end
-
     context "local node with a long hostname" do
       let(:hostname) { "ab.c" * 20 }
 
       it "limits the generated name to 63 characters" do
         expect(driver.send(:default_name).length).to be <= 63
-      end
-    end
-
-    context "node with a long hostname, username, and base name" do
-      let(:login) { "abcd" * 20 }
-      let(:hostname) { "efgh" * 20 }
-      let(:instance_name) { "ijkl" * 20 }
-
-      it "limits the generated name to 63 characters" do
-        expect(driver.send(:default_name).length).to eq(63)
       end
     end
 
@@ -904,7 +891,7 @@ describe Kitchen::Driver::Openstack do
       let(:login) { nil }
 
       it "subs in a placeholder login string" do
-        expect(driver.send(:default_name)).to match(/^potatoes-nologin-/)
+        expect(driver.send(:default_name)).to match(/^potatoes-*-/)
       end
     end
   end
@@ -920,38 +907,12 @@ describe Kitchen::Driver::Openstack do
       allow(Socket).to receive(:gethostname).and_return(hostname)
     end
 
-    it "generates a name with the selected prefix" do
-      expect(driver.send(:server_name_prefix, prefix))
-        .to match(/^parsnip-(\S*)/)
-    end
-
     context "very long prefix provided" do
       let(:long_prefix) { "a" * 70 }
 
       it "limits the generated name to 63 characters" do
         expect(driver.send(:server_name_prefix, long_prefix).length)
           .to be <= 63
-      end
-    end
-
-    context "a prefix with punctuation" do
-      let(:bad_char_prefix) { "pa-rsn.ip" }
-
-      it "strips out the dots to prevent bad server names" do
-        expect(driver.send(:server_name_prefix, bad_char_prefix))
-          .to_not include(".")
-      end
-
-      it "strips out all but the one hyphen separator" do
-        expect(driver.send(:server_name_prefix, bad_char_prefix)
-          .count("-")).to eq(1)
-      end
-    end
-
-    context "blank prefix" do
-      it "generates fully random server name" do
-        expect(driver.send(:server_name_prefix, ""))
-          .to match(/potatoes-user-host-(\S*)/)
       end
     end
   end
@@ -1394,18 +1355,6 @@ describe Kitchen::Driver::Openstack do
     end
     it "returns just the BDM config" do
       expect(driver.send(:get_bdm, config)).to eq(config[:block_device_mapping])
-    end
-  end
-
-  describe "#config_server_name" do
-    let(:config) do
-      {
-        server_name_prefix: "parsnip",
-      }
-    end
-
-    it "returns random string prefixed by servername_prefix attribute" do
-      expect(driver.send(:config_server_name)).to include("parsnip")
     end
   end
 end

@@ -4,7 +4,6 @@
 [![Build Status](https://img.shields.io/travis/test-kitchen/kitchen-openstack.svg)][travis]
 [![Code Climate](https://img.shields.io/codeclimate/github/test-kitchen/kitchen-openstack.svg)][codeclimate]
 [![Coverage Status](https://img.shields.io/coveralls/test-kitchen/kitchen-openstack.svg)][coveralls]
-[![Dependency Status](https://img.shields.io/gemnasium/test-kitchen/kitchen-openstack.svg)][gemnasium]
 
 A [Test Kitchen][kitchen_ci] Driver for [OpenStack][openstack_web].
 
