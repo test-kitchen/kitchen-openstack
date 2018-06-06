@@ -1,7 +1,14 @@
 # Change Log
 
-## [v3.6.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.0)
+## [v3.6.1](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.1)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.6.0...v3.6.1)
+
+**Merged pull requests:**
+
+- Use Etc.getpwuid instead of getlogin [\#183](https://github.com/test-kitchen/kitchen-openstack/pull/183) ([tnguyen14](https://github.com/tnguyen14))
+
+## [v3.6.0](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.0) (2018-03-28)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.5.1...v3.6.0)
 
 **Closed issues:**
