@@ -873,16 +873,6 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
-    context "node with a long hostname, username, and base name" do
-      let(:login) { "abcd" * 20 }
-      let(:hostname) { "efgh" * 20 }
-      let(:instance_name) { "ijkl" * 20 }
-
-      it "limits the generated name to 56 characters" do
-        expect(driver.send(:default_name).length).to eq(56)
-      end
-    end
-
     context "a login and hostname with punctuation in them" do
       let(:login) { "some.u-se-r" }
       let(:hostname) { "a.host-name" }
