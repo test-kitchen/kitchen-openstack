@@ -52,6 +52,16 @@ module Kitchen
           if bdm[:reuse_volume]
             @logger.info "Attempting to re-use old Volume..."
             volume = volume(os).volumes.find { |x| x.name == volume_name }
+
+            if volume
+              if !volume.attachments.empty?
+                @logger.info "Volume already attached. Force dettaching ..."
+                volume.service.action(volume.id, 'os-reset_status' => {:attach_status => 'detached'})
+                volume.reset_status('available')
+                volume.wait_for { ready? }
+              end
+            end
+
             return volume.id if volume
           end
 
