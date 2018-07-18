@@ -46,8 +46,8 @@ module Kitchen
           vanilla_options.select { |o| bdm[o] }.each do |key|
             opt[key] = bdm[key]
           end
-
-          volume_name = "#{config[:server_name]}-volume"
+          
+          volume_name = config[:volume_name] || "#{config[:server_name]}-volume"
 
           if bdm[:reuse_volume]
             @logger.info "Attempting to re-use old Volume..."
