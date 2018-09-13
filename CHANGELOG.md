@@ -1,7 +1,16 @@
 # Change Log
 
-## [v3.6.1](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.1)
+## [v3.6.2](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.2)
 
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.6.1...v3.6.2)
+
+**Merged pull requests:**
+
+- Fall back on Etc.getlogin for windows environments [\#186](https://github.com/test-kitchen/kitchen-openstack/pull/186) ([joshuariojas](https://github.com/joshuariojas))
+- Update Travis to the latest ruby releases [\#185](https://github.com/test-kitchen/kitchen-openstack/pull/185) ([tas50](https://github.com/tas50))
+- Getting travis green. [\#184](https://github.com/test-kitchen/kitchen-openstack/pull/184) ([jjasghar](https://github.com/jjasghar))
+
+## [v3.6.1](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.1) (2018-06-06)
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.6.0...v3.6.1)
 
 **Merged pull requests:**
