@@ -148,7 +148,7 @@ module Kitchen
       end
 
       def optional_server_settings
-        Fog::Compute::OpenStack.recognized.select do |k|
+        Fog::OpenStack::Compute.recognized.select do |k|
           k.to_s.start_with?("openstack")
         end - required_server_settings
       end
@@ -326,7 +326,7 @@ module Kitchen
         begin
           pub = server.public_ip_addresses
           priv = server.private_ip_addresses
-        rescue Fog::Compute::OpenStack::NotFound, Excon::Errors::Forbidden
+        rescue Fog::OpenStack::Compute::NotFound, Excon::Errors::Forbidden
           # See Fog issue: https://github.com/fog/fog/issues/2160
           addrs = server.addresses
           addrs["public"] && pub = addrs["public"].map { |i| i["addr"] }
