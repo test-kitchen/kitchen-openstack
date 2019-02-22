@@ -11,6 +11,10 @@ This driver uses the [fog gem][fog_web] to provision and destroy nova instances.
 
 Shamelessly copied from [Fletcher Nichol](https://github.com/fnichol)'s awesome work on an [EC2 driver](https://github.com/test-kitchen/kitchen-ec2), and [Adam Leff](https://github.com/adamleff)'s amazing work on an [VRO driver](https://github.com/chef-partners/kitchen-vro).
 
+## Status
+
+This software project is no longer under active development as it has no active maintainers. The software may continue to work for some or all use cases, but issues filed in GitHub will most likely not be triaged. If a new maintainer is interested in working on this project please come chat with us in #test-kitchen on Chef Community Slack.
+
 ## Requirements
 
 There are **no** external system requirements for this driver. However you will need access to an OpenStack cloud.
