@@ -48,10 +48,13 @@ module Kitchen
             opt[key] = bdm[key]
           end
           @logger.info "Creating Volume..."
-          resp = volume(os).create_volume("#{config[:server_name]}-volume",
-                                          "#{config[:server_name]} volume",
-                                          bdm[:volume_size],
-                                          opt)
+          resp = volume(os)
+            .create_volume(
+              "#{config[:server_name]}-volume",
+              "#{config[:server_name]} volume",
+              bdm[:volume_size],
+              opt
+            )
           vol_id = resp[:body]["volume"]["id"]
 
           # Get Volume Model to make waiting for ready easy
@@ -67,6 +70,7 @@ module Kitchen
           vol_model.wait_for(creation_timeout) do
             sleep(1)
             raise("Failed to make volume") if status.casecmp("error".downcase) == 0
+
             ready?
           end
 
