@@ -55,7 +55,7 @@ describe Kitchen::Driver::Openstack::Volume do
     let(:volume_model) do
       {
         id: "555",
-        status: "ACTIVE"
+        status: "ACTIVE",
         # wait_for: true
         # ready?: true
       }

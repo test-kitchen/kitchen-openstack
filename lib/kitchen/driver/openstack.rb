@@ -117,8 +117,7 @@ module Kitchen
             pub_ip = pub[config[:public_ip_order].to_i] || nil
             if pub_ip
               info "Retrieve the ID of floating IP <#{pub_ip}>"
-              floating_ip_id = network.list_floating_ips(floating_ip_address: pub_ip)
-                                      .body["floatingips"][0]["id"]
+              floating_ip_id = network.list_floating_ips(floating_ip_address: pub_ip).body["floatingips"][0]["id"]
               network.delete_floating_ip(floating_ip_id)
               info "OpenStack Floating IP <#{pub_ip}> released."
             end
@@ -176,6 +175,7 @@ module Kitchen
       def create_server
         server_def = init_configuration
         fail(ActionFailed, "Cannot specify both network_ref and network_id") if config[:network_id] && config[:network_ref] # rubocop:disable SignalException
+
         if config[:network_id]
           networks = [].concat([config[:network_id]])
           server_def[:nics] = networks.flatten.map do |net_id|
@@ -211,6 +211,7 @@ module Kitchen
       def init_configuration
         fail(ActionFailed, "Cannot specify both image_ref and image_id") if config[:image_id] && config[:image_ref] # rubocop:disable SignalException
         fail(ActionFailed, "Cannot specify both flavor_ref and flavor_id") if config[:flavor_id] && config[:flavor_ref] # rubocop:disable SignalException
+
         {
           name: config[:server_name],
           image_ref: config[:image_id] || find_image(config[:image_ref]).id,
@@ -233,6 +234,7 @@ module Kitchen
       def find_image(image_ref)
         image = find_matching(compute.images, image_ref)
         fail(ActionFailed, "Image not found") unless image # rubocop:disable SignalException
+
         debug "Selected image: #{image.id} #{image.name}"
         image
       end
@@ -240,6 +242,7 @@ module Kitchen
       def find_flavor(flavor_ref)
         flavor = find_matching(compute.flavors, flavor_ref)
         fail(ActionFailed, "Flavor not found") unless flavor # rubocop:disable SignalException
+
         debug "Selected flavor: #{flavor.id} #{flavor.name}"
         flavor
       end
@@ -247,6 +250,7 @@ module Kitchen
       def find_network(network_ref)
         net = find_matching(network.networks.all, network_ref)
         fail(ActionFailed, "Network not found") unless net # rubocop:disable SignalException
+
         debug "Selected net: #{net.id} #{net.name}"
         net
       end
@@ -298,8 +302,10 @@ module Kitchen
         @@ip_pool_lock.synchronize do
           info "Attaching floating IP from <#{pool}> pool"
           if config[:allocate_floating_ip]
-            network_id = network.list_networks(name: pool)
-                                .body["networks"][0]["id"]
+            network_id = network
+              .list_networks(
+                name: pool
+              ).body["networks"][0]["id"]
             resp = network.create_floating_ip(network_id)
             ip = resp.body["floatingip"]["floating_ip_address"]
             info "Created floating IP <#{ip}> from <#{pool}> pool"
@@ -311,6 +317,7 @@ module Kitchen
             if free_addrs.empty?
               fail ActionFailed, "No available IPs in pool <#{pool}>" # rubocop:disable SignalException
             end
+
             config[:floating_ip] = free_addrs[0]
           end
           attach_ip(server, config[:floating_ip])
@@ -353,8 +360,7 @@ module Kitchen
         # should also work for private networks
         if config[:openstack_network_name]
           debug "Using configured net: #{config[:openstack_network_name]}"
-          return filter_ips(server.addresses[config[:openstack_network_name]])
-                 .first["addr"]
+          return filter_ips(server.addresses[config[:openstack_network_name]]).first["addr"]
         end
 
         pub, priv = get_public_private_ips(server)
