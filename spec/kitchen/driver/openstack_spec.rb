@@ -375,7 +375,7 @@ describe Kitchen::Driver::Openstack do
 
     context "all requirements provided" do
       it "creates a new compute connection" do
-        allow(Fog::Compute).to receive(:new) { |arg| arg }
+        allow(Fog::OpenStack::Compute).to receive(:new) { |arg| arg }
         res = config.merge(provider: "OpenStack")
         expect(driver.send(:compute)).to eq(res)
       end
@@ -1076,10 +1076,10 @@ describe Kitchen::Driver::Openstack do
     context "an OpenStack deployment without the floating IP extension" do
       before do
         allow(server).to receive(:public_ip_addresses).and_raise(
-          Fog::Compute::OpenStack::NotFound
+          Fog::OpenStack::Compute::NotFound
         )
         allow(server).to receive(:private_ip_addresses).and_raise(
-          Fog::Compute::OpenStack::NotFound
+          Fog::OpenStack::Compute::NotFound
         )
       end
 
