@@ -42,7 +42,7 @@ describe Kitchen::Driver::Openstack::Volume do
           snapshot_id: "444",
           volume_size: "5",
           creation_timeout: "30",
-          attach_timeout: 0,
+          attach_timeout: 5,
         },
       }
     end
@@ -108,7 +108,7 @@ describe Kitchen::Driver::Openstack::Volume do
           volume_size: "5",
           volume_device_name: "vda",
           delete_on_termination: true,
-          attach_timeout: 0,
+          attach_timeout: 5,
         },
       }
     end
