@@ -209,7 +209,7 @@ describe Kitchen::Driver::Openstack do
         expect { driver.send(:create, state) }.to raise_error(Kitchen::ActionFailed) # rubocop:disable Metrics/LineLength
       end
 
-      it 'returns ready status' do
+      it "returns ready status" do
         expect(driver.send(:ready?, state)).to be true
       end
     end
