@@ -156,6 +156,7 @@ describe Kitchen::Driver::Openstack do
       allow(d).to receive(:sleep)
       allow(d).to receive(:wait_for_ssh_key_access).and_return("SSH key authetication successful") # rubocop:disable Metrics/LineLength
       allow(d).to receive(:disable_ssl_validation).and_return(false)
+      allow(d).to receive(:ready?).and_return(true)
       d
     end
 
