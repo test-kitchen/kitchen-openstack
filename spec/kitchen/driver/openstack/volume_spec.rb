@@ -42,7 +42,7 @@ describe Kitchen::Driver::Openstack::Volume do
           snapshot_id: "444",
           volume_size: "5",
           creation_timeout: "30",
-          attach_timeout: 0
+          attach_timeout: 0,
         },
       }
     end
