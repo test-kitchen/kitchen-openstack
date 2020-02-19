@@ -89,6 +89,7 @@ describe Kitchen::Driver::Openstack::Volume do
       # This makes rspec work
       # but the vol_driver doesnt have these methods properties?
       allow(vol_driver).to receive(:status).and_return("ACTIVE")
+      allow(config).to receive(:attach_timeout).and_return(5)
       allow(vol_driver).to receive(:ready?).and_return(true)
       allow(volume_model).to receive(:wait_for)
         .with(an_instance_of(String)).and_yield
