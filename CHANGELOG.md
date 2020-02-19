@@ -1,5 +1,8 @@
 # Change Log
 
+## [v3.7.0]
+* Added functionality to delay attaching a volume after its marked active when configuring block device mapping. This addresses an issue in VMWare Openstack (VIO) that may be present in others when attaching large volumes in which VIO would mark the device active but was still performing operations which caused test kitchen to fail.
+
 ## [v3.6.2](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.2)
 
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.6.1...v3.6.2)

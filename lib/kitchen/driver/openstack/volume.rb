@@ -74,6 +74,13 @@ module Kitchen
             ready?
           end
 
+          attach_timeout = bdm.key?(:attach_timeout) ? bdm[:attach_timeout] : 0
+
+          if attach_timeout > 0
+            @logger.debug "Sleeping for an additional #{attach_timeout} seconds before attaching volume to wait for Openstack to finish disk creation process.."
+            sleep(attach_timeout)
+          end
+
           @logger.debug "Volume Ready"
 
           vol_id
