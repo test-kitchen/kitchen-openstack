@@ -1,7 +1,20 @@
 # Change Log
 
-## [v3.7.0]
-* Added functionality to delay attaching a volume after its marked active when configuring block device mapping. This addresses an issue in VMWare Openstack (VIO) that may be present in others when attaching large volumes in which VIO would mark the device active but was still performing operations which caused test kitchen to fail.
+
+## [v5.0.0](https://github.com/test-kitchen/kitchen-openstack/tree/v5.0.0)
+
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v4.0.0..v5.0.0)
+
+- Added functionality to delay attaching a volume after its marked active when configuring block device mapping. This addresses an issue in VMWare Openstack (VIO) that may be present in others when attaching large volumes in which VIO would mark the device active but was still performing operations which caused test kitchen to fail.
+- Require fog-openstack 1.X instead of Fog < 1, which greatly reduces the total dependencies necessary. This may require updating other tools to support fog 1.x, which has breaking changes.
+- Only ship the necessary files in the gem to slim the size of the gem install slightly
+
+## [v4.0.0](https://github.com/test-kitchen/kitchen-openstack/tree/v4.0.0)
+
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v3.6.2..v4.0.0)
+
+- Loosen the Test Kitchen dependency to allow for 2.x
+- Fix minor style issues in the code
 
 ## [v3.6.2](https://github.com/test-kitchen/kitchen-openstack/tree/v3.6.2)
 
