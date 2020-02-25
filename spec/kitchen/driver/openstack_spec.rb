@@ -208,6 +208,10 @@ describe Kitchen::Driver::Openstack do
         allow(driver).to receive(:create_server).and_raise(Fog::Errors::Error)
         expect { driver.send(:create, state) }.to raise_error(Kitchen::ActionFailed) # rubocop:disable Metrics/LineLength
       end
+
+      it "returns ready status" do
+        expect(driver.send(:ready?, state)).to be true
+      end
     end
   end
 

@@ -42,6 +42,7 @@ describe Kitchen::Driver::Openstack::Volume do
           snapshot_id: "444",
           volume_size: "5",
           creation_timeout: "30",
+          attach_timeout: 5,
         },
       }
     end
@@ -88,6 +89,7 @@ describe Kitchen::Driver::Openstack::Volume do
       # This makes rspec work
       # but the vol_driver doesnt have these methods properties?
       allow(vol_driver).to receive(:status).and_return("ACTIVE")
+      allow(config).to receive(:attach_timeout).and_return(5)
       allow(vol_driver).to receive(:ready?).and_return(true)
       allow(volume_model).to receive(:wait_for)
         .with(an_instance_of(String)).and_yield
@@ -107,6 +109,7 @@ describe Kitchen::Driver::Openstack::Volume do
           volume_size: "5",
           volume_device_name: "vda",
           delete_on_termination: true,
+          attach_timeout: 5,
         },
       }
     end

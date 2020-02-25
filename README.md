@@ -285,6 +285,9 @@ Otherwise set this to `false`.
 #### creation\_timeout
 Timeout to wait for volume to become available.  If a large volume is provisioned, it might take time to provision it on the backend.  Maximum amount of time to wait for volume to be created and be available.
 
+#### attach\_timeout
+If using a customized version of Openstack such a VMWare Integrated OPenstack (VIO), it may mark a volume active even though it is still performing some actions which may cause test kitchen to attach the volume to early which results in errors. Specify in seconds the amount of time to delay attaching the volume after its been marked active. Default timeout is 0.
+
 #### Example
 
 ```yaml
@@ -295,6 +298,7 @@ block_device_mapping:
   availability_zone: nova
   delete_on_termination: false
   creation_timeout: 120
+  attach_timeout: 240
 ```
 
 ## Network and Communication Configuration
