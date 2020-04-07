@@ -335,7 +335,7 @@ describe Kitchen::Driver::Openstack do
     end
 
     it "returns a hash of server settings" do
-      expected = config.merge(provider: "OpenStack")
+      expected = config.merge(config)
       expect(driver.send(:openstack_server)).to eq(expected)
     end
   end
@@ -380,13 +380,13 @@ describe Kitchen::Driver::Openstack do
     context "all requirements provided" do
       it "creates a new compute connection" do
         allow(Fog::OpenStack::Compute).to receive(:new) { |arg| arg }
-        res = config.merge(provider: "OpenStack")
+        res = config.merge(config)
         expect(driver.send(:compute)).to eq(res)
       end
 
       it "creates a new network connection" do
-        allow(Fog::Network).to receive(:new) { |arg| arg }
-        res = config.merge(provider: "OpenStack")
+        allow(Fog::OpenStack::Network).to receive(:new) { |arg| arg }
+        res = config.merge(config)
         expect(driver.send(:network)).to eq(res)
       end
     end

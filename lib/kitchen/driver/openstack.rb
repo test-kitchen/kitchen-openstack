@@ -133,7 +133,6 @@ module Kitchen
 
       def openstack_server
         server_def = {
-          provider: "OpenStack",
           connection_options: {},
         }
         required_server_settings.each { |s| server_def[s] = config[s] }
@@ -157,7 +156,7 @@ module Kitchen
       end
 
       def network
-        Fog::Network.new(openstack_server)
+        Fog::OpenStack::Network.new(openstack_server)
       end
 
       def compute
