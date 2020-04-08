@@ -22,7 +22,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "test-kitchen", ">= 1.4.1", "< 3"
   spec.add_dependency "fog-openstack", "~> 1.0"
-  spec.add_dependency "unf"
   spec.add_dependency "ohai"
 
   spec.add_development_dependency "bundler"
