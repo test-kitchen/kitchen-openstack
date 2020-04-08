@@ -173,7 +173,7 @@ module Kitchen
 
       def create_server
         server_def = init_configuration
-        fail(ActionFailed, "Cannot specify both network_ref and network_id") if config[:network_id] && config[:network_ref] # rubocop:disable Style/SignalException
+        raise(ActionFailed, "Cannot specify both network_ref and network_id") if config[:network_id] && config[:network_ref]
 
         if config[:network_id]
           networks = [].concat([config[:network_id]])
@@ -208,8 +208,8 @@ module Kitchen
       end
 
       def init_configuration
-        fail(ActionFailed, "Cannot specify both image_ref and image_id") if config[:image_id] && config[:image_ref] # rubocop:disable Style/SignalException
-        fail(ActionFailed, "Cannot specify both flavor_ref and flavor_id") if config[:flavor_id] && config[:flavor_ref] # rubocop:disable Style/SignalException
+        raise(ActionFailed, "Cannot specify both image_ref and image_id") if config[:image_id] && config[:image_ref]
+        raise(ActionFailed, "Cannot specify both flavor_ref and flavor_id") if config[:flavor_id] && config[:flavor_ref]
 
         {
           name: config[:server_name],
@@ -232,7 +232,7 @@ module Kitchen
 
       def find_image(image_ref)
         image = find_matching(compute.images, image_ref)
-        fail(ActionFailed, "Image not found") unless image # rubocop:disable Style/SignalException
+        raise(ActionFailed, "Image not found") unless image
 
         debug "Selected image: #{image.id} #{image.name}"
         image
@@ -240,7 +240,7 @@ module Kitchen
 
       def find_flavor(flavor_ref)
         flavor = find_matching(compute.flavors, flavor_ref)
-        fail(ActionFailed, "Flavor not found") unless flavor # rubocop:disable Style/SignalException
+        raise(ActionFailed, "Flavor not found") unless flavor
 
         debug "Selected flavor: #{flavor.id} #{flavor.name}"
         flavor
@@ -248,7 +248,7 @@ module Kitchen
 
       def find_network(network_ref)
         net = find_matching(network.networks.all, network_ref)
-        fail(ActionFailed, "Network not found") unless net # rubocop:disable Style/SignalException
+        raise(ActionFailed, "Network not found") unless net
 
         debug "Selected net: #{net.id} #{net.name}"
         net
@@ -314,7 +314,7 @@ module Kitchen
               i.ip if i.fixed_ip.nil? && i.instance_id.nil? && i.pool == pool
             end.compact
             if free_addrs.empty?
-              fail ActionFailed, "No available IPs in pool <#{pool}>" # rubocop:disable Style/SignalException
+              raise ActionFailed, "No available IPs in pool <#{pool}>"
             end
 
             config[:floating_ip] = free_addrs[0]
@@ -367,7 +367,7 @@ module Kitchen
         pub, priv = parse_ips(pub, priv)
         pub[config[:public_ip_order].to_i] ||
           priv[config[:private_ip_order].to_i] ||
-          fail(ActionFailed, "Could not find an IP") # rubocop:disable Style/SignalException
+          raise(ActionFailed, "Could not find an IP")
       end
 
       def filter_ips(addresses)
