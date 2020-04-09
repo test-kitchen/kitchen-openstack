@@ -24,6 +24,6 @@ module Kitchen
   #
   # @author Jonathan Hartman <j@p4nt5.com>
   module Driver
-    OPENSTACK_VERSION = "5.0.0"
+    OPENSTACK_VERSION = "5.0.1"
   end
 end

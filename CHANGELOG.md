@@ -1,5 +1,12 @@
 # Change Log
 
+## [v5.0.1](https://github.com/test-kitchen/kitchen-openstack/tree/v5.0.1)
+
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v5.0.0..v5.0.1)
+
+- Switched to GitHub Actions for PR testing
+- Resolved fog deprecation warnings when running the plugin
+- Removed the unused `unf` gem dependency
 
 ## [v5.0.0](https://github.com/test-kitchen/kitchen-openstack/tree/v5.0.0)
 
