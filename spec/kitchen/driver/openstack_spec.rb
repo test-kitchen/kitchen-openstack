@@ -154,7 +154,7 @@ describe Kitchen::Driver::Openstack do
       allow(d).to receive(:add_ohai_hint).and_return(true)
       allow(d).to receive(:do_ssh_setup).and_return(true)
       allow(d).to receive(:sleep)
-      allow(d).to receive(:wait_for_ssh_key_access).and_return("SSH key authetication successful") # rubocop:disable Metrics/LineLength
+      allow(d).to receive(:wait_for_ssh_key_access).and_return("SSH key authetication successful")
       allow(d).to receive(:disable_ssl_validation).and_return(false)
       d
     end
@@ -206,7 +206,7 @@ describe Kitchen::Driver::Openstack do
 
       it "throws an Action error when trying to create_server" do
         allow(driver).to receive(:create_server).and_raise(Fog::Errors::Error)
-        expect { driver.send(:create, state) }.to raise_error(Kitchen::ActionFailed) # rubocop:disable Metrics/LineLength
+        expect { driver.send(:create, state) }.to raise_error(Kitchen::ActionFailed)
       end
 
       it "returns ready status" do
@@ -297,7 +297,7 @@ describe Kitchen::Driver::Openstack do
 
       let(:network) do
         s = double("network")
-        expect(s).to receive(:list_floating_ips).with(floating_ip_address: ip).and_return(network_response) # rubocop:disable Metrics/LineLength
+        expect(s).to receive(:list_floating_ips).with(floating_ip_address: ip).and_return(network_response)
         expect(s).to receive(:delete_floating_ip).with(ip_id)
         s
       end
@@ -335,7 +335,7 @@ describe Kitchen::Driver::Openstack do
     end
 
     it "returns a hash of server settings" do
-      expected = config.merge(provider: "OpenStack")
+      expected = config.merge(config)
       expect(driver.send(:openstack_server)).to eq(expected)
     end
   end
@@ -380,13 +380,13 @@ describe Kitchen::Driver::Openstack do
     context "all requirements provided" do
       it "creates a new compute connection" do
         allow(Fog::OpenStack::Compute).to receive(:new) { |arg| arg }
-        res = config.merge(provider: "OpenStack")
+        res = config.merge(config)
         expect(driver.send(:compute)).to eq(res)
       end
 
       it "creates a new network connection" do
-        allow(Fog::Network).to receive(:new) { |arg| arg }
-        res = config.merge(provider: "OpenStack")
+        allow(Fog::OpenStack::Network).to receive(:new) { |arg| arg }
+        res = config.merge(config)
         expect(driver.send(:network)).to eq(res)
       end
     end
@@ -967,7 +967,7 @@ describe Kitchen::Driver::Openstack do
     let(:create_ip_network_response) do
       double(body: { "floatingip" => { "floating_ip_address" => ip } })
     end
-    let(:network) { double(list_networks: list_networks_response, create_floating_ip: create_ip_network_response) } # rubocop:disable Metrics/LineLength
+    let(:network) { double(list_networks: list_networks_response, create_floating_ip: create_ip_network_response) }
 
     before(:each) do
       allow(driver).to receive(:attach_ip).with(server, ip).and_return("bing!")

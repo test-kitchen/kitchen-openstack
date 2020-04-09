@@ -36,7 +36,7 @@ module Kitchen
         end
 
         def volume(openstack_server)
-          Fog::Volume.new(openstack_server)
+          Fog::OpenStack::Volume.new(openstack_server)
         end
 
         def create_volume(config, os)

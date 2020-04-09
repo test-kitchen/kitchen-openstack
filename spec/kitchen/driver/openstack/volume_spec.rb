@@ -30,7 +30,7 @@ describe Kitchen::Driver::Openstack::Volume do
     end
 
     it "creates a new block device connection" do
-      allow(Fog::Volume).to receive(:new) { |arg| arg }
+      allow(Fog::OpenStack::Volume).to receive(:new) { |arg| arg }
       expect(vol_driver.send(:volume, os)).to eq(os)
     end
   end
