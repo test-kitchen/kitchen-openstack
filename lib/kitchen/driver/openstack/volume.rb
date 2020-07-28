@@ -87,7 +87,7 @@ module Kitchen
         end
 
         def get_bdm(config, os)
-          bdm = config[:block_device_mapping]
+          bdm = config[:block_device_mapping].clone
           bdm[:volume_id] = create_volume(config, os) if bdm[:make_volume]
           bdm.delete_if { |k, _| k == :make_volume }
           bdm.delete_if { |k, _| k == :snapshot_id }
