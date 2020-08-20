@@ -4,10 +4,10 @@ require_relative "../../../spec_helper"
 require_relative "../../../../lib/kitchen/driver/openstack/volume"
 
 require "logger"
-require "stringio"
+require "stringio" unless defined?(StringIO)
 require "rspec"
 require "kitchen"
-require "ohai"
+require "ohai" unless defined?(Ohai::System)
 
 describe Kitchen::Driver::Openstack::Volume do
   let(:os) do
