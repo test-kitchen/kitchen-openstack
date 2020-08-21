@@ -238,7 +238,7 @@
 
 **Merged pull requests:**
 
-- fixup install ohai hints so the file is written with root privledges [\#104](https://github.com/test-kitchen/kitchen-openstack/pull/104) ([spion06](https://github.com/spion06))
+- fixup install ohai hints so the file is written with root privileges [\#104](https://github.com/test-kitchen/kitchen-openstack/pull/104) ([spion06](https://github.com/spion06))
 - Readd key\_name to README [\#103](https://github.com/test-kitchen/kitchen-openstack/pull/103) ([BobbyRyterski](https://github.com/BobbyRyterski))
 - Add transport ssh\_key note to README [\#102](https://github.com/test-kitchen/kitchen-openstack/pull/102) ([BobbyRyterski](https://github.com/BobbyRyterski))
 

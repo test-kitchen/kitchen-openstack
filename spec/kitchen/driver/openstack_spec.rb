@@ -4,15 +4,15 @@ require_relative "../../spec_helper"
 require_relative "../../../lib/kitchen/driver/openstack"
 
 require "logger"
-require "stringio"
+require "stringio" unless defined?(StringIO)
 require "rspec"
 require "kitchen"
 require "kitchen/driver/openstack"
 require "kitchen/provisioner/dummy"
 require "kitchen/transport/dummy"
 require "kitchen/verifier/dummy"
-require "ohai"
-require "excon"
+require "ohai" unless defined?(Ohai::System)
+require "excon" unless defined?(Excon)
 require "fog/openstack"
 
 describe Kitchen::Driver::Openstack do

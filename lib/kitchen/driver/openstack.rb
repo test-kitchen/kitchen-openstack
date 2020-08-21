@@ -21,7 +21,7 @@
 
 require "kitchen"
 require "fog/openstack"
-require "ohai"
+require "ohai" unless defined?(Ohai::System)
 require_relative "openstack_version"
 require_relative "openstack/volume"
 
@@ -411,7 +411,7 @@ module Kitchen
       end
 
       def disable_ssl_validation
-        require "excon"
+        require "excon" unless defined?(Excon)
         Excon.defaults[:ssl_verify_peer] = false
       end
 
@@ -441,7 +441,7 @@ module Kitchen
         if name.start_with?("/") && name.end_with?("/")
           regex = Regexp.new(name[1...-1])
           # check for regex name match
-          collection.each { |single| return single if regex =~ single.name }
+          collection.each { |single| return single if regex&.match?(single.name) }
         else
           # check for exact id match
           collection.each { |single| return single if single.id == name }
