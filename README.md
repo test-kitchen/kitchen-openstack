@@ -204,6 +204,20 @@ If your vms require config drive.
     config_drive: true
 ```
 
+### scheduler\_hints
+
+If you wish to pass any scheduler hints.
+
+```
+    scheduler_hints:
+      group: b0f6f534-3a02-4dfa-9165-605446799cc0
+      query: >-
+        ["or",
+          ["=", "$host", "cmp123.example.com"],
+          ["=", "$host", "cmp456.example.com"]
+        ]
+```
+
 ### network\_ref
 
 **Deprecated** A list of network names to create instances with.
