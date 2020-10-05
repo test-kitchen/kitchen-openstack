@@ -200,6 +200,10 @@ module Kitchen
           server_def[c] = optional_config(c) if config[c]
         end
 
+        if config[:scheduler_hints]
+          server_def[:os_scheduler_hints] = optional_config(:scheduler_hints)
+        end
+
         # Can't use the Fog bootstrap and/or setup methods here; they require a
         # public IP address that can't be guaranteed to exist across all
         # OpenStack deployments (e.g. TryStack ARM only has private IPs).
@@ -224,6 +228,8 @@ module Kitchen
           config[c] if config[c].is_a?(Array)
         when :user_data
           File.open(config[c], &:read) if File.exist?(config[c])
+        when :scheduler_hints
+          config[c] if config[c].is_a?(Hash)
         else
           config[c]
         end

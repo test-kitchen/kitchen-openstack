@@ -534,6 +534,35 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
+    context "scheduler_hints specified" do
+      let(:config) do
+        {
+          server_name: "hello",
+          image_ref: "111",
+          flavor_ref: "1",
+          scheduler_hints: {
+            group: "3df3519e-0e22-4d14-8c6a-afd8e4467b4b",
+          },
+        }
+      end
+      let(:data) do
+        {
+          group: "3df3519e-0e22-4d14-8c6a-afd8e4467b4b",
+        }
+      end
+
+      it "passes scheduler_hints contents" do
+        expect(servers).to receive(:create).with(
+          name: "hello",
+          image_ref: "111",
+          flavor_ref: "1",
+          availability_zone: nil,
+          os_scheduler_hints: data
+        )
+        driver.send(:create_server)
+      end
+    end
+
     context "image_id specified" do
       let(:config) do
         {
