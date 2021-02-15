@@ -203,6 +203,7 @@ module Kitchen
 
         if config[:cloud_config]
           raise(ActionFailed, "Cannot specify both cloud_config and user_data") if config[:user_data]
+
           server_def[:user_data] = Kitchen::Util.stringified_hash(config[:cloud_config]).to_yaml.gsub(/^---\n/, "#cloud-config\n")
         end
 
