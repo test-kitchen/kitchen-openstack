@@ -180,7 +180,7 @@ security_groups:
 
 ### user\_data
 
-If your vms have `cloud-init` enabled you can use the `user_data` in your
+If your VMs have `cloud-init` enabled you can use the `user_data` in your
 kitchen.yml to inject commands at boot time.
 
 ```
@@ -196,9 +196,28 @@ for example:
 echo "do whatever you want to pre-configure your machine"
 ```
 
+### cloud\_config
+
+If your VMs have `cloud-init` enabled you can use `cloud_config` to generate userdata for use by cloud-init in the [cloud-config format](https://cloudinit.readthedocs.io/en/latest/topics/format.html#cloud-config-data). This provides a convenient way to specify cloud-init config inline. As the cloud-config format uses YAML the resulting userdata is essentially a copy+paste of `cloud_config` with the header line '#cloud-config'
+
+```
+    driver_config:
+      cloud_config:
+        hostname: my-hostname
+```
+
+This will pass the following user data to OpenStack:
+
+```
+#cloud-config
+hostname: my-hostname
+```
+
+The `cloud_config` and `user_data` options are mutually exclusive.
+
 ### config\_drive
 
-If your vms require config drive.
+If your VMs require config drive.
 
 ```
     config_drive: true
