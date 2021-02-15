@@ -22,6 +22,7 @@
 require "kitchen"
 require "fog/openstack"
 require "ohai" unless defined?(Ohai::System)
+require "yaml"
 require_relative "openstack_version"
 require_relative "openstack/volume"
 
@@ -198,6 +199,11 @@ module Kitchen
           metadata
         }.each do |c|
           server_def[c] = optional_config(c) if config[c]
+        end
+
+        if config[:cloud_config]
+          raise(ActionFailed, "Cannot specify both cloud_config and user_data") if config[:user_data]
+          server_def[:user_data] = Kitchen::Util.stringified_hash(config[:cloud_config]).to_yaml.gsub(/^---\n/, "#cloud-config\n")
         end
 
         # Can't use the Fog bootstrap and/or setup methods here; they require a
