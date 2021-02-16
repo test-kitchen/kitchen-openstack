@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-lib = File.expand_path("../lib", __FILE__)
+lib = File.expand_path("lib", __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "kitchen/driver/openstack_version"
 
@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["LICENSE", "README.md", "lib/**/*"]
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = ">= 2.0.0"
+  spec.required_ruby_version = ">= 2.6.0"
 
   spec.add_dependency "test-kitchen", ">= 1.4.1", "< 3"
   spec.add_dependency "fog-openstack", "~> 1.0"
