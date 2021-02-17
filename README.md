@@ -1,7 +1,7 @@
 # <a name="title"></a> Kitchen::OpenStack: A Test Kitchen Driver for OpenStack
 
 [![Gem Version](https://img.shields.io/gem/v/kitchen-openstack.svg)][gem]
-[![Build Status](https://img.shields.io/travis/test-kitchen/kitchen-openstack.svg)][travis]
+![CI](https://github.com/test-kitchen/kitchen-openstack/workflows/CI/badge.svg)
 
 A [Test Kitchen][kitchen_ci] Driver for [OpenStack][openstack_web].
 
@@ -469,10 +469,6 @@ Apache 2.0 (see [LICENSE][license])
 
 
 [gem]: https://rubygems.org/gems/kitchen-openstack
-[travis]: https://travis-ci.org/test-kitchen/kitchen-openstack
-[codeclimate]: https://codeclimate.com/github/test-kitchen/kitchen-openstack
-[coveralls]: https://coveralls.io/r/test-kitchen/kitchen-openstack
-[gemnasium]: https://gemnasium.com/test-kitchen/kitchen-openstack
 
 [author]:           https://github.com/RoboticCheese
 [maintainer]:       https://github.com/jjasghar
