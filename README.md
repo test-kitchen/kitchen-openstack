@@ -2,8 +2,6 @@
 
 [![Gem Version](https://img.shields.io/gem/v/kitchen-openstack.svg)][gem]
 [![Build Status](https://img.shields.io/travis/test-kitchen/kitchen-openstack.svg)][travis]
-[![Code Climate](https://img.shields.io/codeclimate/github/test-kitchen/kitchen-openstack.svg)][codeclimate]
-[![Coverage Status](https://img.shields.io/coveralls/test-kitchen/kitchen-openstack.svg)][coveralls]
 
 A [Test Kitchen][kitchen_ci] Driver for [OpenStack][openstack_web].
 
@@ -21,6 +19,12 @@ There are **no** external system requirements for this driver. However you will 
 
 ## Installation and Setup
 
+This plugin ships out of the box with Chef Workstation, which is the easiest way to make sure you always have the latest testing dependencies in a single package.
+
+[Download Chef Workstation](https://downloads.chef.io/tools/workstation) to get started
+
+### Manual Installation
+
 Add this line to your application's Gemfile:
 
 ```ruby
@@ -37,12 +41,6 @@ Or install it yourself as:
 
 ```bash
 $ gem install kitchen-openstack
-```
-
-Or if using [chefdk][chefdk_dl] install with:
-
-```bash
-$ chef gem install kitchen-openstack
 ```
 
 ## Minimum Configuration
@@ -482,8 +480,7 @@ Apache 2.0 (see [LICENSE][license])
 [license]:          https://github.com/test-kitchen/kitchen-openstack/blob/master/LICENSE.txt
 [repo]:             https://github.com/test-kitchen/kitchen-openstack
 [driver_usage]:     https://github.com/test-kitchen/kitchen-openstack
-[chef_omnibus_dl]:  http://www.chef.io/chef/install/
-[chefdk_dl]:        https://downloads.chef.io/chef-dk
+[chef_omnibus_dl]:  https://downloads.chef.io/tools/infra-client
 [kitchen_ci]:       http://kitchen.ci
 
 [openstack_web]:    http://www.openstack.org
