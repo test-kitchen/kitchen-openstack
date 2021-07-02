@@ -1,5 +1,9 @@
 # Change Log
 
+## [v6.1.0](https://github.com/test-kitchen/kitchen-openstack/tree/v6.1.0)
+
+- Support Test Kitchen 3.0
+
 ## [v6.0.0](https://github.com/test-kitchen/kitchen-openstack/tree/v6.0.0)
 
 - Require Ruby 2.6 or later and add testing for Ruby 3.0
