@@ -82,14 +82,16 @@ module Kitchen
         disable_ssl_validation if config[:disable_ssl_validation]
         server = create_server
         state[:server_id] = server.id
-        info "OpenStack instance with ID of <#{state[:server_id]}> is ready."
 
         # this is due to the glance_caching issues. Annoying yes, but necessary.
-        debug "Waiting for VM to be in ACTIVE state for a max time of:#{config[:glance_cache_wait_timeout]} seconds"
+        debug "Waiting for a max time of:#{config[:glance_cache_wait_timeout]} seconds for OpenStack server to be in ACTIVE state"
         server.wait_for(config[:glance_cache_wait_timeout]) do
           sleep(1)
+          raise(Kitchen::InstanceFailure, "OpenStack server ID <#{state[:server_id]}> build failed to ERROR state") if failed?
+
           ready?
         end
+        info "OpenStack server ID <#{state[:server_id]}> created"
 
         if config[:floating_ip]
           attach_ip(server, config[:floating_ip])

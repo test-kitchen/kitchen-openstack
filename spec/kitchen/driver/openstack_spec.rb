@@ -190,6 +190,7 @@ describe Kitchen::Driver::Openstack do
 
         # Inside the yield block we are calling ready?  So we fake it here
         allow(d).to receive(:ready?).and_return(true)
+        allow(d).to receive(:failed?).and_return(false)
         allow(server).to receive(:wait_for)
           .with(an_instance_of(Integer)).and_yield
 
@@ -203,7 +204,13 @@ describe Kitchen::Driver::Openstack do
         expect(state[:server_id]).to eq("test123")
       end
 
-      it "throws an Action error when trying to create_server" do
+      it "throws an InstanceFailure error when server is in ERROR state" do
+        allow(driver).to receive(:failed?).and_return(true)
+        expect { driver.send(:create, state) }.to raise_error(Kitchen::InstanceFailure)
+        expect(driver).not_to receive(:failed?)
+      end
+
+      it "throws an ActionFailed error when trying to create_server" do
         allow(driver).to receive(:create_server).and_raise(Fog::Errors::Error)
         expect { driver.send(:create, state) }.to raise_error(Kitchen::ActionFailed)
       end
