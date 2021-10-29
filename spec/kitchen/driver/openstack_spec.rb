@@ -668,7 +668,7 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
-    context "network specifies network_id" do
+    context "network specifies network_id no fixed ipv4" do
       let(:config) do
         {
           server_name: "hello",
@@ -681,6 +681,30 @@ describe Kitchen::Driver::Openstack do
       it "exact id match" do
         networks = [
           { "net_id" => "0922b7aa-0a2f-4e68-8ff7-2886c4fc472d" },
+        ]
+        expect(servers).to receive(:create).with(name: "hello",
+                                                 image_ref: "111",
+                                                 flavor_ref: "1",
+                                                 availability_zone: nil,
+                                                 nics: networks)
+        driver.send(:create_server)
+      end
+    end
+
+    context "network specifies network_id with fixed ipv4" do
+      let(:config) do
+        {
+          server_name: "hello",
+          image_ref: "111",
+          flavor_ref: "1",
+          network_id: "0922b7aa-0a2f-4e68-8ff7-2886c4fc472d",
+          fixed_ip_v4: "192.168.1.100",
+        }
+      end
+
+      it "exact id match" do
+        networks = [
+          { "net_id" => "0922b7aa-0a2f-4e68-8ff7-2886c4fc472d", :v4_fixed_ip => "192.168.1.100" },
         ]
         expect(servers).to receive(:create).with(name: "hello",
                                                  image_ref: "111",
@@ -733,7 +757,7 @@ describe Kitchen::Driver::Openstack do
       end
     end
 
-    context "network specifies name" do
+    context "network specifies name and no fixed ipv4" do
       let(:config) do
         {
           server_name: "hello",
@@ -746,6 +770,32 @@ describe Kitchen::Driver::Openstack do
       it "exact id match" do
         networks = [
           { "net_id" => "1" },
+        ]
+        expect(servers).to receive(:create).with(
+          name: "hello",
+          image_ref: "111",
+          flavor_ref: "1",
+          availability_zone: nil,
+          nics: networks
+        )
+        driver.send(:create_server)
+      end
+    end
+
+    context "network specifies name and fixed ipv4" do
+      let(:config) do
+        {
+          server_name: "hello",
+          image_ref: "111",
+          flavor_ref: "1",
+          network_ref: "vlan1",
+          fixed_ip_v4: "192.168.1.100",
+        }
+      end
+
+      it "exact id match" do
+        networks = [
+          { "net_id" => "1", :v4_fixed_ip => "192.168.1.100" },
         ]
         expect(servers).to receive(:create).with(
           name: "hello",

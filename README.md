@@ -366,6 +366,10 @@ assuming that test network is configured as private.
 If true use IPv6 addresses to for SSH connections. If false, the default, use
 IPv4 addresses for SSH connections.
 
+### fixed_ip_v4
+
+You can use this to set a fixed IPv4 IP address for your instance.
+
 ### network\_ref
 
 The `network_ref` option can be specified as an exact id, an exact name,

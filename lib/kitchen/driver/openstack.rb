@@ -61,6 +61,7 @@ module Kitchen
       default_config :read_timeout, 60
       default_config :write_timeout, 60
       default_config :metadata, nil
+      default_config :fixed_ip_v4, nil
 
       # Set the proper server name in the config
       def config_server_name
@@ -180,12 +181,20 @@ module Kitchen
         if config[:network_id]
           networks = [].concat([config[:network_id]])
           server_def[:nics] = networks.flatten.map do |net_id|
-            { "net_id" => net_id }
+            if config[:fixed_ip_v4]
+              { "net_id" => net_id, :v4_fixed_ip => config[:fixed_ip_v4] }
+            else
+              { "net_id" => net_id }
+            end
           end
         elsif config[:network_ref]
           networks = [].concat([config[:network_ref]])
           server_def[:nics] = networks.flatten.map do |net|
-            { "net_id" => find_network(net).id }
+            if config[:fixed_ip_v4]
+              { "net_id" => find_network(net).id, :v4_fixed_ip => config[:fixed_ip_v4] }
+            else
+              { "net_id" => find_network(net).id }
+            end
           end
         end
 
