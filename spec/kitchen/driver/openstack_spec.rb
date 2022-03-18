@@ -552,10 +552,12 @@ describe Kitchen::Driver::Openstack do
 
       it "exact id match" do
         expect(servers).to receive(:create).with(
-          name: "hello",
-          image_ref: "1e1f4346-e3ea-48ba-9d1b-0002bfcb8981",
-          flavor_ref: "1",
-          availability_zone: nil
+          {
+            name: "hello",
+            image_ref: "1e1f4346-e3ea-48ba-9d1b-0002bfcb8981",
+            flavor_ref: "1",
+            availability_zone: nil,
+          }
         )
         driver.send(:create_server)
       end
@@ -588,10 +590,12 @@ describe Kitchen::Driver::Openstack do
 
       it "exact id match" do
         expect(servers).to receive(:create).with(
-          name: "hello",
-          flavor_ref: "1e1f4346-e3ea-48ba-9d1b-0002bfcb8981",
-          image_ref: "111",
-          availability_zone: nil
+          {
+            name: "hello",
+            flavor_ref: "1e1f4346-e3ea-48ba-9d1b-0002bfcb8981",
+            image_ref: "111",
+            availability_zone: nil,
+          }
         )
         driver.send(:create_server)
       end
@@ -623,10 +627,14 @@ describe Kitchen::Driver::Openstack do
       end
 
       it "exact id match" do
-        expect(servers).to receive(:create).with(name: "hello",
-                                                 image_ref: "111",
-                                                 flavor_ref: "1",
-                                                 availability_zone: nil)
+        expect(servers).to receive(:create).with(
+          {
+            name: "hello",
+            image_ref: "111",
+            flavor_ref: "1",
+            availability_zone: nil,
+          }
+        )
         driver.send(:create_server)
       end
     end
@@ -641,10 +649,14 @@ describe Kitchen::Driver::Openstack do
       end
 
       it "exact name match" do
-        expect(servers).to receive(:create).with(name: "hello",
-                                                 image_ref: "222",
-                                                 flavor_ref: "2",
-                                                 availability_zone: nil)
+        expect(servers).to receive(:create).with(
+          {
+            name: "hello",
+            image_ref: "222",
+            flavor_ref: "2",
+            availability_zone: nil,
+          }
+        )
         driver.send(:create_server)
       end
     end
@@ -660,10 +672,14 @@ describe Kitchen::Driver::Openstack do
       end
 
       it "regex name match" do
-        expect(servers).to receive(:create).with(name: "hello",
-                                                 image_ref: "222",
-                                                 flavor_ref: "1",
-                                                 availability_zone: nil)
+        expect(servers).to receive(:create).with(
+          {
+            name: "hello",
+            image_ref: "222",
+            flavor_ref: "1",
+            availability_zone: nil,
+          }
+        )
         driver.send(:create_server)
       end
     end
@@ -682,11 +698,15 @@ describe Kitchen::Driver::Openstack do
         networks = [
           { "net_id" => "0922b7aa-0a2f-4e68-8ff7-2886c4fc472d" },
         ]
-        expect(servers).to receive(:create).with(name: "hello",
-                                                 image_ref: "111",
-                                                 flavor_ref: "1",
-                                                 availability_zone: nil,
-                                                 nics: networks)
+        expect(servers).to receive(:create).with(
+          {
+            name: "hello",
+            image_ref: "111",
+            flavor_ref: "1",
+            availability_zone: nil,
+            nics: networks,
+          }
+        )
         driver.send(:create_server)
       end
     end
@@ -723,11 +743,13 @@ describe Kitchen::Driver::Openstack do
           { "net_id" => "1" },
         ]
         expect(servers).to receive(:create).with(
-          name: "hello",
-          image_ref: "111",
-          flavor_ref: "1",
-          availability_zone: nil,
-          nics: networks
+          {
+            name: "hello",
+            image_ref: "111",
+            flavor_ref: "1",
+            availability_zone: nil,
+            nics: networks,
+          }
         )
         driver.send(:create_server)
       end
@@ -748,11 +770,13 @@ describe Kitchen::Driver::Openstack do
           { "net_id" => "1" },
         ]
         expect(servers).to receive(:create).with(
-          name: "hello",
-          image_ref: "111",
-          flavor_ref: "1",
-          availability_zone: nil,
-          nics: networks
+          {
+            name: "hello",
+            image_ref: "111",
+            flavor_ref: "1",
+            availability_zone: nil,
+            nics: networks,
+          }
         )
         driver.send(:create_server)
       end
@@ -774,11 +798,13 @@ describe Kitchen::Driver::Openstack do
           { "net_id" => "2" },
         ]
         expect(servers).to receive(:create).with(
-          name: "hello",
-          image_ref: "111",
-          flavor_ref: "1",
-          availability_zone: nil,
-          nics: networks
+          {
+            name: "hello",
+            image_ref: "111",
+            flavor_ref: "1",
+            availability_zone: nil,
+            nics: networks,
+          }
         )
         driver.send(:create_server)
       end
@@ -802,11 +828,13 @@ describe Kitchen::Driver::Openstack do
 
       it "passes file contents" do
         expect(servers).to receive(:create).with(
-          name: "hello",
-          image_ref: "111",
-          flavor_ref: "1",
-          availability_zone: nil,
-          user_data: data
+          {
+            name: "hello",
+            image_ref: "111",
+            flavor_ref: "1",
+            availability_zone: nil,
+            user_data: data,
+          }
         )
         driver.send(:create_server)
       end
@@ -824,11 +852,13 @@ describe Kitchen::Driver::Openstack do
 
       it "enables config drive" do
         expect(servers).to receive(:create).with(
-          name: "hello",
-          image_ref: "111",
-          flavor_ref: "1",
-          availability_zone: nil,
-          config_drive: true
+          {
+            name: "hello",
+            image_ref: "111",
+            flavor_ref: "1",
+            availability_zone: nil,
+            config_drive: true,
+          }
         )
         driver.send(:create_server)
       end
@@ -855,11 +885,13 @@ describe Kitchen::Driver::Openstack do
 
       it "passes metadata contents" do
         expect(servers).to receive(:create).with(
-          name: "hello",
-          image_ref: "111",
-          flavor_ref: "1",
-          availability_zone: nil,
-          metadata: data
+          {
+            name: "hello",
+            image_ref: "111",
+            flavor_ref: "1",
+            availability_zone: nil,
+            metadata: data,
+          }
         )
         driver.send(:create_server)
       end
