@@ -1,5 +1,12 @@
 # Change Log
 
+## [v6.2.0](https://github.com/test-kitchen/kitchen-openstack/tree/v6.2.0)
+
+[Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v6.1.0..v6.2.0)
+
+- Support for Ruby 3.1
+- Check for ERROR status after server create
+
 ## [v6.1.0](https://github.com/test-kitchen/kitchen-openstack/tree/v6.1.0)
 
 - Support Test Kitchen 3.0
