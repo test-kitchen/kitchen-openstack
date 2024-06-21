@@ -1,5 +1,12 @@
 # Change Log
 
+## [6.2.1](https://github.com/test-kitchen/kitchen-openstack/compare/v6.2.0...v6.2.1) (2024-06-21)
+
+
+### Bug Fixes
+
+* release please configs ([#228](https://github.com/test-kitchen/kitchen-openstack/issues/228)) ([cbb2736](https://github.com/test-kitchen/kitchen-openstack/commit/cbb27362313150d6be7de0d356affbc3069101bb))
+
 ## [v6.2.0](https://github.com/test-kitchen/kitchen-openstack/tree/v6.2.0)
 
 [Full Changelog](https://github.com/test-kitchen/kitchen-openstack/compare/v6.1.0..v6.2.0)
