@@ -21,7 +21,7 @@
 ## [v6.0.0](https://github.com/test-kitchen/kitchen-openstack/tree/v6.0.0)
 
 - Require Ruby 2.6 or later and add testing for Ruby 3.0
-- Add a new `cloud_config` option which allows you to pass data to cloud-init. See https://github.com/test-kitchen/kitchen-openstack#cloud_config for usage information. Thanks [@JimScadden](https://github.com/JimScadden)
+- Add a new `cloud_config` option which allows you to pass data to cloud-init. See <https://github.com/test-kitchen/kitchen-openstack#cloud_config> for usage information. Thanks [@JimScadden](https://github.com/JimScadden)
 
 ## [v5.0.1](https://github.com/test-kitchen/kitchen-openstack/tree/v5.0.1)
 

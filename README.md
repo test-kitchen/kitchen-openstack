@@ -1,4 +1,6 @@
-# <a name="title"></a> Kitchen::OpenStack: A Test Kitchen Driver for OpenStack
+# Kitchen::OpenStack
+
+A Test Kitchen Driver for OpenStack
 
 [![Gem Version](https://img.shields.io/gem/v/kitchen-openstack.svg)][gem]
 ![CI](https://github.com/test-kitchen/kitchen-openstack/workflows/CI/badge.svg)
@@ -34,20 +36,20 @@ gem 'kitchen-openstack'
 And then execute:
 
 ```bash
-$ bundle
+bundle
 ```
 
 Or install it yourself as:
 
 ```bash
-$ gem install kitchen-openstack
+gem install kitchen-openstack
 ```
 
 ## Usage
 
-See https://kitchen.ci/docs/drivers/openstack/ for documentation.
+See <https://kitchen.ci/docs/drivers/openstack/> for documentation.
 
-## <a name="development"></a> Development
+## Development
 
 * Source hosted at [GitHub][repo]
 * Report issues/questions/feature requests on [GitHub Issues][issues]
@@ -63,12 +65,12 @@ example:
 5. Push to the branch (`git push origin my-new-feature`)
 6. Create new Pull Request
 
-## <a name="authors"></a> Authors
+## Authors
 
 Created by [Jonathan Hartman][author] (<j@p4nt5.com>)
 and maintained by [JJ Asghar][maintainer] (<jj@chef.io>)
 
-## <a name="license"></a> License
+## License
 
 Apache 2.0 (see [LICENSE][license])
 
