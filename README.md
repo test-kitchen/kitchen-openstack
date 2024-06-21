@@ -73,18 +73,3 @@ and maintained by [JJ Asghar][maintainer] (<jj@chef.io>)
 ## License
 
 Apache 2.0 (see [LICENSE][license])
-
-
-[gem]: https://rubygems.org/gems/kitchen-openstack
-
-[author]:           https://github.com/RoboticCheese
-[maintainer]:       https://github.com/jjasghar
-[issues]:           https://github.com/test-kitchen/kitchen-openstack/issues
-[license]:          https://github.com/test-kitchen/kitchen-openstack/blob/master/LICENSE.txt
-[repo]:             https://github.com/test-kitchen/kitchen-openstack
-[driver_usage]:     https://github.com/test-kitchen/kitchen-openstack
-[chef_omnibus_dl]:  https://downloads.chef.io/tools/infra-client
-[kitchen_ci]:       http://kitchen.ci
-
-[openstack_web]:    http://www.openstack.org
-[fog_web]:          http://fog.io
