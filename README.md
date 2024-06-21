@@ -1,13 +1,11 @@
 # Kitchen::OpenStack
 
-A Test Kitchen Driver for OpenStack
-
 [![Gem Version](https://img.shields.io/gem/v/kitchen-openstack.svg)][gem]
 ![CI](https://github.com/test-kitchen/kitchen-openstack/workflows/CI/badge.svg)
 
-A [Test Kitchen][kitchen_ci] Driver for [OpenStack][openstack_web].
+A Test Kitchen Driver for OpenStack.
 
-This driver uses the [fog gem][fog_web] to provision and destroy nova instances. Use an OpenStack cloud for your infrastructure testing!
+This driver uses the fog gem to provision and destroy nova instances. Use an OpenStack cloud for your infrastructure testing!
 
 Shamelessly copied from [Fletcher Nichol](https://github.com/fnichol)'s awesome work on an [EC2 driver](https://github.com/test-kitchen/kitchen-ec2), and [Adam Leff](https://github.com/adamleff)'s amazing work on an [VRO driver](https://github.com/chef-partners/kitchen-vro).
 
@@ -51,9 +49,6 @@ See <https://kitchen.ci/docs/drivers/openstack/> for documentation.
 
 ## Development
 
-* Source hosted at [GitHub][repo]
-* Report issues/questions/feature requests on [GitHub Issues][issues]
-
 Pull requests are very welcome! Make sure your patches are well tested.
 Ideally create a topic branch for every separate change you make. For
 example:
@@ -67,9 +62,8 @@ example:
 
 ## Authors
 
-Created by [Jonathan Hartman][author] (<j@p4nt5.com>)
-and maintained by [JJ Asghar][maintainer] (<jj@chef.io>)
+Created by Jonathan Hartman
 
 ## License
 
-Apache 2.0 (see [LICENSE][license])
+Apache 2.0 (see LICENSE.txt file)
