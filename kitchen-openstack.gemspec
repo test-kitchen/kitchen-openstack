@@ -17,16 +17,9 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["LICENSE", "README.md", "lib/**/*"]
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = ">= 2.6.0"
+  spec.required_ruby_version = ">= 3.1"
 
   spec.add_dependency "test-kitchen", ">= 1.4.1", "< 4"
   spec.add_dependency "fog-openstack", "~> 1.0"
   spec.add_dependency "ohai"
-
-  spec.add_development_dependency "bundler"
-  spec.add_development_dependency "rake"
-  spec.add_development_dependency "chefstyle"
-  spec.add_development_dependency "countloc"
-  spec.add_development_dependency "rspec"
-  spec.add_development_dependency "github_changelog_generator"
 end
