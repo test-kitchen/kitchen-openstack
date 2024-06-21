@@ -1,6 +1,6 @@
 # Kitchen::OpenStack
 
-[![Gem Version](https://img.shields.io/gem/v/kitchen-openstack.svg)][gem]
+![Gem Version](https://img.shields.io/gem/v/kitchen-openstack.svg)
 ![CI](https://github.com/test-kitchen/kitchen-openstack/workflows/CI/badge.svg)
 
 A Test Kitchen Driver for OpenStack.
