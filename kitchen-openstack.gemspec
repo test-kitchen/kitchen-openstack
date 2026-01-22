@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 3.1"
 
-  spec.add_dependency "test-kitchen", ">= 1.4.1", "< 4"
+  spec.add_dependency "test-kitchen", ">= 1.4.1", "< 5"
   spec.add_dependency "fog-openstack", "~> 1.0"
   spec.add_dependency "ohai"
 end
