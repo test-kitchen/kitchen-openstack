@@ -1,5 +1,12 @@
 # Change Log
 
+## [6.2.2](https://github.com/test-kitchen/kitchen-openstack/compare/v6.2.1...v6.2.2) (2026-01-24)
+
+
+### Bug Fixes
+
+* switch to cookstyle ([#233](https://github.com/test-kitchen/kitchen-openstack/issues/233)) ([dda6596](https://github.com/test-kitchen/kitchen-openstack/commit/dda659687a48dbde55e49407194f231af8b3f691))
+
 ## [6.2.1](https://github.com/test-kitchen/kitchen-openstack/compare/v6.2.0...v6.2.1) (2024-06-21)
 
 
