@@ -178,12 +178,12 @@ module Kitchen
         raise(ActionFailed, "Cannot specify both network_ref and network_id") if config[:network_id] && config[:network_ref]
 
         if config[:network_id]
-          networks = [].concat([config[:network_id]])
+          networks = [].push(config[:network_id])
           server_def[:nics] = networks.flatten.map do |net_id|
             { "net_id" => net_id }
           end
         elsif config[:network_ref]
-          networks = [].concat([config[:network_ref]])
+          networks = [].push(config[:network_ref])
           server_def[:nics] = networks.flatten.map do |net|
             { "net_id" => find_network(net).id }
           end
