@@ -823,7 +823,7 @@ describe Kitchen::Driver::Openstack do
 
       before(:each) do
         allow(File).to receive(:exist?).and_return(true)
-        allow(File).to receive(:open).and_return(data)
+        allow(File).to receive(:read).and_return(data)
       end
 
       it "passes file contents" do
