@@ -3,7 +3,7 @@
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 #
-# Copyright (C) 2013-2015, Jonathan Hartman
+# Copyright:: (C) 2013-2015, Jonathan Hartman
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ module Kitchen
       #
       # @author Liam Haworth <liam.haworth@bluereef.com.au>
       class Volume
-        @@default_creation_timeout = 60
+        DEFAULT_CREATION_TIMEOUT = 60
 
         def initialize(logger)
           @logger = logger
@@ -60,7 +60,7 @@ module Kitchen
           vol_model = volume(os).volumes.first { |x| x.id == vol_id }
 
           # Use default creation timeout or user supplied
-          creation_timeout = @@default_creation_timeout
+          creation_timeout = DEFAULT_CREATION_TIMEOUT
           if bdm.key?(:creation_timeout)
             creation_timeout = bdm[:creation_timeout]
           end

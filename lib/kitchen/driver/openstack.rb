@@ -3,9 +3,11 @@
 #
 # Author:: Jonathan Hartman (<j@p4nt5.com>)
 # Author:: JJ Asghar (<jj@chef.io>)
+# Author:: Lance Albertson (<lance@osuosl.org>)
 #
-# Copyright (C) 2013-2015, Jonathan Hartman
-# Copyright (C) 2015-2020, Chef Software Inc.
+# Copyright:: (C) 2013-2015, Jonathan Hartman
+# Copyright:: (C) 2015-2020, Chef Software Inc.
+# Copyright:: (C) 2026, Oregon State University
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,16 +23,22 @@
 
 require "kitchen"
 require "fog/openstack"
-require "ohai" unless defined?(Ohai::System)
 require "yaml"
 require_relative "openstack_version"
+require_relative "openstack/config"
+require_relative "openstack/helpers"
+require_relative "openstack/networking"
+require_relative "openstack/server_helper"
 require_relative "openstack/volume"
 
 module Kitchen
   module Driver
     # This takes from the Base Class and creates the OpenStack driver.
     class Openstack < Kitchen::Driver::Base
-      @@ip_pool_lock = Mutex.new
+      include Config
+      include Helpers
+      include Networking
+      include ServerHelper
 
       kitchen_driver_api_version 2
       plugin_version Kitchen::Driver::OPENSTACK_VERSION
@@ -61,17 +69,6 @@ module Kitchen
       default_config :read_timeout, 60
       default_config :write_timeout, 60
       default_config :metadata, nil
-
-      # Set the proper server name in the config
-      def config_server_name
-        return if config[:server_name]
-
-        config[:server_name] = if config[:server_name_prefix]
-                                 server_name_prefix(config[:server_name_prefix])
-                               else
-                                 default_name
-                               end
-      end
 
       def create(state)
         config_server_name
@@ -171,293 +168,6 @@ module Kitchen
 
       def get_bdm(config)
         volume.get_bdm(config, openstack_server)
-      end
-
-      def create_server
-        server_def = init_configuration
-        raise(ActionFailed, "Cannot specify both network_ref and network_id") if config[:network_id] && config[:network_ref]
-
-        if config[:network_id]
-          networks = [].push(config[:network_id])
-          server_def[:nics] = networks.flatten.map do |net_id|
-            { "net_id" => net_id }
-          end
-        elsif config[:network_ref]
-          networks = [].push(config[:network_ref])
-          server_def[:nics] = networks.flatten.map do |net|
-            { "net_id" => find_network(net).id }
-          end
-        end
-
-        if config[:block_device_mapping]
-          server_def[:block_device_mapping] = get_bdm(config)
-        end
-
-        %i{
-          security_groups
-          key_name
-          user_data
-          config_drive
-          metadata
-        }.each do |c|
-          server_def[c] = optional_config(c) if config[c]
-        end
-
-        if config[:cloud_config]
-          raise(ActionFailed, "Cannot specify both cloud_config and user_data") if config[:user_data]
-
-          server_def[:user_data] = Kitchen::Util.stringified_hash(config[:cloud_config]).to_yaml.gsub(/^---\n/, "#cloud-config\n")
-        end
-
-        # Can't use the Fog bootstrap and/or setup methods here; they require a
-        # public IP address that can't be guaranteed to exist across all
-        # OpenStack deployments (e.g. TryStack ARM only has private IPs).
-        compute.servers.create(server_def)
-      end
-
-      def init_configuration
-        raise(ActionFailed, "Cannot specify both image_ref and image_id") if config[:image_id] && config[:image_ref]
-        raise(ActionFailed, "Cannot specify both flavor_ref and flavor_id") if config[:flavor_id] && config[:flavor_ref]
-
-        {
-          name: config[:server_name],
-          image_ref: config[:image_id] || find_image(config[:image_ref]).id,
-          flavor_ref: config[:flavor_id] || find_flavor(config[:flavor_ref]).id,
-          availability_zone: config[:availability_zone],
-        }
-      end
-
-      def optional_config(c)
-        case c
-        when :security_groups
-          config[c] if config[c].is_a?(Array)
-        when :user_data
-          File.open(config[c], &:read) if File.exist?(config[c])
-        else
-          config[c]
-        end
-      end
-
-      def find_image(image_ref)
-        image = find_matching(compute.images, image_ref)
-        raise(ActionFailed, "Image not found") unless image
-
-        debug "Selected image: #{image.id} #{image.name}"
-        image
-      end
-
-      def find_flavor(flavor_ref)
-        flavor = find_matching(compute.flavors, flavor_ref)
-        raise(ActionFailed, "Flavor not found") unless flavor
-
-        debug "Selected flavor: #{flavor.id} #{flavor.name}"
-        flavor
-      end
-
-      def find_network(network_ref)
-        net = find_matching(network.networks.all, network_ref)
-        raise(ActionFailed, "Network not found") unless net
-
-        debug "Selected net: #{net.id} #{net.name}"
-        net
-      end
-
-      # Generate what should be a unique server name up to 63 total chars
-      # Base name:    15
-      # Username:     15
-      # Hostname:     23
-      # Random string: 7
-      # Separators:    3
-      # ================
-      # Total:        63
-      def default_name
-        [
-          instance.name.gsub(/\W/, "")[0..14],
-          ((Etc.getpwuid ? Etc.getpwuid.name : Etc.getlogin) || "nologin").gsub(/\W/, "")[0..14],
-          Socket.gethostname.gsub(/\W/, "")[0..22],
-          Array.new(7) { rand(36).to_s(36) }.join,
-        ].join("-")
-      end
-
-      def server_name_prefix(server_name_prefix)
-        # Generate what should be a unique server name with given prefix
-        # of up to 63 total chars
-        #
-        # Provided prefix:  variable, max 54
-        # Separator:        1
-        # Random string:    8
-        # ===================
-        # Max:              63
-        #
-        if server_name_prefix.length > 54
-          warn "Server name prefix too long, truncated to 54 characters"
-          server_name_prefix = server_name_prefix[0..53]
-        end
-
-        server_name_prefix.gsub!(/\W/, "")
-
-        if server_name_prefix.empty?
-          warn "Server name prefix empty or invalid; using fully generated name"
-          default_name
-        else
-          random_suffix = ("a".."z").to_a.sample(8).join
-          server_name_prefix + "-" + random_suffix
-        end
-      end
-
-      def attach_ip_from_pool(server, pool)
-        @@ip_pool_lock.synchronize do
-          info "Attaching floating IP from <#{pool}> pool"
-          if config[:allocate_floating_ip]
-            network_id = network
-              .list_networks(
-                name: pool
-              ).body["networks"][0]["id"]
-            resp = network.create_floating_ip(network_id)
-            ip = resp.body["floatingip"]["floating_ip_address"]
-            info "Created floating IP <#{ip}> from <#{pool}> pool"
-            config[:floating_ip] = ip
-          else
-            free_addrs = compute.addresses.map do |i|
-              i.ip if i.fixed_ip.nil? && i.instance_id.nil? && i.pool == pool
-            end.compact
-            if free_addrs.empty?
-              raise ActionFailed, "No available IPs in pool <#{pool}>"
-            end
-
-            config[:floating_ip] = free_addrs[0]
-          end
-          attach_ip(server, config[:floating_ip])
-        end
-      end
-
-      def attach_ip(server, ip)
-        info "Attaching floating IP <#{ip}>"
-        server.associate_address ip
-      end
-
-      def get_public_private_ips(server)
-        begin
-          pub = server.public_ip_addresses
-          priv = server.private_ip_addresses
-        rescue Fog::OpenStack::Compute::NotFound, Excon::Errors::Forbidden
-          # See Fog issue: https://github.com/fog/fog/issues/2160
-          addrs = server.addresses
-          addrs["public"] && pub = addrs["public"].map { |i| i["addr"] }
-          addrs["private"] && priv = addrs["private"].map { |i| i["addr"] }
-        end
-        [pub, priv]
-      end
-
-      def get_ip(server)
-        if config[:floating_ip]
-          debug "Using floating ip: #{config[:floating_ip]}"
-          return config[:floating_ip]
-        end
-
-        # make sure we have the latest info
-        info "Waiting for network information to be available..."
-        begin
-          w = server.wait_for { !addresses.empty? }
-          debug "Waited #{w[:duration]} seconds for network information."
-        rescue Fog::Errors::TimeoutError
-          raise ActionFailed, "Could not get network information (timed out)"
-        end
-
-        # should also work for private networks
-        if config[:openstack_network_name]
-          debug "Using configured net: #{config[:openstack_network_name]}"
-          return filter_ips(server.addresses[config[:openstack_network_name]]).first["addr"]
-        end
-
-        pub, priv = get_public_private_ips(server)
-        priv = server.ip_addresses if Array(pub).empty? && Array(priv).empty?
-        pub, priv = parse_ips(pub, priv)
-        pub[config[:public_ip_order].to_i] ||
-          priv[config[:private_ip_order].to_i] ||
-          raise(ActionFailed, "Could not find an IP")
-      end
-
-      def filter_ips(addresses)
-        if config[:use_ipv6]
-          addresses.select { |i| IPAddr.new(i["addr"]).ipv6? }
-        else
-          addresses.select { |i| IPAddr.new(i["addr"]).ipv4? }
-        end
-      end
-
-      def parse_ips(pub, priv)
-        pub = Array(pub)
-        priv = Array(priv)
-        if config[:use_ipv6]
-          [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv6? } }
-        else
-          [pub, priv].each { |n| n.select! { |i| IPAddr.new(i).ipv4? } }
-        end
-        [pub, priv]
-      end
-
-      def add_ohai_hint(state)
-        if bourne_shell?
-          info "Adding OpenStack hint for ohai"
-          mkdir_cmd = "sudo mkdir -p #{hints_path}"
-          touch_cmd = "sudo bash -c 'echo {} > #{hints_path}/openstack.json'"
-          instance.transport.connection(state).execute(
-            "#{mkdir_cmd} && #{touch_cmd}"
-          )
-        elsif windows_os?
-          info "Adding OpenStack hint for ohai"
-          touch_cmd = "New-Item #{hints_path}\\openstack.json"
-          touch_cmd_args = "-Value '{}' -Force -Type file"
-          instance.transport.connection(state).execute(
-            "#{touch_cmd} #{touch_cmd_args}"
-          )
-        end
-      end
-
-      def hints_path
-        Ohai.config[:hints_path][0]
-      end
-
-      def disable_ssl_validation
-        require "excon" unless defined?(Excon)
-        Excon.defaults[:ssl_verify_peer] = false
-      end
-
-      def wait_for_server(state)
-        if config[:server_wait]
-          info "Sleeping for #{config[:server_wait]} seconds to let your server start up..."
-          countdown(config[:server_wait])
-        end
-        info "Waiting for server to be ready..."
-        instance.transport.connection(state).wait_until_ready
-      rescue
-        error "Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server..."
-        destroy(state)
-        raise
-      end
-
-      def countdown(seconds)
-        date1 = Time.now + seconds
-        while Time.now < date1
-          Kernel.print "."
-          sleep 10
-        end
-      end
-
-      def find_matching(collection, name)
-        name = name.to_s
-        if name.start_with?("/") && name.end_with?("/")
-          regex = Regexp.new(name[1...-1])
-          # check for regex name match
-          collection.each { |single| return single if regex&.match?(single.name) }
-        else
-          # check for exact id match
-          collection.each { |single| return single if single.id == name }
-          # check for exact name match
-          collection.each { |single| return single if single.name == name }
-        end
-        nil
       end
     end
   end
