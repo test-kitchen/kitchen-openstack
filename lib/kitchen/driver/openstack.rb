@@ -21,15 +21,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'kitchen'
-require 'fog/openstack'
-require 'yaml'
-require_relative 'openstack_version'
-require_relative 'openstack/config'
-require_relative 'openstack/helpers'
-require_relative 'openstack/networking'
-require_relative 'openstack/server_helper'
-require_relative 'openstack/volume'
+require "kitchen"
+require "fog/openstack"
+require "yaml"
+require_relative "openstack_version"
+require_relative "openstack/config"
+require_relative "openstack/helpers"
+require_relative "openstack/networking"
+require_relative "openstack/server_helper"
+require_relative "openstack/volume"
 
 module Kitchen
   module Driver
@@ -46,7 +46,7 @@ module Kitchen
       default_config :server_name, nil
       default_config :server_name_prefix, nil
       default_config :key_name, nil
-      default_config :port, '22'
+      default_config :port, "22"
       default_config :use_ipv6, false
       default_config :openstack_project_name, nil
       default_config :openstack_region, nil
@@ -110,13 +110,13 @@ module Kitchen
 
         unless server.nil?
           if config[:floating_ip_pool] && config[:allocate_floating_ip]
-            info 'Retrieve the floating IP'
+            info "Retrieve the floating IP"
             pub, priv = get_public_private_ips(server)
             pub, = parse_ips(pub, priv)
             pub_ip = pub[config[:public_ip_order].to_i] || nil
             if pub_ip
               info "Retrieve the ID of floating IP <#{pub_ip}>"
-              floating_ip_id = network.list_floating_ips(floating_ip_address: pub_ip).body['floatingips'][0]['id']
+              floating_ip_id = network.list_floating_ips(floating_ip_address: pub_ip).body["floatingips"][0]["id"]
               network.delete_floating_ip(floating_ip_id)
               info "OpenStack Floating IP <#{pub_ip}> released."
             end
@@ -141,17 +141,17 @@ module Kitchen
       end
 
       def required_server_settings
-        %i(openstack_username openstack_api_key openstack_auth_url openstack_domain_id)
+        %i{openstack_username openstack_api_key openstack_auth_url openstack_domain_id}
       end
 
       def optional_server_settings
         Fog::OpenStack::Compute.recognized.select do |k|
-          k.to_s.start_with?('openstack')
+          k.to_s.start_with?("openstack")
         end - required_server_settings
       end
 
       def connection_options
-        %i(read_timeout write_timeout connect_timeout)
+        %i{read_timeout write_timeout connect_timeout}
       end
 
       def network

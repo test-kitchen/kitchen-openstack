@@ -16,9 +16,9 @@ end
 
 begin
   require 'cookstyle'
-  require 'rubocop/rake_task'
-  RuboCop::RakeTask.new(:style) do |task|
-    task.options += ['--display-cop-names', '--no-color']
+  desc 'Run cookstyle with chefstyle rules'
+  task :style do
+    sh 'cookstyle --chefstyle --display-cop-names'
   end
 rescue LoadError
   puts 'cookstyle is not available.  gem install cookstyle to do style checking.'

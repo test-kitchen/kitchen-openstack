@@ -21,7 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'ohai' unless defined?(Ohai::System)
+require "ohai" unless defined?(Ohai::System)
 
 module Kitchen
   module Driver
@@ -32,14 +32,14 @@ module Kitchen
 
         def add_ohai_hint(state)
           if bourne_shell?
-            info 'Adding OpenStack hint for ohai'
+            info "Adding OpenStack hint for ohai"
             mkdir_cmd = "sudo mkdir -p #{hints_path}"
             touch_cmd = "sudo bash -c 'echo {} > #{hints_path}/openstack.json'"
             instance.transport.connection(state).execute(
               "#{mkdir_cmd} && #{touch_cmd}"
             )
           elsif windows_os?
-            info 'Adding OpenStack hint for ohai'
+            info "Adding OpenStack hint for ohai"
             touch_cmd = "New-Item #{hints_path}\\openstack.json"
             touch_cmd_args = "-Value '{}' -Force -Type file"
             instance.transport.connection(state).execute(
@@ -53,7 +53,7 @@ module Kitchen
         end
 
         def disable_ssl_validation
-          require 'excon' unless defined?(Excon)
+          require "excon" unless defined?(Excon)
           Excon.defaults[:ssl_verify_peer] = false
         end
 
@@ -62,7 +62,7 @@ module Kitchen
             info "Sleeping for #{config[:server_wait]} seconds to let your server start up..."
             countdown(config[:server_wait])
           end
-          info 'Waiting for server to be ready...'
+          info "Waiting for server to be ready..."
           instance.transport.connection(state).wait_until_ready
         rescue
           error "Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server..."
@@ -73,7 +73,7 @@ module Kitchen
         def countdown(seconds)
           date1 = Time.now + seconds
           while Time.now < date1
-            Kernel.print '.'
+            Kernel.print "."
             sleep 10
           end
         end

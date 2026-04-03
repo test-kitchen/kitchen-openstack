@@ -30,17 +30,17 @@ module Kitchen
 
         def create_server
           server_def = init_configuration
-          raise(ActionFailed, 'Cannot specify both network_ref and network_id') if config[:network_id] && config[:network_ref]
+          raise(ActionFailed, "Cannot specify both network_ref and network_id") if config[:network_id] && config[:network_ref]
 
           if config[:network_id]
             networks = [].push(config[:network_id])
             server_def[:nics] = networks.flatten.map do |net_id|
-              { 'net_id' => net_id }
+              { "net_id" => net_id }
             end
           elsif config[:network_ref]
             networks = [].push(config[:network_ref])
             server_def[:nics] = networks.flatten.map do |net|
-              { 'net_id' => find_network(net).id }
+              { "net_id" => find_network(net).id }
             end
           end
 
@@ -48,18 +48,18 @@ module Kitchen
             server_def[:block_device_mapping] = get_bdm(config)
           end
 
-          %i(
+          %i{
             security_groups
             key_name
             user_data
             config_drive
             metadata
-          ).each do |c|
+          }.each do |c|
             server_def[c] = optional_config(c) if config[c]
           end
 
           if config[:cloud_config]
-            raise(ActionFailed, 'Cannot specify both cloud_config and user_data') if config[:user_data]
+            raise(ActionFailed, "Cannot specify both cloud_config and user_data") if config[:user_data]
 
             server_def[:user_data] = YAML.dump(Kitchen::Util.stringified_hash(config[:cloud_config])).gsub(/^---\n/, "#cloud-config\n")
           end
@@ -71,8 +71,8 @@ module Kitchen
         end
 
         def init_configuration
-          raise(ActionFailed, 'Cannot specify both image_ref and image_id') if config[:image_id] && config[:image_ref]
-          raise(ActionFailed, 'Cannot specify both flavor_ref and flavor_id') if config[:flavor_id] && config[:flavor_ref]
+          raise(ActionFailed, "Cannot specify both image_ref and image_id") if config[:image_id] && config[:image_ref]
+          raise(ActionFailed, "Cannot specify both flavor_ref and flavor_id") if config[:flavor_id] && config[:flavor_ref]
 
           {
             name: config[:server_name],
@@ -95,7 +95,7 @@ module Kitchen
 
         def find_image(image_ref)
           image = find_matching(compute.images, image_ref)
-          raise(ActionFailed, 'Image not found') unless image
+          raise(ActionFailed, "Image not found") unless image
 
           debug "Selected image: #{image.id} #{image.name}"
           image
@@ -103,7 +103,7 @@ module Kitchen
 
         def find_flavor(flavor_ref)
           flavor = find_matching(compute.flavors, flavor_ref)
-          raise(ActionFailed, 'Flavor not found') unless flavor
+          raise(ActionFailed, "Flavor not found") unless flavor
 
           debug "Selected flavor: #{flavor.id} #{flavor.name}"
           flavor
@@ -111,7 +111,7 @@ module Kitchen
 
         def find_network(network_ref)
           net = find_matching(network.networks.all, network_ref)
-          raise(ActionFailed, 'Network not found') unless net
+          raise(ActionFailed, "Network not found") unless net
 
           debug "Selected net: #{net.id} #{net.name}"
           net
@@ -119,7 +119,7 @@ module Kitchen
 
         def find_matching(collection, name)
           name = name.to_s
-          if name.start_with?('/') && name.end_with?('/')
+          if name.start_with?("/") && name.end_with?("/")
             regex = Regexp.new(name[1...-1])
             # check for regex name match
             collection.each { |single| return single if regex&.match?(single.name) }

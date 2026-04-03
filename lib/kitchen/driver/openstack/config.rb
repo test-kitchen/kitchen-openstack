@@ -49,11 +49,11 @@ module Kitchen
         # Total:        63
         def default_name
           [
-            instance.name.gsub(/\W/, '')[0..14],
-            ((Etc.getpwuid ? Etc.getpwuid.name : Etc.getlogin) || 'nologin').gsub(/\W/, '')[0..14],
-            Socket.gethostname.gsub(/\W/, '')[0..22],
+            instance.name.gsub(/\W/, "")[0..14],
+            ((Etc.getpwuid ? Etc.getpwuid.name : Etc.getlogin) || "nologin").gsub(/\W/, "")[0..14],
+            Socket.gethostname.gsub(/\W/, "")[0..22],
             Array.new(7) { rand(36).to_s(36) }.join,
-          ].join('-')
+          ].join("-")
         end
 
         def server_name_prefix(server_name_prefix)
@@ -67,18 +67,18 @@ module Kitchen
           # Max:              63
           #
           if server_name_prefix.length > 54
-            warn 'Server name prefix too long, truncated to 54 characters'
+            warn "Server name prefix too long, truncated to 54 characters"
             server_name_prefix = server_name_prefix[0..53]
           end
 
-          server_name_prefix.gsub!(/\W/, '')
+          server_name_prefix.gsub!(/\W/, "")
 
           if server_name_prefix.empty?
-            warn 'Server name prefix empty or invalid; using fully generated name'
+            warn "Server name prefix empty or invalid; using fully generated name"
             default_name
           else
-            random_suffix = ('a'..'z').to_a.sample(8).join
-            server_name_prefix + '-' + random_suffix
+            random_suffix = ("a".."z").to_a.sample(8).join
+            server_name_prefix + "-" + random_suffix
           end
         end
       end

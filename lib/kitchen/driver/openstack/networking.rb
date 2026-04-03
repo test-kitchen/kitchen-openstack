@@ -21,7 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'ipaddr' unless defined?(IPAddr)
+require "ipaddr" unless defined?(IPAddr)
 
 module Kitchen
   module Driver
@@ -37,11 +37,11 @@ module Kitchen
             info "Attaching floating IP from <#{pool}> pool"
             if config[:allocate_floating_ip]
               network_id = network
-                           .list_networks(
+                .list_networks(
                   name: pool
-                ).body['networks'][0]['id']
+                ).body["networks"][0]["id"]
               resp = network.create_floating_ip(network_id)
-              ip = resp.body['floatingip']['floating_ip_address']
+              ip = resp.body["floatingip"]["floating_ip_address"]
               info "Created floating IP <#{ip}> from <#{pool}> pool"
               config[:floating_ip] = ip
             else
@@ -70,8 +70,8 @@ module Kitchen
           rescue Fog::OpenStack::Compute::NotFound, Excon::Errors::Forbidden
             # See Fog issue: https://github.com/fog/fog/issues/2160
             addrs = server.addresses
-            addrs['public'] && pub = addrs['public'].map { |i| i['addr'] }
-            addrs['private'] && priv = addrs['private'].map { |i| i['addr'] }
+            addrs["public"] && pub = addrs["public"].map { |i| i["addr"] }
+            addrs["private"] && priv = addrs["private"].map { |i| i["addr"] }
           end
           [pub, priv]
         end
@@ -83,18 +83,18 @@ module Kitchen
           end
 
           # make sure we have the latest info
-          info 'Waiting for network information to be available...'
+          info "Waiting for network information to be available..."
           begin
             w = server.wait_for { !addresses.empty? }
             debug "Waited #{w[:duration]} seconds for network information."
           rescue Fog::Errors::TimeoutError
-            raise ActionFailed, 'Could not get network information (timed out)'
+            raise ActionFailed, "Could not get network information (timed out)"
           end
 
           # should also work for private networks
           if config[:openstack_network_name]
             debug "Using configured net: #{config[:openstack_network_name]}"
-            return filter_ips(server.addresses[config[:openstack_network_name]]).first['addr']
+            return filter_ips(server.addresses[config[:openstack_network_name]]).first["addr"]
           end
 
           pub, priv = get_public_private_ips(server)
@@ -102,14 +102,14 @@ module Kitchen
           pub, priv = parse_ips(pub, priv)
           pub[config[:public_ip_order].to_i] ||
             priv[config[:private_ip_order].to_i] ||
-            raise(ActionFailed, 'Could not find an IP')
+            raise(ActionFailed, "Could not find an IP")
         end
 
         def filter_ips(addresses)
           if config[:use_ipv6]
-            addresses.select { |i| IPAddr.new(i['addr']).ipv6? }
+            addresses.select { |i| IPAddr.new(i["addr"]).ipv6? }
           else
-            addresses.select { |i| IPAddr.new(i['addr']).ipv4? }
+            addresses.select { |i| IPAddr.new(i["addr"]).ipv4? }
           end
         end
 
