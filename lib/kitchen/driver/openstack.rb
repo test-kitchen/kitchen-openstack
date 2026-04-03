@@ -25,6 +25,7 @@ require "kitchen"
 require "fog/openstack"
 require "yaml"
 require_relative "openstack_version"
+require_relative "openstack/clouds"
 require_relative "openstack/config"
 require_relative "openstack/helpers"
 require_relative "openstack/networking"
@@ -35,6 +36,7 @@ module Kitchen
   module Driver
     # This takes from the Base Class and creates the OpenStack driver.
     class Openstack < Kitchen::Driver::Base
+      include Clouds
       include Config
       include Helpers
       include Networking
@@ -43,7 +45,17 @@ module Kitchen
       kitchen_driver_api_version 2
       plugin_version Kitchen::Driver::OPENSTACK_VERSION
 
+      default_config :openstack_cloud, nil
+      default_config :clouds_yaml_path, nil
       default_config :server_name, nil
+
+      # Merge clouds.yaml values into config so they are visible in
+      # `kitchen diagnose` and available to all driver methods.
+      def finalize_config!(instance)
+        super
+        apply_clouds_config
+        self
+      end
       default_config :server_name_prefix, nil
       default_config :key_name, nil
       default_config :port, "22"
@@ -84,7 +96,10 @@ module Kitchen
         debug "Waiting for a max time of:#{config[:glance_cache_wait_timeout]} seconds for OpenStack server to be in ACTIVE state"
         server.wait_for(config[:glance_cache_wait_timeout]) do
           sleep(1)
-          raise(Kitchen::InstanceFailure, "OpenStack server ID <#{state[:server_id]}> build failed to ERROR state") if failed?
+          if failed?
+            raise(Kitchen::InstanceFailure,
+              "OpenStack server ID <#{state[:server_id]}> build failed to ERROR state")
+          end
 
           ready?
         end
@@ -98,8 +113,8 @@ module Kitchen
         state[:hostname] = get_ip(server)
         wait_for_server(state)
         add_ohai_hint(state)
-      rescue Fog::Errors::Error, Excon::Errors::Error => ex
-        raise ActionFailed, ex.message
+      rescue Fog::Errors::Error, Excon::Errors::Error => e
+        raise ActionFailed, e.message
       end
 
       def destroy(state)

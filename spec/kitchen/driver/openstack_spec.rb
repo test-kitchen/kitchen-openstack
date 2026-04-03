@@ -71,6 +71,8 @@ describe Kitchen::Driver::Openstack do
 
       nils = %i{
         server_name
+        openstack_cloud
+        clouds_yaml_path
         openstack_project_name
         openstack_region
         openstack_service_name
