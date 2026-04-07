@@ -21,3 +21,4 @@ tmp
 .direnv/
 .envrc
 .ruby-version
+.ruby-gemset

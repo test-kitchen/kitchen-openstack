@@ -14,9 +14,15 @@ kitchen-openstack is a Test Kitchen driver for OpenStack. It provisions and dest
 ## Architecture
 
 - Driver class: `Kitchen::Driver::Openstack` in `lib/kitchen/driver/openstack.rb` — extends `Kitchen::Driver::Base` (Driver API v2)
+- Clouds.yaml support: `Kitchen::Driver::Openstack::Clouds` in `lib/kitchen/driver/openstack/clouds.rb` — parses OpenStack `clouds.yaml`/`secure.yaml` and translates to Fog config
+- Server configuration: `Kitchen::Driver::Openstack::Config` in `lib/kitchen/driver/openstack/config.rb` — server naming helpers
+- Helpers: `Kitchen::Driver::Openstack::Helpers` in `lib/kitchen/driver/openstack/helpers.rb` — ohai hints, SSL, server wait
+- Networking: `Kitchen::Driver::Openstack::Networking` in `lib/kitchen/driver/openstack/networking.rb` — floating IP allocation, IP resolution
+- Server creation: `Kitchen::Driver::Openstack::ServerHelper` in `lib/kitchen/driver/openstack/server_helper.rb` — server creation, image/flavor/network finders
 - Volume handling: `Kitchen::Driver::Openstack::Volume` in `lib/kitchen/driver/openstack/volume.rb`
 - Version constant: `OPENSTACK_VERSION` in `lib/kitchen/driver/openstack_version.rb` — used by gemspec and release automation
 - Configuration uses `default_config` declarations; raise `Kitchen::ActionFailed` for driver errors
+- Supports `clouds.yaml` via `openstack_cloud` config or `OS_CLOUD` env var — see `Clouds` module
 
 ## Build and Test
 
