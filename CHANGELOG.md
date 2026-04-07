@@ -1,5 +1,21 @@
 # Change Log
 
+## [7.0.0](https://github.com/test-kitchen/kitchen-openstack/compare/v6.2.2...v7.0.0) (2026-04-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Kitchen::Driver::Openstack internals have been reorganized into separate modules (Config, Networking, ServerHelper, Helpers). Users relying on internal class structure may need to update.
+
+### Features
+
+* add OpenStack clouds.yaml and OS_* env var support ([#236](https://github.com/test-kitchen/kitchen-openstack/issues/236)) ([66db1c2](https://github.com/test-kitchen/kitchen-openstack/commit/66db1c25f8ab5da6effca7a772c33a6a178b2e87)), closes [#212](https://github.com/test-kitchen/kitchen-openstack/issues/212)
+
+
+### Miscellaneous Chores
+
+* target major release ([#238](https://github.com/test-kitchen/kitchen-openstack/issues/238)) ([e126d92](https://github.com/test-kitchen/kitchen-openstack/commit/e126d929ab5fadfb94e1db61adca6e322b05f51d))
+
 ## [6.2.2](https://github.com/test-kitchen/kitchen-openstack/compare/v6.2.1...v6.2.2) (2026-01-24)
 
 
