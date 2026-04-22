@@ -346,6 +346,44 @@ describe Kitchen::Driver::Openstack do
       expected = config.merge(config)
       expect(driver.send(:openstack_server)).to eq(expected)
     end
+
+    context "when string-like fog settings are numeric" do
+      let(:config) do
+        {
+          openstack_username: "a",
+          openstack_domain_id: 12_345,
+          openstack_api_key: "b",
+          openstack_auth_url: "http://",
+          openstack_project_id: 99,
+          openstack_identity_api_version: 3,
+        }
+      end
+
+      it "coerces them to strings before passing to fog" do
+        server = driver.send(:openstack_server)
+
+        expect(server[:openstack_domain_id]).to eq("12345")
+        expect(server[:openstack_project_id]).to eq("99")
+        # identity_api_version is prefixed with "v" so that
+        # Fog::Service#coerce_options does not turn it back into an
+        # Integer (which would later break Token.build's `=~`).
+        expect(server[:openstack_identity_api_version]).to eq("v3")
+      end
+
+      it "prefixes identity_api_version 2 with a v for fog v2 detection" do
+        config[:openstack_identity_api_version] = 2
+        server = driver.send(:openstack_server)
+
+        expect(server[:openstack_identity_api_version]).to eq("v2.0")
+      end
+
+      it "passes through identity_api_version values already prefixed" do
+        config[:openstack_identity_api_version] = "v3"
+        server = driver.send(:openstack_server)
+
+        expect(server[:openstack_identity_api_version]).to eq("v3")
+      end
+    end
   end
 
   describe "#required_server_settings" do
