@@ -48,6 +48,10 @@ module Kitchen
           "identity_api_version" => :openstack_identity_api_version,
         }.freeze
 
+        # Fog expects these config values to be strings. YAML may parse
+        # unquoted scalars as integers/booleans, so normalize on ingest.
+        STRING_CONFIG_KEYS = (CLOUDS_YAML_AUTH_MAP.values + CLOUDS_YAML_TOP_MAP.values).freeze
+
         # Mapping of OS_* environment variables to Fog OpenStack config keys
         ENV_VAR_MAP = {
           "OS_AUTH_URL" => :openstack_auth_url,
@@ -100,7 +104,7 @@ module Kitchen
           result = {}
           ENV_VAR_MAP.each do |env_var, fog_key|
             value = ENV[env_var]
-            result[fog_key] = value if value && !value.empty?
+            result[fog_key] = normalize_config_value(fog_key, value) if value && !value.empty?
           end
           result
         end
@@ -175,12 +179,14 @@ module Kitchen
           # Map auth section
           auth = cloud["auth"] || {}
           CLOUDS_YAML_AUTH_MAP.each do |yaml_key, fog_key|
-            result[fog_key] = auth[yaml_key] if auth[yaml_key]
+            value = auth[yaml_key]
+            result[fog_key] = normalize_config_value(fog_key, value) if value
           end
 
           # Map top-level keys
           CLOUDS_YAML_TOP_MAP.each do |yaml_key, fog_key|
-            result[fog_key] = cloud[yaml_key] if cloud[yaml_key]
+            value = cloud[yaml_key]
+            result[fog_key] = normalize_config_value(fog_key, value) if value
           end
 
           # SSL settings
@@ -188,6 +194,12 @@ module Kitchen
           result[:ssl_ca_file] = cloud["cacert"] if cloud["cacert"]
 
           result
+        end
+
+        def normalize_config_value(fog_key, value)
+          return value unless STRING_CONFIG_KEYS.include?(fog_key)
+
+          value.to_s
         end
       end
     end

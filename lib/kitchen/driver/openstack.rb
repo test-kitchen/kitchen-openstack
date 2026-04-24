@@ -36,6 +36,27 @@ module Kitchen
   module Driver
     # This takes from the Base Class and creates the OpenStack driver.
     class Openstack < Kitchen::Driver::Base
+      FOG_STRING_SETTINGS = %i{
+        openstack_username
+        openstack_api_key
+        openstack_auth_url
+        openstack_project_name
+        openstack_project_id
+        openstack_user_domain
+        openstack_user_domain_id
+        openstack_project_domain
+        openstack_project_domain_id
+        openstack_domain_id
+        openstack_domain_name
+        openstack_region
+        openstack_endpoint_type
+        openstack_identity_api_version
+        openstack_application_credential_id
+        openstack_application_credential_secret
+        openstack_tenant
+        openstack_tenant_id
+      }.freeze
+
       include Clouds
       include Config
       include Helpers
@@ -149,8 +170,8 @@ module Kitchen
         server_def = {
           connection_options: {},
         }
-        required_server_settings.each { |s| server_def[s] = config[s] }
-        optional_server_settings.each { |s| server_def[s] = config[s] if config[s] }
+        required_server_settings.each { |s| server_def[s] = normalize_fog_setting(s, config[s]) }
+        optional_server_settings.each { |s| server_def[s] = normalize_fog_setting(s, config[s]) if config[s] }
         connection_options.each { |s| server_def[:connection_options][s] = config[s] if config[s] }
         server_def
       end
@@ -183,6 +204,30 @@ module Kitchen
 
       def get_bdm(config)
         volume.get_bdm(config, openstack_server)
+      end
+
+      def normalize_fog_setting(setting, value)
+        return value if value.nil?
+        return normalize_identity_api_version(value) if setting == :openstack_identity_api_version
+        return value unless FOG_STRING_SETTINGS.include?(setting)
+
+        value.to_s
+      end
+
+      # Fog::Service#coerce_options re-coerces any value where
+      # `value.to_s.to_i.to_s == value.to_s` back to an Integer, which
+      # then breaks Fog::OpenStack::Auth::Token.build (it calls `=~`
+      # on the value). Prefixing with "v" keeps Fog from coercing and
+      # still satisfies Token.build's `/(v)*2(\.0)*/i` regex check.
+      def normalize_identity_api_version(value)
+        str = value.to_s.strip
+        return str if str.empty?
+        return str if str.start_with?("v", "V")
+
+        case str
+        when "2", "2.0" then "v2.0"
+        else "v#{str}"
+        end
       end
     end
   end

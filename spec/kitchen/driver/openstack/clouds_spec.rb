@@ -384,6 +384,21 @@ describe Kitchen::Driver::Openstack do
       result = driver.send(:translate_cloud_config, {})
       expect(result).to eq({})
     end
+
+    it "coerces non-string scalar values for fog string config keys" do
+      cloud = {
+        "auth" => {
+          "project_id" => 12_345,
+          "domain_id" => 9,
+        },
+        "identity_api_version" => 3,
+      }
+
+      result = driver.send(:translate_cloud_config, cloud)
+      expect(result[:openstack_project_id]).to eq("12345")
+      expect(result[:openstack_domain_id]).to eq("9")
+      expect(result[:openstack_identity_api_version]).to eq("3")
+    end
   end
 
   describe "#deep_merge" do
