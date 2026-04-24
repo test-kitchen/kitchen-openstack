@@ -1,5 +1,12 @@
 # Change Log
 
+## [7.0.1](https://github.com/test-kitchen/kitchen-openstack/compare/v7.0.0...v7.0.1) (2026-04-24)
+
+
+### Bug Fixes
+
+* **driver:** coerce OpenStack auth/config values to strings before Fog ([#239](https://github.com/test-kitchen/kitchen-openstack/issues/239)) ([f53b635](https://github.com/test-kitchen/kitchen-openstack/commit/f53b6351872bc7fa0cc6d55cd650c0b649990c8a))
+
 ## [7.0.0](https://github.com/test-kitchen/kitchen-openstack/compare/v6.2.2...v7.0.0) (2026-04-07)
 
 
