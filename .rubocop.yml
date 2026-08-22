@@ -1,8 +1,14 @@
 ---
+require:
+  - cookstyle/chefstyle
+
 AllCops:
   TargetRubyVersion: 3.1
   Include:
     - "**/*.rb"
+    - "**/*.gemspec"
+    - "**/Gemfile"
+    - "**/Rakefile"
   Exclude:
     - "vendor/**/*"
     - "spec/**/*"
