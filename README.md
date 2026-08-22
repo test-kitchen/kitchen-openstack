@@ -132,7 +132,7 @@ driver:
 The supported environment variables are:
 
 | Env var | Maps to |
-|---|---|
+| --- | --- |
 | `OS_AUTH_URL` | `openstack_auth_url` |
 | `OS_USERNAME` | `openstack_username` |
 | `OS_PASSWORD` | `openstack_api_key` |
@@ -162,7 +162,7 @@ The driver follows the upstream OpenStack SDK precedence order:
 #### New driver config options
 
 | Option | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `openstack_cloud` | `nil` | Name of the cloud entry in `clouds.yaml`. Falls back to the `OS_CLOUD` env var. |
 | `clouds_yaml_path` | `nil` | Explicit path to a `clouds.yaml` file, inserted into the search path. |
 
