@@ -19,9 +19,12 @@ There are **no** external system requirements for this driver. However you will 
 
 ## Installation and Setup
 
-This plugin ships out of the box with Chef Workstation, which is the easiest way to make sure you always have the latest testing dependencies in a single package.
+This plugin ships out of the box with [Cinc Workstation](https://cinc.sh/start/workstation/), which is the easiest
+way to make sure you always have the latest testing dependencies in a single package. If you have Cinc Workstation
+installed, there is nothing else to install.
 
-[Download Chef Workstation](https://downloads.chef.io/tools/workstation) to get started
+The examples below use the `cinc` commands. Everything here works identically with Chef Workstation — see
+[Using with Chef](#using-with-chef).
 
 ### Manual Installation
 
@@ -43,9 +46,63 @@ Or install it yourself as:
 gem install kitchen-openstack
 ```
 
-## Usage
+## Quick Start
 
-See <https://kitchen.ci/docs/drivers/openstack/> for documentation.
+The least you need is credentials, an image, a flavor, and a keypair. If you already use the `openstack` CLI, source
+your `openrc` and the driver picks the credentials up automatically:
+
+```bash
+source openrc.sh
+```
+
+```yaml
+---
+driver:
+  name: openstack
+  image_ref: ubuntu-22.04
+  flavor_ref: m1.small
+  key_name: my-keypair
+
+provisioner:
+  name: cinc_infra
+
+verifier:
+  name: cinc_auditor
+
+platforms:
+  - name: ubuntu-22.04
+
+suites:
+  - name: default
+    run_list:
+      - recipe[my_cookbook::default]
+```
+
+Then run the full test cycle:
+
+```bash
+cinc kitchen test
+```
+
+Or step through it:
+
+```bash
+cinc kitchen create    # build the nova instance
+cinc kitchen converge  # apply your cookbook
+cinc kitchen verify    # run your tests
+cinc kitchen destroy   # delete the instance
+```
+
+## Credentials
+
+There are three ways to give the driver credentials, described in full under
+[Using `clouds.yaml`](#using-cloudsyaml) below:
+
+- a `clouds.yaml` file, the same one the `openstack` CLI uses
+- the standard `OS_*` environment variables, e.g. from an `openrc` file
+- explicit `openstack_*` options in `kitchen.yml`
+
+They combine, in that order of increasing precedence.
 
 ### Using `clouds.yaml`
 
@@ -166,18 +223,184 @@ The driver follows the upstream OpenStack SDK precedence order:
 | `openstack_cloud` | `nil` | Name of the cloud entry in `clouds.yaml`. Falls back to the `OS_CLOUD` env var. |
 | `clouds_yaml_path` | `nil` | Explicit path to a `clouds.yaml` file, inserted into the search path. |
 
-## Development
+## Configuration
 
-Pull requests are very welcome! Make sure your patches are well tested.
-Ideally create a topic branch for every separate change you make. For
-example:
+All options below are set under the `driver:` key in `kitchen.yml`, or per platform under `platforms[].driver:`.
 
-1. Fork the repo
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Run the tests and rubocop, `bundle exec rake spec` and `bundle exec rake rubocop`
-4. Commit your changes (`git commit -am 'Added some feature'`)
-5. Push to the branch (`git push origin my-new-feature`)
-6. Create new Pull Request
+Credential options (`openstack_auth_url`, `openstack_username`, `openstack_api_key`, `openstack_project_name`,
+and the rest of the `openstack_*` family) are listed in
+[Using `OS_*` environment variables](#using-os_-environment-variables) above, alongside the environment variable
+each one maps to.
+
+### Image and flavor
+
+Give **either** the `_ref` or the `_id` form of each, never both — the driver raises `ActionFailed` if you set both.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `image_ref` | *none* | Image to boot, by name, ID, or regular expression. |
+| `image_id` | *none* | Image to boot, by exact ID. Cannot be combined with `image_ref`. |
+| `flavor_ref` | *none* | Flavor to use, by name, ID, or regular expression. |
+| `flavor_id` | *none* | Flavor to use, by exact ID. Cannot be combined with `flavor_ref`. |
+
+### Instance
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `server_name` | *generated* | Name of the instance. Generated from the suite and platform if unset. |
+| `server_name_prefix` | `nil` | Prefix for the generated name. Ignored when `server_name` is set. |
+| `availability_zone` | *scheduler chooses* | Availability zone to launch into. |
+| `security_groups` | *project default* | Array of security group names to apply. |
+| `key_name` | `nil` | Name of an existing OpenStack keypair to inject. |
+| `metadata` | `nil` | Hash of instance metadata. |
+| `block_device_mapping` | `nil` | Hash describing a block device to boot from or attach. See [Block device mapping](#block-device-mapping). |
+| `user_data` | *unset* | Path to a user data file passed to the instance. Cannot be combined with `cloud_config`. |
+| `cloud_config` | *unset* | Inline cloud-init configuration. Cannot be combined with `user_data`. |
+
+### Networking
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `openstack_network_name` | `nil` | Name of the network to attach to, and to take the instance's address from. |
+| `network_ref` | `nil` | Network to attach, by name, ID, or an array of either, for multiple NICs. |
+| `network_id` | `nil` | Network to attach, by exact ID. |
+| `floating_ip` | `nil` | Specific floating IP to associate with the instance. |
+| `floating_ip_pool` | `nil` | Pool to allocate a floating IP from. |
+| `allocate_floating_ip` | `false` | Allocate a new floating IP, and release it again on destroy. |
+| `use_ipv6` | `false` | Connect over the instance's IPv6 address. |
+| `public_ip_order` | `0` | Index of the public address to use when the instance has several. |
+| `private_ip_order` | `0` | Index of the private address to use when the instance has several. |
+| `port` | `"22"` | SSH port to connect to. |
+
+### Waiting and timeouts
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `server_wait` | *unset* | Seconds to sleep after the instance is active, before connecting. Useful when an image needs time to finish booting. |
+| `no_ssh_tcp_check` | `false` | Skip the TCP check on the SSH port. Use when a firewall makes the check unreliable. |
+| `no_ssh_tcp_check_sleep` | `120` | Seconds to sleep instead of checking, when `no_ssh_tcp_check` is enabled. |
+| `glance_cache_wait_timeout` | `600` | Seconds to wait while Glance caches the image before the instance can boot. |
+| `connect_timeout` | `60` | Seconds to wait when opening an API connection. |
+| `read_timeout` | `60` | Seconds to wait for an API read. |
+| `write_timeout` | `60` | Seconds to wait for an API write. |
+
+### API and endpoints
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `openstack_region` | `$OS_REGION_NAME` | Region to operate in. |
+| `openstack_service_name` | `nil` | Compute service name in the catalog, when the deployment uses a non-standard one. |
+| `disable_ssl_validation` | `false` | Skip TLS certificate validation. Only use this against a deployment with an invalid certificate. |
+| `openstack_cloud` | `nil` | Name of the cloud entry in `clouds.yaml`. Falls back to `OS_CLOUD`. |
+| `clouds_yaml_path` | `nil` | Explicit path to a `clouds.yaml` file, inserted into the search path. |
+
+## Block device mapping
+
+`block_device_mapping` boots the instance from a volume rather than the image directly, or attaches an extra volume:
+
+```yaml
+driver:
+  name: openstack
+  image_ref: ubuntu-22.04
+  flavor_ref: m1.small
+  block_device_mapping:
+    make_volume: true
+    snapshot_id: 5e4e5d5e-1f1f-4b4b-9c9c-2d2d3e3e4f4f
+    device_name: vda
+    volume_size: 20
+    volume_id: null
+    availability_zone: nova
+    delete_on_termination: true
+```
+
+## Examples
+
+### Allocating a floating IP
+
+```yaml
+driver:
+  name: openstack
+  image_ref: ubuntu-22.04
+  flavor_ref: m1.small
+  key_name: my-keypair
+  floating_ip_pool: public
+  allocate_floating_ip: true
+```
+
+### Several networks
+
+```yaml
+driver:
+  name: openstack
+  image_ref: ubuntu-22.04
+  flavor_ref: m1.small
+  network_ref:
+    - management
+    - storage
+  openstack_network_name: management
+```
+
+### cloud-init
+
+```yaml
+driver:
+  name: openstack
+  image_ref: ubuntu-22.04
+  flavor_ref: m1.small
+  cloud_config:
+    packages:
+      - htop
+```
+
+### A slow image
+
+```yaml
+driver:
+  name: openstack
+  image_ref: ubuntu-22.04
+  flavor_ref: m1.small
+  server_wait: 60
+  glance_cache_wait_timeout: 1200
+  no_ssh_tcp_check: true
+```
+
+### Per-platform images
+
+```yaml
+driver:
+  name: openstack
+  flavor_ref: m1.small
+  key_name: my-keypair
+
+platforms:
+  - name: ubuntu-22.04
+    driver:
+      image_ref: ubuntu-22.04
+  - name: rockylinux-9
+    driver:
+      image_ref: rocky-9
+```
+
+## Using with Chef
+
+This driver is not tied to Cinc. The examples above use Cinc Workstation and the `cinc_infra` provisioner, but the
+driver works exactly the same with [Chef Workstation](https://www.chef.io/downloads/tools/workstation) — run
+`kitchen` instead of `cinc kitchen`, and use `chef_infra` instead of `cinc_infra`:
+
+```yaml
+provisioner:
+  name: chef_infra
+
+verifier:
+  name: inspec
+```
+
+No driver configuration changes are needed.
+
+## Contributing
+
+Pull requests are very welcome on [GitHub](https://github.com/test-kitchen/kitchen-openstack). See
+[CONTRIBUTING.md](CONTRIBUTING.md) for development setup, how to run the tests, and the release process.
 
 ## Authors
 
