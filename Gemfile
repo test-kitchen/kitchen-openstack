@@ -9,7 +9,6 @@ group :test do
   gem 'rake'
   gem 'kitchen-inspec'
   gem 'rspec', '~> 3.2'
-  gem 'countloc'
 end
 
 group :debug do

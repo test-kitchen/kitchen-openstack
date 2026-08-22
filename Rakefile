@@ -6,14 +6,6 @@ RSpec::Core::RakeTask.new(:unit)
 desc 'Run all test suites'
 task test: [:unit]
 
-desc 'Display LOC stats'
-task :stats do
-  puts "\n## Production Code Stats"
-  sh 'countloc -r lib'
-  puts "\n## Test Code Stats"
-  sh 'countloc -r spec'
-end
-
 begin
   require 'cookstyle'
   desc 'Run cookstyle with chefstyle rules'
@@ -25,6 +17,6 @@ rescue LoadError
 end
 
 desc 'Run all quality tasks'
-task quality: %i(style stats)
+task quality: %i(style)
 
 task default: %i(test quality)
