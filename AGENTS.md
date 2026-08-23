@@ -28,10 +28,12 @@ kitchen-openstack is a Test Kitchen driver for OpenStack. It provisions and dest
 
 ```bash
 bundle install
-bundle exec rake          # runs tests + style + stats (default)
-bundle exec rake test     # unit tests only (RSpec)
-bundle exec rake style    # Cookstyle lint
-bundle exec rake quality  # style + stats
+bundle exec rake            # runs tests + style (default)
+bundle exec rake test       # unit tests only (RSpec)
+bundle exec rake style      # Cookstyle lint
+bundle exec rake quality    # style
+bundle exec rake yard       # render YARD docs to doc/ (not CI-gated)
+bundle exec rake yard_stats # list undocumented methods
 ```
 
 ## Conventions
@@ -39,5 +41,10 @@ bundle exec rake quality  # style + stats
 - Use `Fog::OpenStack::Compute` and `Fog::OpenStack::Network` for cloud interactions
 - Thread safety: use `Mutex` for shared resource pools (e.g., floating IP allocation)
 - Resource finders (`find_image`, `find_flavor`, `find_network`) support regex matching via `/pattern/` syntax
-- Test with RSpec 3 using `let` fixtures, `double` mocks, and `allow_any_instance_of` for Kitchen internals
+- Every method in `lib/` carries YARD tags (`@param`/`@return`/`@raise`). Keep new ones documented; `rake yard_stats` reports gaps but nothing enforces it
+- Specs mirror `lib/` one-to-one: `spec/kitchen/driver/openstack/<module>_spec.rb`
+- Shared spec setup lives in `spec/support/`: the `"with a configured driver"` shared context builds the driver and stubs `instance`; `FogDoubles` builds the Fog stand-ins
+- `verify_partial_doubles` is on. Fog *model* classes take `instance_double`; Fog *service* objects cannot, because Fog defines their methods dynamically at instantiation
+- Unit tests never sleep, hit the network, or read outside a `Dir.mktmpdir`. The one exemption is `openstack_version_spec.rb`, which reads the gemspec and the Release Please manifest to catch version drift, and skips when they are absent. `ENV` is replaced with an `OS_*`-free hash, and the clouds.yaml specs additionally pin `Dir.pwd`, `Dir.home` and `/etc/openstack`, so neither a developer's OpenStack environment nor their real `clouds.yaml`/`secure.yaml` can leak in
+- SimpleCov reports to `coverage/` with no enforced threshold
 - Release automation via Release Please — version bumps go in `lib/kitchen/driver/openstack_version.rb`

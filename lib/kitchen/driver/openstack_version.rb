@@ -23,6 +23,12 @@ module Kitchen
   #
   # @author Jonathan Hartman <j@p4nt5.com>
   module Driver
+    # The kitchen-openstack gem version.
+    #
+    # Read by the gemspec and bumped by Release Please, so it must stay a
+    # plain string literal on a single line.
+    #
+    # @return [String]
     OPENSTACK_VERSION = "7.0.1"
   end
 end

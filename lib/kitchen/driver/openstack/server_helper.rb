@@ -26,8 +26,29 @@ module Kitchen
     class Openstack < Kitchen::Driver::Base
       # Server creation and resource finders (image, flavor, network)
       module ServerHelper
+        # Config keys copied onto the server definition when set, each routed
+        # through {#optional_config}.
+        #
+        # @return [Array<Symbol>]
+        OPTIONAL_SERVER_KEYS = %i{
+          security_groups
+          key_name
+          user_data
+          config_drive
+          metadata
+        }.freeze
+
         private
 
+        # Builds the Nova server definition and submits it.
+        #
+        # Fog's `bootstrap`/`setup` helpers are deliberately not used: they
+        # require a public IP address, which is not guaranteed to exist on
+        # every OpenStack deployment.
+        #
+        # @return [Fog::OpenStack::Compute::Server] the newly created server
+        # @raise [Kitchen::ActionFailed] on mutually exclusive or unresolvable
+        #   configuration
         def create_server
           server_def = init_configuration
           raise(ActionFailed, "Cannot specify both network_ref and network_id") if config[:network_id] && config[:network_ref]
@@ -44,17 +65,7 @@ module Kitchen
             end
           end
 
-          if config[:block_device_mapping]
-            server_def[:block_device_mapping] = get_bdm(config)
-          end
-
-          %i{
-            security_groups
-            key_name
-            user_data
-            config_drive
-            metadata
-          }.each do |c|
+          OPTIONAL_SERVER_KEYS.each do |c|
             server_def[c] = optional_config(c) if config[c]
           end
 
@@ -64,12 +75,25 @@ module Kitchen
             server_def[:user_data] = YAML.dump(Kitchen::Util.stringified_hash(config[:cloud_config])).gsub(/^---\n/, "#cloud-config\n")
           end
 
-          # Can't use the Fog bootstrap and/or setup methods here; they require a
-          # public IP address that can't be guaranteed to exist across all
-          # OpenStack deployments (e.g. TryStack ARM only has private IPs).
+          # Last, because this is the only step that creates a resource. Every
+          # check above is local config validation, and running them first means
+          # a bad security_groups or user_data value cannot strand a Cinder
+          # volume whose id exists only in the server_def about to be discarded.
+          if config[:block_device_mapping]
+            server_def[:block_device_mapping] = get_bdm(config)
+          end
+
           compute.servers.create(server_def)
         end
 
+        # Builds the mandatory part of the server definition.
+        #
+        # `*_id` and `*_ref` are mutually exclusive: an id is used verbatim, a
+        # ref is resolved by name, id or regex through {#find_matching}.
+        #
+        # @return [Hash] name, image, flavor and availability zone
+        # @raise [Kitchen::ActionFailed] if both an id and a ref are given for
+        #   the image or the flavor, or if either cannot be resolved
         def init_configuration
           raise(ActionFailed, "Cannot specify both image_ref and image_id") if config[:image_id] && config[:image_ref]
           raise(ActionFailed, "Cannot specify both flavor_ref and flavor_id") if config[:flavor_id] && config[:flavor_ref]
@@ -82,17 +106,39 @@ module Kitchen
           }
         end
 
+        # Resolves one optional server setting to the value Nova expects.
+        #
+        # @param c [Symbol] the config key
+        # @return [Object] the resolved value
+        # @raise [Kitchen::ActionFailed] if `:security_groups` is not a list, or
+        #   if the `:user_data` file does not exist
         def optional_config(c)
           case c
           when :security_groups
-            config[c] if config[c].is_a?(Array)
+            unless config[c].is_a?(Array)
+              raise ActionFailed, "The security_groups config must be an array, got #{config[c].class}"
+            end
+
+            config[c]
           when :user_data
-            File.read(config[c]) if File.exist?(config[c])
+            # Booting without the user_data the user asked for produces a
+            # server that looks fine and behaves wrongly, so a missing file is
+            # fatal rather than silently ignored.
+            unless File.exist?(config[c])
+              raise ActionFailed, "The user_data file <#{config[c]}> does not exist"
+            end
+
+            File.read(config[c])
           else
             config[c]
           end
         end
 
+        # Finds a Glance image by id, name or regex.
+        #
+        # @param image_ref [String] id, name, or `/regex/`
+        # @return [Object] the matching image
+        # @raise [Kitchen::ActionFailed] if nothing matches
         def find_image(image_ref)
           image = find_matching(compute.images, image_ref)
           raise(ActionFailed, "Image not found") unless image
@@ -101,6 +147,11 @@ module Kitchen
           image
         end
 
+        # Finds a Nova flavor by id, name or regex.
+        #
+        # @param flavor_ref [String] id, name, or `/regex/`
+        # @return [Object] the matching flavor
+        # @raise [Kitchen::ActionFailed] if nothing matches
         def find_flavor(flavor_ref)
           flavor = find_matching(compute.flavors, flavor_ref)
           raise(ActionFailed, "Flavor not found") unless flavor
@@ -109,6 +160,11 @@ module Kitchen
           flavor
         end
 
+        # Finds a Neutron network by id, name or regex.
+        #
+        # @param network_ref [String] id, name, or `/regex/`
+        # @return [Object] the matching network
+        # @raise [Kitchen::ActionFailed] if nothing matches
         def find_network(network_ref)
           net = find_matching(network.networks.all, network_ref)
           raise(ActionFailed, "Network not found") unless net
@@ -117,15 +173,31 @@ module Kitchen
           net
         end
 
+        # Picks a resource out of a Fog collection.
+        #
+        # A ref wrapped in forward slashes is treated as a regular expression
+        # matched against the resource name; anything else is compared against
+        # the id first and then the name, so an exact id always wins.
+        #
+        # @example an exact name
+        #   find_matching(compute.images, "ubuntu-24.04")
+        # @example a regular expression
+        #   find_matching(compute.images, "/^ubuntu-24\\.04/")
+        #
+        # @param collection [Enumerable] the Fog collection to search
+        # @param name [String] id, name, or `/regex/`
+        # @return [Object, nil] the first match, or nil
         def find_matching(collection, name)
           name = name.to_s
           if name.start_with?("/") && name.end_with?("/")
             regex = Regexp.new(name[1...-1])
-            # check for regex name match
-            collection.each { |single| return single if regex&.match?(single.name) }
+            # check for regex name match, skipping unnamed resources; Neutron
+            # networks in particular are allowed to have no name
+            collection.each { |single| return single if single.name && regex.match?(single.name) }
           else
-            # check for exact id match
-            collection.each { |single| return single if single.id == name }
+            # check for exact id match; ids come back as integers on some
+            # deployments, so compare as strings
+            collection.each { |single| return single if single.id.to_s == name }
             # check for exact name match
             collection.each { |single| return single if single.name == name }
           end
