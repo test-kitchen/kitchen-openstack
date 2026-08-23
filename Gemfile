@@ -8,7 +8,7 @@ group :test do
   gem "rake"
   gem "kitchen-inspec"
   gem "rspec", "~> 3.2"
-  gem "simplecov", "~> 0.22"
+  gem "simplecov", "~> 1.0"
 end
 
 group :docs do
