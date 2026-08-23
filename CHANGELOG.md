@@ -9,6 +9,17 @@
 * Docs: document every driver option and split contributor docs ([#246](https://github.com/test-kitchen/kitchen-openstack/pull/246)) ([ee556dae](https://github.com/test-kitchen/kitchen-openstack/commit/ee556dae))
 * Standardize renovate config and remove dependabot ([#247](https://github.com/test-kitchen/kitchen-openstack/pull/247)) ([39ccc29e](https://github.com/test-kitchen/kitchen-openstack/commit/39ccc29e))
 
+## [8.0.0](https://github.com/test-kitchen/kitchen-openstack/compare/v7.0.1...v8.0.0) (2026-08-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* three behaviours change in ways that can fail a converge that previously succeeded.
+
+### Bug Fixes
+
+* rebuild the unit test suite, document lib/, fix the bugs it found ([#245](https://github.com/test-kitchen/kitchen-openstack/issues/245)) ([42039e0](https://github.com/test-kitchen/kitchen-openstack/commit/42039e020f3e12425373d1fe30706f7b8dabb375))
+
 ## [7.0.1](https://github.com/test-kitchen/kitchen-openstack/compare/v7.0.0...v7.0.1) (2026-04-24)
 
 ### Bug Fixes
