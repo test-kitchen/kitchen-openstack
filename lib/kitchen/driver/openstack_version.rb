@@ -29,6 +29,6 @@ module Kitchen
     # plain string literal on a single line.
     #
     # @return [String]
-    OPENSTACK_VERSION = "7.0.1"
+    OPENSTACK_VERSION = "8.0.0"
   end
 end
