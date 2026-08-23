@@ -1,0 +1,10 @@
+--markup markdown
+--private
+--protected
+--readme README.md
+--output-dir doc
+--title "kitchen-openstack"
+lib/**/*.rb
+-
+CHANGELOG.md
+LICENSE.txt

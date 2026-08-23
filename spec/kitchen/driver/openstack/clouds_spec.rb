@@ -1,43 +1,52 @@
 # frozen_string_literal: true
 
-require_relative "../../../spec_helper"
-require_relative "../../../../lib/kitchen/driver/openstack"
+require "fileutils"
+require "tmpdir"
+require "yaml"
 
-require "logger"
-require "stringio" unless defined?(StringIO)
-require "rspec"
-require "kitchen"
-require "kitchen/driver/openstack"
-require "kitchen/provisioner/dummy"
-require "kitchen/transport/dummy"
-require "kitchen/verifier/dummy"
+RSpec.describe Kitchen::Driver::Openstack::Clouds do
+  include_context "with a configured driver"
 
-describe Kitchen::Driver::Openstack do
-  let(:logged_output) { StringIO.new }
-  let(:logger) { Logger.new(logged_output) }
-  let(:config) { {} }
-  let(:instance_name) { "potatoes" }
-  let(:transport) { Kitchen::Transport::Dummy.new }
-  let(:platform) { Kitchen::Platform.new(name: "fake_platform") }
-  let(:driver) { described_class.new(config) }
-
-  let(:instance) do
-    double(
-      name: instance_name,
-      transport: transport,
-      logger: logger,
-      platform: platform,
-      to_str: "instance"
-    )
+  # A directory that is never created, used to pin the search path away from
+  # the developer's real files.
+  def nowhere
+    File.join(Dir.tmpdir, "kitchen-openstack-does-not-exist")
   end
 
-  before(:each) do
-    allow_any_instance_of(described_class).to receive(:instance)
-      .and_return(instance)
-    allow(File).to receive(:exist?).and_call_original
+  # Pin every location clouds_yaml_search_paths consults.
+  #
+  # Scrubbing OS_* is not sufficient on its own: the search falls through to
+  # ./{clouds,secure}.yaml, ~/.config/openstack/ and /etc/openstack/ whenever
+  # the pinned path does not exist, so on an operator's machine a real
+  # secure.yaml naming a cloud these fixtures also use would fail examples
+  # here -- and RSpec's diff would print their real password into the terminal
+  # and the CI log.
+  before do
+    allow(Dir).to receive_messages(pwd: nowhere, home: nowhere)
+    allow(File).to receive(:exist?).with(a_string_starting_with("/etc/openstack/")).and_return(false)
   end
 
-  let(:clouds_yaml_content) do
+  # Real files on disk rather than a stubbed File.exist?: these examples are
+  # the only place the driver touches the filesystem, and stubbing it out was
+  # hiding whether the search-path logic worked at all.
+  #
+  # Created lazily and torn down after: most examples in this file never touch
+  # the filesystem, and building then recursively removing a tmpdir for each of
+  # them was the largest source of dead I/O in the suite.
+  def tmpdir
+    @tmpdir ||= Dir.mktmpdir("kitchen-openstack-clouds")
+  end
+
+  after { FileUtils.remove_entry(@tmpdir) if @tmpdir }
+
+  # Writes a YAML document into the sandbox and returns its path.
+  def write_yaml(filename, content)
+    path = File.join(tmpdir, filename)
+    File.write(path, content.is_a?(String) ? content : YAML.dump(content))
+    path
+  end
+
+  let(:clouds_yaml) do
     {
       "clouds" => {
         "mycloud" => {
@@ -52,714 +61,639 @@ describe Kitchen::Driver::Openstack do
           },
           "region_name" => "RegionOne",
           "interface" => "public",
-          "identity_api_version" => "3",
+          "identity_api_version" => 3,
         },
         "minimal" => {
           "auth" => {
             "auth_url" => "https://minimal.example.com:5000/v3",
             "username" => "minuser",
-            "password" => "minpass",
-            "domain_id" => "default",
           },
-        },
-        "appcred" => {
-          "auth" => {
-            "auth_url" => "https://appcred.example.com:5000/v3",
-            "application_credential_id" => "abc123",
-            "application_credential_secret" => "secret456",
-            "domain_id" => "default",
-          },
-          "auth_type" => "v3applicationcredential",
-        },
-        "sslcloud" => {
-          "auth" => {
-            "auth_url" => "https://ssl.example.com:5000/v3",
-            "username" => "ssluser",
-            "password" => "sslpass",
-            "domain_id" => "default",
-          },
-          "verify" => false,
-          "cacert" => "/path/to/ca.crt",
         },
       },
     }
   end
 
-  let(:secure_yaml_content) do
-    {
-      "clouds" => {
-        "mycloud" => {
-          "auth" => {
-            "password" => "secure_password_override",
-          },
-        },
-      },
+  # Point the loader at the sandbox and return the clouds.yaml path.
+  #
+  # OS_CLIENT_SECURE_FILE is always pinned, at a file that only exists when the
+  # example asked for one, so no example can silently pick up a real
+  # secure.yaml.
+  def use_clouds_file(content = clouds_yaml, secure: nil, env: {})
+    path = write_yaml("clouds.yaml", content)
+    vars = {
+      "OS_CLIENT_CONFIG_FILE" => path,
+      "OS_CLIENT_SECURE_FILE" => secure ? write_yaml("secure.yaml", secure) : File.join(tmpdir, "no-secure.yaml"),
     }
+    stub_env(vars.merge(env))
+    path
   end
 
   describe "#cloud_name" do
-    context "when openstack_cloud is set in config" do
-      let(:config) { { openstack_cloud: "mycloud" } }
+    it "reads openstack_cloud from kitchen.yml" do
+      config[:openstack_cloud] = "mycloud"
 
-      it "returns the config value" do
-        expect(driver.send(:cloud_name)).to eq("mycloud")
-      end
+      expect(driver.send(:cloud_name)).to eq("mycloud")
     end
 
-    context "when OS_CLOUD env var is set" do
-      before { allow(ENV).to receive(:[]).and_call_original }
-      before { allow(ENV).to receive(:[]).with("OS_CLOUD").and_return("envcloud") }
+    it "falls back to OS_CLOUD" do
+      stub_env("OS_CLOUD" => "envcloud")
 
-      it "returns the env var value" do
-        expect(driver.send(:cloud_name)).to eq("envcloud")
-      end
+      expect(driver.send(:cloud_name)).to eq("envcloud")
     end
 
-    context "when openstack_cloud config takes precedence over OS_CLOUD" do
-      let(:config) { { openstack_cloud: "configcloud" } }
+    it "prefers kitchen.yml over OS_CLOUD" do
+      stub_env("OS_CLOUD" => "envcloud")
+      config[:openstack_cloud] = "mycloud"
 
-      before { allow(ENV).to receive(:[]).and_call_original }
-      before { allow(ENV).to receive(:[]).with("OS_CLOUD").and_return("envcloud") }
-
-      it "returns the config value" do
-        expect(driver.send(:cloud_name)).to eq("configcloud")
-      end
+      expect(driver.send(:cloud_name)).to eq("mycloud")
     end
 
-    context "when neither is set" do
-      before { allow(ENV).to receive(:[]).and_call_original }
-      before { allow(ENV).to receive(:[]).with("OS_CLOUD").and_return(nil) }
-
-      it "returns nil" do
-        expect(driver.send(:cloud_name)).to be_nil
-      end
-    end
-  end
-
-  describe "#load_clouds_config" do
-    before do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("OS_CLIENT_CONFIG_FILE").and_return(nil)
-      allow(ENV).to receive(:[]).with("OS_CLIENT_SECURE_FILE").and_return(nil)
-      allow(ENV).to receive(:[]).with("OS_CLOUD").and_return(nil)
-    end
-
-    context "when no cloud name is configured" do
-      it "returns an empty hash" do
-        expect(driver.send(:load_clouds_config)).to eq({})
-      end
-    end
-
-    context "when a cloud name is set and clouds.yaml exists" do
-      let(:config) { { openstack_cloud: "mycloud" } }
-
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
-
-      it "returns translated fog config" do
-        result = driver.send(:load_clouds_config)
-        expect(result[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-        expect(result[:openstack_username]).to eq("testuser")
-        expect(result[:openstack_api_key]).to eq("testpass")
-        expect(result[:openstack_project_name]).to eq("testproject")
-        expect(result[:openstack_user_domain]).to eq("Default")
-        expect(result[:openstack_project_domain]).to eq("Default")
-        expect(result[:openstack_domain_id]).to eq("default")
-        expect(result[:openstack_region]).to eq("RegionOne")
-        expect(result[:openstack_endpoint_type]).to eq("public")
-        expect(result[:openstack_identity_api_version]).to eq("3")
-      end
-    end
-
-    context "when secure.yaml provides password override" do
-      let(:config) { { openstack_cloud: "mycloud" } }
-
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "secure.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "secure.yaml"))
-          .and_return(YAML.dump(secure_yaml_content))
-      end
-
-      it "merges secure.yaml values over clouds.yaml" do
-        result = driver.send(:load_clouds_config)
-        expect(result[:openstack_api_key]).to eq("secure_password_override")
-        expect(result[:openstack_username]).to eq("testuser")
-      end
-    end
-
-    context "when OS_CLIENT_CONFIG_FILE is set" do
-      let(:config) { { openstack_cloud: "mycloud" } }
-      let(:custom_path) { "/custom/path/clouds.yaml" }
-
-      before do
-        allow(ENV).to receive(:[]).with("OS_CLIENT_CONFIG_FILE").and_return(custom_path)
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?).with(custom_path).and_return(true)
-        allow(File).to receive(:read)
-          .with(custom_path)
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
-
-      it "uses the custom path" do
-        result = driver.send(:load_clouds_config)
-        expect(result[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-      end
-    end
-
-    context "when clouds_yaml_path config is set" do
-      let(:config) { { openstack_cloud: "mycloud", clouds_yaml_path: "/my/clouds.yaml" } }
-
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?).with("/my/clouds.yaml").and_return(true)
-        allow(File).to receive(:read)
-          .with("/my/clouds.yaml")
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
-
-      it "uses the configured path" do
-        result = driver.send(:load_clouds_config)
-        expect(result[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-      end
-    end
-
-    context "when cloud entry does not exist in clouds.yaml" do
-      let(:config) { { openstack_cloud: "nonexistent" } }
-
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
-
-      it "returns an empty hash" do
-        expect(driver.send(:load_clouds_config)).to eq({})
-      end
-    end
-
-    context "with application credential auth" do
-      let(:config) { { openstack_cloud: "appcred" } }
-
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
-
-      it "maps application credential fields" do
-        result = driver.send(:load_clouds_config)
-        expect(result[:openstack_application_credential_id]).to eq("abc123")
-        expect(result[:openstack_application_credential_secret]).to eq("secret456")
-      end
-    end
-
-    context "with SSL settings" do
-      let(:config) { { openstack_cloud: "sslcloud" } }
-
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
-
-      it "maps SSL settings" do
-        result = driver.send(:load_clouds_config)
-        expect(result[:ssl_verify_peer]).to eq(false)
-        expect(result[:ssl_ca_file]).to eq("/path/to/ca.crt")
-      end
+    it "is nil when neither is set" do
+      expect(driver.send(:cloud_name)).to be_nil
     end
   end
 
   describe "#clouds_yaml_search_paths" do
-    before do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("OS_CLIENT_CONFIG_FILE").and_return(nil)
+    before { stub_env }
+
+    it "searches cwd, then the user config dir, then /etc/openstack" do
+      allow(Dir).to receive_messages(pwd: "/work", home: "/home/me")
+
+      expect(driver.send(:clouds_yaml_search_paths, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")).to eq(
+        [
+          "/work/clouds.yaml",
+          "/home/me/.config/openstack/clouds.yaml",
+          "/etc/openstack/clouds.yaml",
+        ]
+      )
     end
 
-    context "with no env var or config path" do
-      it "returns standard search paths" do
-        paths = driver.send(:clouds_yaml_search_paths, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")
-        expect(paths).to include(File.join(Dir.pwd, "clouds.yaml"))
-        expect(paths).to include(File.join(Dir.home, ".config", "openstack", "clouds.yaml"))
-        expect(paths).to include("/etc/openstack/clouds.yaml")
-      end
+    # Dir.home raises ArgumentError when HOME is unset and the uid has no
+    # passwd entry -- the ordinary state in a container running as an arbitrary
+    # uid. With OS_CLOUD set that used to crash the driver before /etc/openstack
+    # was ever tried, which is the one location such a container is likely to
+    # have.
+    it "skips the user config dir when there is no home directory" do
+      allow(Dir).to receive(:pwd).and_return("/work")
+      allow(Dir).to receive(:home).and_raise(ArgumentError, "couldn't find HOME environment -- expanding `~'")
+
+      expect(driver.send(:clouds_yaml_search_paths, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")).to eq(
+        [
+          "/work/clouds.yaml",
+          "/etc/openstack/clouds.yaml",
+        ]
+      )
     end
 
-    context "with env var set" do
-      before do
-        allow(ENV).to receive(:[]).with("OS_CLIENT_CONFIG_FILE").and_return("/custom/clouds.yaml")
-      end
+    it "puts the env var override first" do
+      stub_env("OS_CLIENT_CONFIG_FILE" => "/custom/clouds.yaml")
 
-      it "prepends the env var path" do
-        paths = driver.send(:clouds_yaml_search_paths, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")
-        expect(paths.first).to eq("/custom/clouds.yaml")
-      end
+      expect(driver.send(:clouds_yaml_search_paths, "clouds.yaml", "OS_CLIENT_CONFIG_FILE").first)
+        .to eq("/custom/clouds.yaml")
     end
 
-    context "with clouds_yaml_path config" do
-      let(:config) { { clouds_yaml_path: "/configured/clouds.yaml" } }
+    it "honours clouds_yaml_path from kitchen.yml" do
+      config[:clouds_yaml_path] = "/kitchen/clouds.yaml"
 
-      it "includes the configured path" do
-        paths = driver.send(:clouds_yaml_search_paths, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")
-        expect(paths).to include("/configured/clouds.yaml")
-      end
+      expect(driver.send(:clouds_yaml_search_paths, "clouds.yaml", "OS_CLIENT_CONFIG_FILE"))
+        .to include("/kitchen/clouds.yaml")
+    end
 
-      it "does not include config path for secure.yaml" do
-        paths = driver.send(:clouds_yaml_search_paths, "secure.yaml", "OS_CLIENT_SECURE_FILE")
-        expect(paths).not_to include("/configured/clouds.yaml")
-      end
+    it "ranks the env var above clouds_yaml_path" do
+      stub_env("OS_CLIENT_CONFIG_FILE" => "/custom/clouds.yaml")
+      config[:clouds_yaml_path] = "/kitchen/clouds.yaml"
+
+      paths = driver.send(:clouds_yaml_search_paths, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")
+
+      expect(paths.index("/custom/clouds.yaml")).to be < paths.index("/kitchen/clouds.yaml")
+    end
+
+    it "does not apply clouds_yaml_path to secure.yaml" do
+      config[:clouds_yaml_path] = "/kitchen/clouds.yaml"
+
+      expect(driver.send(:clouds_yaml_search_paths, "secure.yaml", "OS_CLIENT_SECURE_FILE"))
+        .not_to include("/kitchen/clouds.yaml")
     end
   end
 
-  describe "#translate_cloud_config" do
-    it "maps all auth keys correctly" do
-      cloud = {
-        "auth" => {
-          "auth_url" => "http://example.com:5000/v3",
-          "username" => "user",
-          "password" => "pass",
-          "project_name" => "proj",
-          "project_id" => "proj-id",
-          "user_domain_name" => "UDN",
-          "user_domain_id" => "udi",
-          "project_domain_name" => "PDN",
-          "project_domain_id" => "pdi",
-          "domain_id" => "did",
-          "domain_name" => "dname",
-          "application_credential_id" => "acid",
-          "application_credential_secret" => "acs",
-        },
-        "region_name" => "Region1",
-        "interface" => "internal",
-        "identity_api_version" => "3",
-        "verify" => true,
-        "cacert" => "/ca.pem",
-      }
+  describe "#load_yaml_file" do
+    it "returns an empty hash when no file is found" do
+      stub_env
+      allow(Dir).to receive_messages(pwd: File.join(tmpdir, "empty"), home: File.join(tmpdir, "empty"))
 
-      result = driver.send(:translate_cloud_config, cloud)
-      expect(result[:openstack_auth_url]).to eq("http://example.com:5000/v3")
-      expect(result[:openstack_username]).to eq("user")
-      expect(result[:openstack_api_key]).to eq("pass")
-      expect(result[:openstack_project_name]).to eq("proj")
-      expect(result[:openstack_project_id]).to eq("proj-id")
-      expect(result[:openstack_user_domain]).to eq("UDN")
-      expect(result[:openstack_user_domain_id]).to eq("udi")
-      expect(result[:openstack_project_domain]).to eq("PDN")
-      expect(result[:openstack_project_domain_id]).to eq("pdi")
-      expect(result[:openstack_domain_id]).to eq("did")
-      expect(result[:openstack_domain_name]).to eq("dname")
-      expect(result[:openstack_application_credential_id]).to eq("acid")
-      expect(result[:openstack_application_credential_secret]).to eq("acs")
-      expect(result[:openstack_region]).to eq("Region1")
-      expect(result[:openstack_endpoint_type]).to eq("internal")
-      expect(result[:openstack_identity_api_version]).to eq("3")
-      expect(result[:ssl_verify_peer]).to eq(true)
-      expect(result[:ssl_ca_file]).to eq("/ca.pem")
+      expect(driver.send(:load_yaml_file, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")).to eq([{}, nil])
     end
 
-    it "handles empty auth section" do
-      result = driver.send(:translate_cloud_config, {})
-      expect(result).to eq({})
+    it "parses the first file that exists, and reports where it came from" do
+      path = use_clouds_file
+
+      expect(driver.send(:load_yaml_file, "clouds.yaml", "OS_CLIENT_CONFIG_FILE"))
+        .to eq([clouds_yaml, path])
     end
 
-    it "coerces non-string scalar values for fog string config keys" do
-      cloud = {
-        "auth" => {
-          "project_id" => 12_345,
-          "domain_id" => 9,
-        },
-        "identity_api_version" => 3,
-      }
+    it "treats an empty file as an empty document" do
+      path = write_yaml("clouds.yaml", "")
+      stub_env("OS_CLIENT_CONFIG_FILE" => path)
 
-      result = driver.send(:translate_cloud_config, cloud)
-      expect(result[:openstack_project_id]).to eq("12345")
-      expect(result[:openstack_domain_id]).to eq("9")
-      expect(result[:openstack_identity_api_version]).to eq("3")
+      expect(driver.send(:load_yaml_file, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")).to eq([{}, path])
+    end
+
+    it "allows Date values, which appear in expiry fields" do
+      path = write_yaml("clouds.yaml", "clouds:\n  mycloud:\n    expires: 2030-01-01\n")
+      stub_env("OS_CLIENT_CONFIG_FILE" => path)
+
+      expect(driver.send(:load_yaml_file, "clouds.yaml", "OS_CLIENT_CONFIG_FILE").first)
+        .to eq("clouds" => { "mycloud" => { "expires" => Date.new(2030, 1, 1) } })
+    end
+
+    it "names the file when the YAML is malformed" do
+      path = write_yaml("clouds.yaml", "clouds:\n  mycloud:\n   - broken: [\n")
+      stub_env("OS_CLIENT_CONFIG_FILE" => path)
+
+      expect { driver.send(:load_yaml_file, "clouds.yaml", "OS_CLIENT_CONFIG_FILE") }
+        .to raise_error(Kitchen::ActionFailed, /Could not parse #{Regexp.escape(path)}/)
+    end
+
+    it "rejects a document that is not a mapping" do
+      path = write_yaml("clouds.yaml", "- one\n- two\n")
+      stub_env("OS_CLIENT_CONFIG_FILE" => path)
+
+      expect { driver.send(:load_yaml_file, "clouds.yaml", "OS_CLIENT_CONFIG_FILE") }
+        .to raise_error(Kitchen::ActionFailed, /must contain a YAML mapping/)
+    end
+
+    it "logs where it loaded the file from" do
+      path = write_yaml("clouds.yaml", clouds_yaml)
+      stub_env("OS_CLIENT_CONFIG_FILE" => path)
+
+      driver.send(:load_yaml_file, "clouds.yaml", "OS_CLIENT_CONFIG_FILE")
+
+      expect(logged_output.string).to include("Loading clouds.yaml from #{path}")
+    end
+  end
+
+  describe "#extract_cloud" do
+    it "pulls out the named cloud" do
+      expect(driver.send(:extract_cloud, clouds_yaml, "minimal", "clouds.yaml"))
+        .to eq("auth" => { "auth_url" => "https://minimal.example.com:5000/v3", "username" => "minuser" })
+    end
+
+    # An absent entry is normal: clouds.yaml and secure.yaml are merged, and a
+    # cloud is allowed to appear in only one of them.
+    it "returns an empty hash for an unknown cloud" do
+      expect(driver.send(:extract_cloud, clouds_yaml, "nope", "clouds.yaml")).to eq({})
+    end
+
+    it "returns an empty hash when there is no clouds key" do
+      expect(driver.send(:extract_cloud, { "other" => {} }, "mycloud", "clouds.yaml")).to eq({})
+    end
+
+    # A present-but-malformed entry is always a mistake. Returning {} here let
+    # the driver carry on with nil credentials, and the user saw an opaque
+    # Keystone auth failure that never mentioned their config file.
+    it "names the file when clouds is present but not a mapping" do
+      expect { driver.send(:extract_cloud, { "clouds" => "oops" }, "mycloud", "/etc/openstack/clouds.yaml") }
+        .to raise_error(Kitchen::ActionFailed, %r{clouds section of /etc/openstack/clouds.yaml must be a YAML mapping})
+    end
+
+    it "names the cloud when the entry is present but not a mapping" do
+      entry = { "clouds" => { "mycloud" => "https://example.com:5000/v3" } }
+
+      expect { driver.send(:extract_cloud, entry, "mycloud", "/etc/openstack/clouds.yaml") }
+        .to raise_error(Kitchen::ActionFailed, %r{Cloud <mycloud> in /etc/openstack/clouds.yaml must be a YAML mapping})
     end
   end
 
   describe "#deep_merge" do
-    it "deep merges nested hashes" do
-      base = { "auth" => { "username" => "user", "password" => "base_pass" }, "region" => "r1" }
-      override = { "auth" => { "password" => "override_pass" } }
-      result = driver.send(:deep_merge, base, override)
-      expect(result["auth"]["username"]).to eq("user")
-      expect(result["auth"]["password"]).to eq("override_pass")
-      expect(result["region"]).to eq("r1")
+    it "merges nested hashes" do
+      base = { "auth" => { "username" => "a", "password" => "b" }, "region_name" => "r" }
+      override = { "auth" => { "password" => "c" } }
+
+      expect(driver.send(:deep_merge, base, override))
+        .to eq("auth" => { "username" => "a", "password" => "c" }, "region_name" => "r")
     end
 
-    it "does not mutate the original hashes" do
-      base = { "auth" => { "password" => "old" } }
-      override = { "auth" => { "password" => "new" } }
+    it "replaces scalars rather than merging them" do
+      expect(driver.send(:deep_merge, { "a" => 1 }, { "a" => 2 })).to eq("a" => 2)
+    end
+
+    it "replaces a hash with a scalar when the override says so" do
+      expect(driver.send(:deep_merge, { "a" => { "b" => 1 } }, { "a" => 2 })).to eq("a" => 2)
+    end
+
+    it "adds keys only present in the override" do
+      expect(driver.send(:deep_merge, { "a" => 1 }, { "b" => 2 })).to eq("a" => 1, "b" => 2)
+    end
+
+    it "does not mutate either input" do
+      base = { "auth" => { "username" => "a" } }
+      override = { "auth" => { "password" => "b" } }
+
       driver.send(:deep_merge, base, override)
-      expect(base["auth"]["password"]).to eq("old")
+
+      expect(base).to eq("auth" => { "username" => "a" })
+      expect(override).to eq("auth" => { "password" => "b" })
+    end
+  end
+
+  describe "#translate_cloud_config" do
+    it "maps every auth key it knows about" do
+      cloud = {
+        "auth" => {
+          "auth_url" => "https://keystone.example.com:5000/v3",
+          "username" => "testuser",
+          "password" => "testpass",
+          "project_name" => "testproject",
+          "project_id" => "pid",
+          "user_domain_name" => "Default",
+          "user_domain_id" => "udid",
+          "project_domain_name" => "Default",
+          "project_domain_id" => "pdid",
+          "domain_id" => "default",
+          "domain_name" => "Default",
+        },
+      }
+
+      expect(driver.send(:translate_cloud_config, cloud)).to eq(
+        openstack_auth_url: "https://keystone.example.com:5000/v3",
+        openstack_username: "testuser",
+        openstack_api_key: "testpass",
+        openstack_project_name: "testproject",
+        openstack_project_id: "pid",
+        openstack_user_domain: "Default",
+        openstack_user_domain_id: "udid",
+        openstack_project_domain: "Default",
+        openstack_project_domain_id: "pdid",
+        openstack_domain_id: "default",
+        openstack_domain_name: "Default"
+      )
+    end
+
+    it "maps the top-level keys" do
+      cloud = { "region_name" => "RegionOne", "interface" => "public", "identity_api_version" => "3" }
+
+      expect(driver.send(:translate_cloud_config, cloud)).to eq(
+        openstack_region: "RegionOne",
+        openstack_endpoint_type: "public",
+        openstack_identity_api_version: "3"
+      )
+    end
+
+    it "maps application credentials" do
+      cloud = { "auth" => { "application_credential_id" => "acid", "application_credential_secret" => "acsecret" } }
+
+      expect(driver.send(:translate_cloud_config, cloud)).to eq(
+        openstack_application_credential_id: "acid",
+        openstack_application_credential_secret: "acsecret"
+      )
+    end
+
+    it "returns an empty hash for an empty cloud" do
+      expect(driver.send(:translate_cloud_config, {})).to eq({})
+    end
+
+    it "skips keys it does not recognize" do
+      expect(driver.send(:translate_cloud_config, { "auth" => { "nonsense" => "x" } })).to eq({})
+    end
+
+    # YAML parses `identity_api_version: 3` and numeric project ids as
+    # Integers; Fog then chokes on them.
+    it "stringifies values YAML parsed as numbers" do
+      cloud = { "identity_api_version" => 3, "auth" => { "project_id" => 12345 } }
+
+      expect(driver.send(:translate_cloud_config, cloud))
+        .to eq(openstack_identity_api_version: "3", openstack_project_id: "12345")
+    end
+
+    describe "SSL settings" do
+      it "carries a cacert path through" do
+        expect(driver.send(:translate_cloud_config, { "cacert" => "/path/ca.crt" }))
+          .to eq(ssl_ca_file: "/path/ca.crt")
+      end
+
+      it "carries verify: false through as a boolean" do
+        expect(driver.send(:translate_cloud_config, { "verify" => false }))
+          .to eq(ssl_verify_peer: false)
+      end
+
+      it "carries verify: true through" do
+        expect(driver.send(:translate_cloud_config, { "verify" => true }))
+          .to eq(ssl_verify_peer: true)
+      end
+
+      it "omits ssl_verify_peer when verify is absent" do
+        expect(driver.send(:translate_cloud_config, {})).not_to have_key(:ssl_verify_peer)
+      end
     end
   end
 
   describe "#load_env_vars" do
-    before do
-      allow(ENV).to receive(:[]).and_call_original
-      Kitchen::Driver::Openstack::Clouds::ENV_VAR_MAP.each_key do |var|
-        allow(ENV).to receive(:[]).with(var).and_return(nil)
-      end
+    it "is empty when nothing is set" do
+      stub_env
+
+      expect(driver.send(:load_env_vars)).to eq({})
     end
 
-    context "when no OS_* env vars are set" do
-      it "returns an empty hash" do
-        expect(driver.send(:load_env_vars)).to eq({})
-      end
+    it "maps every variable it knows about" do
+      stub_env(
+        "OS_AUTH_URL" => "https://env.example.com:5000/v3",
+        "OS_USERNAME" => "envuser",
+        "OS_PASSWORD" => "envpass",
+        "OS_PROJECT_NAME" => "envproject",
+        "OS_PROJECT_ID" => "envpid",
+        "OS_USER_DOMAIN_NAME" => "EnvDomain",
+        "OS_USER_DOMAIN_ID" => "envudid",
+        "OS_PROJECT_DOMAIN_NAME" => "EnvProjDomain",
+        "OS_PROJECT_DOMAIN_ID" => "envpdid",
+        "OS_DOMAIN_ID" => "envdomid",
+        "OS_DOMAIN_NAME" => "EnvDomainName",
+        "OS_REGION_NAME" => "EnvRegion",
+        "OS_INTERFACE" => "internal",
+        "OS_IDENTITY_API_VERSION" => "3",
+        "OS_APPLICATION_CREDENTIAL_ID" => "envacid",
+        "OS_APPLICATION_CREDENTIAL_SECRET" => "envacsecret",
+        "OS_CACERT" => "/env/ca.crt"
+      )
+
+      expect(driver.send(:load_env_vars)).to eq(
+        openstack_auth_url: "https://env.example.com:5000/v3",
+        openstack_username: "envuser",
+        openstack_api_key: "envpass",
+        openstack_project_name: "envproject",
+        openstack_project_id: "envpid",
+        openstack_user_domain: "EnvDomain",
+        openstack_user_domain_id: "envudid",
+        openstack_project_domain: "EnvProjDomain",
+        openstack_project_domain_id: "envpdid",
+        openstack_domain_id: "envdomid",
+        openstack_domain_name: "EnvDomainName",
+        openstack_region: "EnvRegion",
+        openstack_endpoint_type: "internal",
+        openstack_identity_api_version: "3",
+        openstack_application_credential_id: "envacid",
+        openstack_application_credential_secret: "envacsecret",
+        ssl_ca_file: "/env/ca.crt"
+      )
     end
 
-    context "when OS_AUTH_URL and OS_USERNAME are set" do
-      before do
-        allow(ENV).to receive(:[]).with("OS_AUTH_URL").and_return("https://env.example.com:5000/v3")
-        allow(ENV).to receive(:[]).with("OS_USERNAME").and_return("envuser")
-      end
-
-      it "maps them to fog config keys" do
-        result = driver.send(:load_env_vars)
-        expect(result[:openstack_auth_url]).to eq("https://env.example.com:5000/v3")
-        expect(result[:openstack_username]).to eq("envuser")
-      end
+    it "covers the whole documented map" do
+      expect(described_class::ENV_VAR_MAP.keys).to all(start_with("OS_"))
     end
 
-    context "when all standard OS_* env vars are set" do
-      before do
-        allow(ENV).to receive(:[]).with("OS_AUTH_URL").and_return("https://env.example.com:5000/v3")
-        allow(ENV).to receive(:[]).with("OS_USERNAME").and_return("envuser")
-        allow(ENV).to receive(:[]).with("OS_PASSWORD").and_return("envpass")
-        allow(ENV).to receive(:[]).with("OS_PROJECT_NAME").and_return("envproject")
-        allow(ENV).to receive(:[]).with("OS_USER_DOMAIN_NAME").and_return("EnvDomain")
-        allow(ENV).to receive(:[]).with("OS_PROJECT_DOMAIN_NAME").and_return("EnvProjDomain")
-        allow(ENV).to receive(:[]).with("OS_DOMAIN_ID").and_return("envdomid")
-        allow(ENV).to receive(:[]).with("OS_REGION_NAME").and_return("EnvRegion")
-        allow(ENV).to receive(:[]).with("OS_IDENTITY_API_VERSION").and_return("3")
-      end
+    # An exported-but-empty variable is how shells leave a cleared setting; it
+    # must not shadow the same key from clouds.yaml.
+    it "ignores empty variables" do
+      stub_env("OS_AUTH_URL" => "", "OS_USERNAME" => "envuser")
 
-      it "maps all env vars to fog config keys" do
-        result = driver.send(:load_env_vars)
-        expect(result[:openstack_auth_url]).to eq("https://env.example.com:5000/v3")
-        expect(result[:openstack_username]).to eq("envuser")
-        expect(result[:openstack_api_key]).to eq("envpass")
-        expect(result[:openstack_project_name]).to eq("envproject")
-        expect(result[:openstack_user_domain]).to eq("EnvDomain")
-        expect(result[:openstack_project_domain]).to eq("EnvProjDomain")
-        expect(result[:openstack_domain_id]).to eq("envdomid")
-        expect(result[:openstack_region]).to eq("EnvRegion")
-        expect(result[:openstack_identity_api_version]).to eq("3")
-      end
+      expect(driver.send(:load_env_vars)).to eq(openstack_username: "envuser")
+    end
+  end
+
+  describe "#load_clouds_config" do
+    it "is empty when no cloud is named" do
+      use_clouds_file
+
+      expect(driver.send(:load_clouds_config)).to eq({})
     end
 
-    context "when OS_CACERT is set" do
-      before do
-        allow(ENV).to receive(:[]).with("OS_CACERT").and_return("/env/ca.crt")
-      end
+    it "translates the named cloud" do
+      use_clouds_file(env: { "OS_CLOUD" => "mycloud" })
 
-      it "maps to ssl_ca_file" do
-        result = driver.send(:load_env_vars)
-        expect(result[:ssl_ca_file]).to eq("/env/ca.crt")
-      end
+      expect(driver.send(:load_clouds_config)).to include(
+        openstack_auth_url: "https://keystone.example.com:5000/v3",
+        openstack_username: "testuser",
+        openstack_api_key: "testpass",
+        openstack_region: "RegionOne",
+        openstack_identity_api_version: "3"
+      )
     end
 
-    context "when an OS_* var is empty string" do
-      before do
-        allow(ENV).to receive(:[]).with("OS_AUTH_URL").and_return("")
-      end
+    it "is empty when the named cloud is absent" do
+      use_clouds_file(env: { "OS_CLOUD" => "nonexistent" })
 
-      it "ignores the empty value" do
-        result = driver.send(:load_env_vars)
-        expect(result).not_to have_key(:openstack_auth_url)
-      end
+      expect(driver.send(:load_clouds_config)).to eq({})
     end
 
-    context "with application credential env vars" do
-      before do
-        allow(ENV).to receive(:[]).with("OS_APPLICATION_CREDENTIAL_ID").and_return("appcred-id")
-        allow(ENV).to receive(:[]).with("OS_APPLICATION_CREDENTIAL_SECRET").and_return("appcred-secret")
+    it "is empty when there is no clouds.yaml at all" do
+      stub_env("OS_CLOUD" => "mycloud")
+      allow(Dir).to receive_messages(pwd: File.join(tmpdir, "empty"), home: File.join(tmpdir, "empty"))
+
+      expect(driver.send(:load_clouds_config)).to eq({})
+    end
+
+    it "reads clouds.yaml from clouds_yaml_path" do
+      stub_env
+      config[:openstack_cloud] = "mycloud"
+      config[:clouds_yaml_path] = write_yaml("clouds.yaml", clouds_yaml)
+
+      expect(driver.send(:load_clouds_config)).to include(openstack_username: "testuser")
+    end
+
+    describe "secure.yaml" do
+      let(:secure_yaml) do
+        { "clouds" => { "mycloud" => { "auth" => { "password" => "secretpass" } } } }
       end
 
-      it "maps application credential env vars" do
-        result = driver.send(:load_env_vars)
-        expect(result[:openstack_application_credential_id]).to eq("appcred-id")
-        expect(result[:openstack_application_credential_secret]).to eq("appcred-secret")
+      it "overrides the password from clouds.yaml" do
+        use_clouds_file(secure: secure_yaml, env: { "OS_CLOUD" => "mycloud" })
+
+        expect(driver.send(:load_clouds_config)).to include(openstack_api_key: "secretpass")
+      end
+
+      it "leaves the rest of clouds.yaml intact" do
+        use_clouds_file(secure: secure_yaml, env: { "OS_CLOUD" => "mycloud" })
+
+        expect(driver.send(:load_clouds_config)).to include(openstack_username: "testuser")
+      end
+
+      it "ignores entries for other clouds" do
+        other = { "clouds" => { "othercloud" => { "auth" => { "password" => "nope" } } } }
+        use_clouds_file(secure: other, env: { "OS_CLOUD" => "mycloud" })
+
+        expect(driver.send(:load_clouds_config)).to include(openstack_api_key: "testpass")
       end
     end
   end
 
   describe "#apply_clouds_config" do
-    before do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("OS_CLIENT_CONFIG_FILE").and_return(nil)
-      allow(ENV).to receive(:[]).with("OS_CLIENT_SECURE_FILE").and_return(nil)
-      allow(ENV).to receive(:[]).with("OS_CLOUD").and_return(nil)
-      Kitchen::Driver::Openstack::Clouds::ENV_VAR_MAP.each_key do |var|
-        allow(ENV).to receive(:[]).with(var).and_return(nil)
-      end
+    it "does nothing when there is nothing to apply" do
+      stub_env
+      allow(Dir).to receive_messages(pwd: File.join(tmpdir, "empty"), home: File.join(tmpdir, "empty"))
+
+      driver.send(:apply_clouds_config)
+
+      expect(driver[:openstack_username]).to be_nil
     end
 
-    context "when clouds.yaml provides settings" do
-      let(:config) { { openstack_cloud: "mycloud" } }
+    it "fills in values from clouds.yaml" do
+      use_clouds_file(env: { "OS_CLOUD" => "mycloud" })
 
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
+      driver.send(:apply_clouds_config)
 
-      it "merges clouds.yaml values into config" do
-        driver.send(:apply_clouds_config)
-        expect(driver[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-        expect(driver[:openstack_username]).to eq("testuser")
-        expect(driver[:openstack_api_key]).to eq("testpass")
-        expect(driver[:openstack_domain_id]).to eq("default")
-        expect(driver[:openstack_region]).to eq("RegionOne")
-      end
-
-      it "does not override existing config values" do
-        config[:openstack_region] = "OverriddenRegion"
-        driver.send(:apply_clouds_config)
-        expect(driver[:openstack_region]).to eq("OverriddenRegion")
-        expect(driver[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-      end
+      expect(driver[:openstack_username]).to eq("testuser")
+      expect(driver[:openstack_api_key]).to eq("testpass")
+      expect(driver[:openstack_region]).to eq("RegionOne")
     end
 
-    context "when SSL verify is false in clouds.yaml" do
-      let(:config) { { openstack_cloud: "sslcloud" } }
+    it "fills in values from OS_* variables with no clouds.yaml" do
+      stub_env("OS_AUTH_URL" => "https://env.example.com:5000/v3", "OS_USERNAME" => "envuser")
+      allow(Dir).to receive_messages(pwd: File.join(tmpdir, "empty"), home: File.join(tmpdir, "empty"))
 
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
+      driver.send(:apply_clouds_config)
 
-      it "sets disable_ssl_validation in config" do
-        driver.send(:apply_clouds_config)
-        expect(driver[:disable_ssl_validation]).to eq(true)
-      end
+      expect(driver[:openstack_username]).to eq("envuser")
     end
 
-    context "when no cloud is configured" do
-      it "does not modify config" do
-        original = driver[:openstack_username]
+    describe "precedence" do
+      it "lets OS_* variables beat clouds.yaml" do
+        use_clouds_file(env: { "OS_CLOUD" => "mycloud", "OS_USERNAME" => "envuser" })
+
         driver.send(:apply_clouds_config)
-        expect(driver[:openstack_username]).to eq(original)
-      end
-    end
 
-    context "using OS_CLOUD env var" do
-      before do
-        allow(ENV).to receive(:[]).with("OS_CLOUD").and_return("mycloud")
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-      end
-
-      it "merges values from clouds.yaml via env var" do
-        driver.send(:apply_clouds_config)
-        expect(driver[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-        expect(driver[:openstack_username]).to eq("testuser")
-      end
-    end
-
-    context "when only OS_* env vars are set (no clouds.yaml)" do
-      before do
-        allow(ENV).to receive(:[]).with("OS_AUTH_URL").and_return("https://env.example.com:5000/v3")
-        allow(ENV).to receive(:[]).with("OS_USERNAME").and_return("envuser")
-        allow(ENV).to receive(:[]).with("OS_PASSWORD").and_return("envpass")
-        allow(ENV).to receive(:[]).with("OS_DOMAIN_ID").and_return("envdomid")
-        allow(ENV).to receive(:[]).with("OS_REGION_NAME").and_return("EnvRegion")
-      end
-
-      it "populates config from env vars" do
-        driver.send(:apply_clouds_config)
-        expect(driver[:openstack_auth_url]).to eq("https://env.example.com:5000/v3")
-        expect(driver[:openstack_username]).to eq("envuser")
-        expect(driver[:openstack_api_key]).to eq("envpass")
-        expect(driver[:openstack_domain_id]).to eq("envdomid")
-        expect(driver[:openstack_region]).to eq("EnvRegion")
-      end
-    end
-
-    context "when OS_* env vars override clouds.yaml values" do
-      let(:config) { { openstack_cloud: "mycloud" } }
-
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-        allow(ENV).to receive(:[]).with("OS_REGION_NAME").and_return("EnvRegionOverride")
-      end
-
-      it "uses env var value over clouds.yaml" do
-        driver.send(:apply_clouds_config)
-        expect(driver[:openstack_region]).to eq("EnvRegionOverride")
-        # clouds.yaml values still fill remaining keys
-        expect(driver[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-        expect(driver[:openstack_username]).to eq("testuser")
-      end
-    end
-
-    context "when kitchen.yml overrides OS_* env vars" do
-      let(:config) { { openstack_region: "KitchenRegion" } }
-
-      before do
-        allow(ENV).to receive(:[]).with("OS_AUTH_URL").and_return("https://env.example.com:5000/v3")
-        allow(ENV).to receive(:[]).with("OS_USERNAME").and_return("envuser")
-        allow(ENV).to receive(:[]).with("OS_PASSWORD").and_return("envpass")
-        allow(ENV).to receive(:[]).with("OS_DOMAIN_ID").and_return("envdomid")
-        allow(ENV).to receive(:[]).with("OS_REGION_NAME").and_return("EnvRegion")
-      end
-
-      it "uses kitchen.yml value over env var" do
-        driver.send(:apply_clouds_config)
-        expect(driver[:openstack_region]).to eq("KitchenRegion")
-        # env var values still fill remaining keys
-        expect(driver[:openstack_auth_url]).to eq("https://env.example.com:5000/v3")
         expect(driver[:openstack_username]).to eq("envuser")
       end
-    end
 
-    context "full precedence: kitchen.yml > OS_* > clouds.yaml" do
-      let(:config) { { openstack_cloud: "mycloud", openstack_username: "kitchenuser" } }
+      it "lets kitchen.yml beat OS_* variables" do
+        use_clouds_file(env: { "OS_CLOUD" => "mycloud", "OS_USERNAME" => "envuser" })
+        config[:openstack_username] = "kitchenuser"
 
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(File).to receive(:exist?)
-          .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-        allow(File).to receive(:read)
-          .with(File.join(Dir.pwd, "clouds.yaml"))
-          .and_return(YAML.dump(clouds_yaml_content))
-        allow(ENV).to receive(:[]).with("OS_USERNAME").and_return("envuser")
-        allow(ENV).to receive(:[]).with("OS_REGION_NAME").and_return("EnvRegion")
-      end
-
-      it "respects the full precedence chain" do
         driver.send(:apply_clouds_config)
-        # kitchen.yml wins over both env and clouds.yaml
+
         expect(driver[:openstack_username]).to eq("kitchenuser")
-        # OS_* env var wins over clouds.yaml
-        expect(driver[:openstack_region]).to eq("EnvRegion")
-        # clouds.yaml fills remaining nils
-        expect(driver[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-        expect(driver[:openstack_api_key]).to eq("testpass")
+      end
+
+      it "resolves the full three-way chain per key" do
+        use_clouds_file(
+          env: {
+            "OS_CLOUD" => "mycloud",
+            "OS_USERNAME" => "envuser",
+            "OS_REGION_NAME" => "EnvRegion",
+          }
+        )
+        config[:openstack_username] = "kitchenuser"
+
+        driver.send(:apply_clouds_config)
+
+        expect(driver[:openstack_username]).to eq("kitchenuser")  # kitchen.yml wins
+        expect(driver[:openstack_region]).to eq("EnvRegion")      # env beats clouds.yaml
+        expect(driver[:openstack_api_key]).to eq("testpass")      # only clouds.yaml has it
+      end
+    end
+
+    describe "SSL handling" do
+      it "turns off validation when clouds.yaml says verify: false" do
+        cloud = clouds_yaml
+        cloud["clouds"]["mycloud"]["verify"] = false
+        use_clouds_file(cloud, env: { "OS_CLOUD" => "mycloud" })
+
+        driver.send(:apply_clouds_config)
+
+        expect(driver[:disable_ssl_validation]).to be(true)
+      end
+
+      it "leaves validation on when verify is true" do
+        cloud = clouds_yaml
+        cloud["clouds"]["mycloud"]["verify"] = true
+        use_clouds_file(cloud, env: { "OS_CLOUD" => "mycloud" })
+
+        driver.send(:apply_clouds_config)
+
+        expect(driver[:disable_ssl_validation]).to be_nil
+      end
+
+      it "leaves validation on when verify is absent" do
+        use_clouds_file(env: { "OS_CLOUD" => "mycloud" })
+
+        driver.send(:apply_clouds_config)
+
+        expect(driver[:disable_ssl_validation]).to be_nil
+      end
+
+      it "carries a cacert from clouds.yaml into ssl_ca_file" do
+        cloud = clouds_yaml
+        cloud["clouds"]["mycloud"]["cacert"] = "/path/ca.crt"
+        use_clouds_file(cloud, env: { "OS_CLOUD" => "mycloud" })
+
+        driver.send(:apply_clouds_config)
+
+        expect(driver[:ssl_ca_file]).to eq("/path/ca.crt")
+      end
+
+      it "carries OS_CACERT into ssl_ca_file" do
+        use_clouds_file(env: { "OS_CLOUD" => "mycloud", "OS_CACERT" => "/env/ca.crt" })
+
+        driver.send(:apply_clouds_config)
+
+        expect(driver[:ssl_ca_file]).to eq("/env/ca.crt")
       end
     end
   end
 
-  describe "#openstack_server with clouds.yaml" do
-    let(:config) { { openstack_cloud: "mycloud" } }
+  describe "end-to-end through openstack_server" do
+    it "hands clouds.yaml credentials to Fog" do
+      use_clouds_file(env: { "OS_CLOUD" => "mycloud" })
 
-    before do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("OS_CLIENT_CONFIG_FILE").and_return(nil)
-      allow(ENV).to receive(:[]).with("OS_CLIENT_SECURE_FILE").and_return(nil)
-      allow(ENV).to receive(:[]).with("OS_CLOUD").and_return(nil)
-      Kitchen::Driver::Openstack::Clouds::ENV_VAR_MAP.each_key do |var|
-        allow(ENV).to receive(:[]).with(var).and_return(nil)
-      end
-      allow(File).to receive(:exist?).and_return(false)
-      allow(File).to receive(:exist?)
-        .with(File.join(Dir.pwd, "clouds.yaml")).and_return(true)
-      allow(File).to receive(:read)
-        .with(File.join(Dir.pwd, "clouds.yaml"))
-        .and_return(YAML.dump(clouds_yaml_content))
-    end
-
-    it "populates server settings after apply_clouds_config" do
       driver.send(:apply_clouds_config)
-      result = driver.send(:openstack_server)
-      expect(result[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-      expect(result[:openstack_username]).to eq("testuser")
-      expect(result[:openstack_api_key]).to eq("testpass")
-      expect(result[:openstack_domain_id]).to eq("default")
-      expect(result[:openstack_region]).to eq("RegionOne")
+
+      expect(driver.send(:openstack_server)).to include(
+        openstack_username: "testuser",
+        openstack_api_key: "testpass",
+        openstack_auth_url: "https://keystone.example.com:5000/v3",
+        openstack_domain_id: "default",
+        openstack_region: "RegionOne"
+      )
     end
 
-    context "when kitchen.yml overrides clouds.yaml values" do
-      let(:config) do
-        {
-          openstack_cloud: "mycloud",
-          openstack_region: "OverriddenRegion",
+    it "prefixes the identity API version so Fog does not re-coerce it" do
+      use_clouds_file(env: { "OS_CLOUD" => "mycloud" })
+
+      driver.send(:apply_clouds_config)
+
+      expect(driver.send(:openstack_server)[:openstack_identity_api_version]).to eq("v3")
+    end
+
+    it "routes a clouds.yaml cacert into the Excon connection options" do
+      cloud = clouds_yaml
+      cloud["clouds"]["mycloud"]["cacert"] = "/path/ca.crt"
+      use_clouds_file(cloud, env: { "OS_CLOUD" => "mycloud" })
+
+      driver.send(:apply_clouds_config)
+
+      expect(driver.send(:openstack_server)[:connection_options])
+        .to include(ssl_ca_file: "/path/ca.crt")
+    end
+  end
+
+  describe "constants" do
+    # Pinned as a literal rather than recomputed from the two maps: the
+    # constant is *defined* as those maps' values, so asserting the same
+    # expression could never fail. Spelled out, adding a clouds.yaml mapping
+    # forces a deliberate decision about whether Fog wants it stringified.
+    it "treats every mapped auth and top-level key as string-valued" do
+      expect(described_class::STRING_CONFIG_KEYS).to match_array(
+        %i{
+          openstack_auth_url
+          openstack_username
+          openstack_api_key
+          openstack_project_name
+          openstack_project_id
+          openstack_user_domain
+          openstack_user_domain_id
+          openstack_project_domain
+          openstack_project_domain_id
+          openstack_domain_id
+          openstack_domain_name
+          openstack_application_credential_id
+          openstack_application_credential_secret
+          openstack_region
+          openstack_endpoint_type
+          openstack_identity_api_version
         }
-      end
-
-      it "uses the kitchen.yml value for the overridden key" do
-        driver.send(:apply_clouds_config)
-        result = driver.send(:openstack_server)
-        expect(result[:openstack_region]).to eq("OverriddenRegion")
-        expect(result[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-      end
+      )
     end
 
-    context "using OS_CLOUD env var" do
-      let(:config) { {} }
-
-      before do
-        allow(ENV).to receive(:[]).with("OS_CLOUD").and_return("mycloud")
-      end
-
-      it "populates server settings from clouds.yaml via env var" do
-        driver.send(:apply_clouds_config)
-        result = driver.send(:openstack_server)
-        expect(result[:openstack_auth_url]).to eq("https://keystone.example.com:5000/v3")
-        expect(result[:openstack_username]).to eq("testuser")
-      end
-    end
-
-    context "using only OS_* env vars (no clouds.yaml)" do
-      let(:config) { {} }
-
-      before do
-        allow(File).to receive(:exist?).and_return(false)
-        allow(ENV).to receive(:[]).with("OS_AUTH_URL").and_return("https://env.example.com:5000/v3")
-        allow(ENV).to receive(:[]).with("OS_USERNAME").and_return("envuser")
-        allow(ENV).to receive(:[]).with("OS_PASSWORD").and_return("envpass")
-        allow(ENV).to receive(:[]).with("OS_DOMAIN_ID").and_return("envdomid")
-      end
-
-      it "populates server settings from env vars" do
-        driver.send(:apply_clouds_config)
-        result = driver.send(:openstack_server)
-        expect(result[:openstack_auth_url]).to eq("https://env.example.com:5000/v3")
-        expect(result[:openstack_username]).to eq("envuser")
-        expect(result[:openstack_api_key]).to eq("envpass")
-        expect(result[:openstack_domain_id]).to eq("envdomid")
-      end
+    it "does not stringify the SSL keys, which are a boolean and a path" do
+      expect(described_class::STRING_CONFIG_KEYS).not_to include(:ssl_verify_peer, :ssl_ca_file)
     end
   end
 end

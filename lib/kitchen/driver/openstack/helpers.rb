@@ -28,8 +28,20 @@ module Kitchen
     class Openstack < Kitchen::Driver::Base
       # Ohai hints, SSL handling, and server wait helpers
       module Helpers
+        # Seconds between progress dots while counting down.
+        #
+        # @return [Integer]
+        COUNTDOWN_TICK = 10
+
         private
 
+        # Drops an empty `openstack.json` ohai hint on the new instance so
+        # that Chef Infra's ohai run picks up OpenStack metadata.
+        #
+        # Does nothing on platforms that are neither Bourne-shell nor Windows.
+        #
+        # @param state [Hash] instance state, used to open a transport session
+        # @return [void]
         def add_ohai_hint(state)
           if bourne_shell?
             info "Adding OpenStack hint for ohai"
@@ -45,18 +57,40 @@ module Kitchen
             instance.transport.connection(state).execute(
               "#{touch_cmd} #{touch_cmd_args}"
             )
+          else
+            debug "Unknown platform shell; skipping the OpenStack ohai hint"
           end
         end
 
+        # The directory ohai reads hint files from.
+        #
+        # @return [String] the first configured ohai hints path
         def hints_path
           Ohai.config[:hints_path][0]
         end
 
+        # Turns off TLS peer verification for every subsequent Excon request in
+        # this process.
+        #
+        # Called when the `disable_ssl_validation` config key is set, which the
+        # user sets directly in kitchen.yml or which is inferred from a
+        # `verify: false` entry in clouds.yaml.
+        #
+        # @return [void]
         def disable_ssl_validation
           require "excon" unless defined?(Excon)
           Excon.defaults[:ssl_verify_peer] = false
         end
 
+        # Blocks until the transport reports the instance is reachable,
+        # destroying the instance if it never comes up.
+        #
+        # A server we cannot reach is a server we cannot clean up later, so the
+        # failure path tears it down before re-raising rather than leaking it.
+        #
+        # @param state [Hash] instance state, containing `:hostname`
+        # @return [void]
+        # @raise [StandardError] whatever the transport raised, after cleanup
         def wait_for_server(state)
           if config[:server_wait]
             info "Sleeping for #{config[:server_wait]} seconds to let your server start up..."
@@ -64,17 +98,22 @@ module Kitchen
           end
           info "Waiting for server to be ready..."
           instance.transport.connection(state).wait_until_ready
-        rescue
-          error "Server #{state[:hostname]} (#{state[:server_id]}) not reachable. Destroying server..."
+        rescue => e
+          error "Server #{state[:hostname]} (#{state[:server_id]}) not reachable: #{e.message}. Destroying server..."
           destroy(state)
           raise
         end
 
+        # Prints a progress dot every {COUNTDOWN_TICK} seconds for the given
+        # duration.
+        #
+        # @param seconds [Integer] how long to wait
+        # @return [void]
         def countdown(seconds)
-          date1 = Time.now + seconds
-          while Time.now < date1
+          finish_at = Time.now + seconds
+          while Time.now < finish_at
             Kernel.print "."
-            sleep 10
+            sleep COUNTDOWN_TICK
           end
         end
       end
