@@ -327,6 +327,114 @@ RSpec.describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe "#doctor" do
+    let(:servers) { double("Fog servers collection", summary: []) }
+    let(:compute) { fog_compute(servers: servers) }
+    let(:config) do
+      {
+        openstack_username: "user", openstack_api_key: "secret",
+        openstack_auth_url: "https://keystone.example.com/v3",
+        image_id: "img-1", flavor_id: "flavor-1"
+      }
+    end
+
+    before { allow(driver).to receive(:compute).and_return(compute) }
+
+    def doctor_messages
+      messages = []
+      allow(driver).to receive(:warn) { |m| messages << m }
+      [driver.doctor({}), messages]
+    end
+
+    it "passes on a complete configuration" do
+      found, messages = doctor_messages
+
+      expect(found).to be(false)
+      expect(messages).to be_empty
+    end
+
+    context "with no credentials at all" do
+      let(:config) { { image_id: "img-1", flavor_id: "flavor-1" } }
+
+      it "names each missing setting and where it can come from" do
+        found, messages = doctor_messages
+
+        expect(found).to be(true)
+        joined = messages.join("\n")
+        expect(joined).to include("openstack_username is not set")
+        expect(joined).to include("OS_PASSWORD")
+        expect(joined).to include("clouds.yaml")
+      end
+
+      it "does not also complain about a connection it never tried" do
+        _found, messages = doctor_messages
+
+        expect(messages.join("\n")).not_to include("rejected the configured credentials")
+      end
+    end
+
+    it "reports credentials Keystone rejects" do
+      allow(servers).to receive(:summary).and_raise(Excon::Errors::Unauthorized.new("401"))
+
+      found, messages = doctor_messages
+
+      expect(found).to be(true)
+      expect(messages.join("\n")).to include("rejected the configured credentials")
+    end
+
+    context "with both image_id and image_ref" do
+      let(:config) do
+        {
+          openstack_username: "user", openstack_api_key: "secret",
+          openstack_auth_url: "https://keystone.example.com/v3",
+          image_id: "img-1", image_ref: "ubuntu", flavor_id: "flavor-1"
+        }
+      end
+
+      it "reports the conflict create would raise on" do
+        found, messages = doctor_messages
+
+        expect(found).to be(true)
+        expect(messages.join("\n")).to include("Both image_id and image_ref are set")
+      end
+    end
+
+    context "with both flavor_id and flavor_ref" do
+      let(:config) do
+        {
+          openstack_username: "user", openstack_api_key: "secret",
+          openstack_auth_url: "https://keystone.example.com/v3",
+          image_id: "img-1", flavor_id: "flavor-1", flavor_ref: "m1.small"
+        }
+      end
+
+      it "reports the conflict create would raise on" do
+        found, messages = doctor_messages
+
+        expect(found).to be(true)
+        expect(messages.join("\n")).to include("Both flavor_id and flavor_ref are set")
+      end
+    end
+
+    context "with neither an image nor a flavor selected" do
+      let(:config) do
+        {
+          openstack_username: "user", openstack_api_key: "secret",
+          openstack_auth_url: "https://keystone.example.com/v3"
+        }
+      end
+
+      it "reports both gaps" do
+        found, messages = doctor_messages
+
+        expect(found).to be(true)
+        joined = messages.join("\n")
+        expect(joined).to include("Neither image_id nor image_ref is set")
+        expect(joined).to include("Neither flavor_id nor flavor_ref is set")
+      end
+    end
+  end
+
   describe "#destroy" do
     let(:state)   { { server_id: "test123", hostname: "1.2.3.4" } }
     let(:servers) { double("Fog servers collection", get: server) }

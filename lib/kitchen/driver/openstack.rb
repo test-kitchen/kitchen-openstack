@@ -218,6 +218,19 @@ module Kitchen
         }
       end
 
+      # Checks the configuration for the mistakes that otherwise surface part
+      # way through +create+, once a server may already be building and
+      # billing.
+      #
+      # @param state [Hash] mutable instance and driver state
+      # @return [Boolean] true when a problem was reported
+      def doctor(state) # rubocop:disable Lint/UnusedMethodArgument
+        problems = credential_problems + image_flavor_problems
+
+        problems.each { |problem| warn(problem) }
+        !problems.empty?
+      end
+
       private
 
       # Looks a server up without turning an unreachable cloud into a failure.
@@ -230,6 +243,54 @@ module Kitchen
         compute.servers.get(server_id)
       rescue ::StandardError
         nil
+      end
+
+      # The three settings without which Keystone cannot authenticate. They are
+      # in +required_server_settings+, but that only means Fog is handed them
+      # even when nil -- nothing rejects a nil before the request goes out.
+      #
+      # @return [Array<String>] one problem per unset setting, then an
+      #   authentication check when all three are present
+      def credential_problems
+        missing = {
+          openstack_username: "OS_USERNAME",
+          openstack_api_key: "OS_PASSWORD",
+          openstack_auth_url: "OS_AUTH_URL",
+        }.filter_map do |key, env|
+          if config[key].to_s.empty?
+            "#{key} is not set: set it in kitchen.yml, export #{env}, or " \
+              "put it in clouds.yaml."
+          end
+        end
+        return missing unless missing.empty?
+
+        compute.servers.summary
+        []
+      rescue ::StandardError => e
+        ["OpenStack rejected the configured credentials at " \
+         "#{config[:openstack_auth_url]}: #{e.message}"]
+      end
+
+      # The image and flavor pairs that +create+ refuses, checked here so the
+      # refusal arrives before the run starts rather than during it.
+      #
+      # @return [Array<String>] the conflicting or missing selections
+      def image_flavor_problems
+        problems = []
+
+        if config[:image_id] && config[:image_ref]
+          problems << "Both image_id and image_ref are set; create accepts only one."
+        elsif config[:image_id].nil? && config[:image_ref].nil?
+          problems << "Neither image_id nor image_ref is set; there is no image to build from."
+        end
+
+        if config[:flavor_id] && config[:flavor_ref]
+          problems << "Both flavor_id and flavor_ref are set; create accepts only one."
+        elsif config[:flavor_id].nil? && config[:flavor_ref].nil?
+          problems << "Neither flavor_id nor flavor_ref is set; there is no flavor to size the server with."
+        end
+
+        problems
       end
 
       # Releases a floating IP back to its pool.
