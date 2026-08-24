@@ -15,10 +15,6 @@ group :docs do
   gem "yard"
 end
 
-group :debug do
-  gem "pry"
-end
-
 group :cookstyle do
   gem "cookstyle"
 end
