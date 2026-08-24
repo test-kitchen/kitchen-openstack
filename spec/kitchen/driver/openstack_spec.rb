@@ -271,6 +271,62 @@ RSpec.describe Kitchen::Driver::Openstack do
     end
   end
 
+  describe "#status" do
+    let(:servers) { double("Fog servers collection", get: server) }
+    let(:compute) { fog_compute(servers: servers) }
+
+    before { allow(driver).to receive(:compute).and_return(compute) }
+
+    it "reports an unknown status when state names no server" do
+      expect(driver.status({})).to include(live: nil, state: "unknown")
+    end
+
+    it "reports an unknown status when Nova does not know the server" do
+      allow(servers).to receive(:get).with("gone").and_return(nil)
+
+      expect(driver.status(server_id: "gone")).to include(state: "unknown")
+    end
+
+    context "with an ACTIVE server" do
+      let(:server) { fog_server(state: "ACTIVE") }
+
+      it "reports it as live" do
+        expect(driver.status(server_id: "test123")).to include(
+          live: true, state: "ACTIVE", source: "driver", resource_id: "test123"
+        )
+      end
+
+      it "stamps when the check happened" do
+        expect(driver.status(server_id: "test123")[:checked_at])
+          .to match(/\A\d{4}-\d{2}-\d{2}T/)
+      end
+    end
+
+    context "with a server Nova has not finished building" do
+      let(:server) { fog_server(state: "BUILD") }
+
+      it "reports it as not live" do
+        expect(driver.status(server_id: "test123"))
+          .to include(live: false, state: "BUILD")
+      end
+    end
+
+    context "with a server in ERROR" do
+      let(:server) { fog_server(state: "ERROR") }
+
+      it "reports it as not live but names the state" do
+        expect(driver.status(server_id: "test123"))
+          .to include(live: false, state: "ERROR")
+      end
+    end
+
+    it "reports an unknown status when the cloud cannot be reached" do
+      allow(servers).to receive(:get).and_raise(Excon::Errors::SocketError.new(StandardError.new("boom")))
+
+      expect(driver.status(server_id: "test123")).to include(state: "unknown")
+    end
+  end
+
   describe "#destroy" do
     let(:state)   { { server_id: "test123", hostname: "1.2.3.4" } }
     let(:servers) { double("Fog servers collection", get: server) }

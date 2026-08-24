@@ -24,6 +24,7 @@
 require "kitchen"
 require "fog/openstack"
 require "yaml"
+require "time" unless defined?(Time.now.iso8601)
 require_relative "openstack_version"
 require_relative "openstack/clouds"
 require_relative "openstack/config"
@@ -41,6 +42,11 @@ module Kitchen
     # kitchen.yml, `OS_*` environment variables, or a standard
     # `clouds.yaml` -- see {Clouds} for the precedence rules.
     class Openstack < Kitchen::Driver::Base
+      # Nova server states that mean the instance is up and reachable.
+      #
+      # @return [Array<String>]
+      LIVE_STATES = %w{ACTIVE}.freeze
+
       # Settings Fog requires as Strings. Fog re-coerces anything that looks
       # numeric back to an Integer, so these are stringified on the way in.
       #
@@ -191,7 +197,40 @@ module Kitchen
         state.delete(:hostname)
       end
 
+      # Reports what Nova currently thinks of the server.
+      #
+      # @param state [Hash] instance state naming the server
+      # @return [Hash] a Test Kitchen status hash, or the base implementation's
+      #   answer when there is no server or Nova does not know it
+      def status(state)
+        return super unless state[:server_id]
+
+        server = lookup_server(state[:server_id])
+        return super unless server
+
+        {
+          live: LIVE_STATES.include?(server.state),
+          state: server.state,
+          source: "driver",
+          resource_id: state[:server_id],
+          message: "OpenStack reports the server as #{server.state}",
+          checked_at: Time.now.utc.iso8601,
+        }
+      end
+
       private
+
+      # Looks a server up without turning an unreachable cloud into a failure.
+      #
+      # @param server_id [String] the Nova server ID
+      # @return [Fog::OpenStack::Compute::Server, nil] the server, or nil when
+      #   Nova does not know it or cannot be reached
+      def lookup_server(server_id)
+        disable_ssl_validation if config[:disable_ssl_validation]
+        compute.servers.get(server_id)
+      rescue ::StandardError
+        nil
+      end
 
       # Releases a floating IP back to its pool.
       #
