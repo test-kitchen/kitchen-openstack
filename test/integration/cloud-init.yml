@@ -1,0 +1,6 @@
+#cloud-config
+# Fixture for the user-data integration suite. The mock Nova accepts the
+# contents unread; the point of the suite is that the driver finds the file,
+# reads it, and puts it on the server definition.
+packages:
+  - htop

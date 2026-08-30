@@ -1,0 +1,104 @@
+---
+# Test Kitchen integration suites for this driver.
+#
+# These run against fog-openstack's mock backend rather than a real cloud, so
+# they need no credentials and no OpenStack deployment. Put Fog into mock mode
+# by requiring test/fog_mock.rb ahead of the kitchen executable:
+#
+#     bundle exec rake integration
+#     bundle exec ruby -Itest -r fog_mock -S kitchen test network-ref-cirros
+#
+# Every suite drives the driver's real create and destroy code through Test
+# Kitchen itself. What that catches, and what it cannot, is written up in
+# CONTRIBUTING.md -- in short, anything a live cloud would reject (quotas,
+# scheduling, real networking, SSH) still needs the manual pass described
+# there.
+#
+# The image and flavor names below are the ones fog-openstack's mock Nova
+# ships with.
+
+driver:
+  name: openstack
+  image_ref: cirros-0.3.0-x86_64-blank
+  flavor_ref: 512 server
+  openstack_auth_url: http://keystone.example.com:5000/v3
+  openstack_username: kitchen
+  openstack_api_key: kitchen
+  openstack_domain_id: default
+  glance_cache_wait_timeout: 60
+
+provisioner:
+  name: dummy
+
+transport:
+  name: dummy
+
+verifier:
+  name: dummy
+
+platforms:
+  - name: cirros
+
+suites:
+  # Boot and tear down with nothing but an image and a flavor set.
+  - name: default
+
+  # image_ref and flavor_ref given as /regex/ rather than as exact names,
+  # which takes a different path through find_matching.
+  - name: image-flavor-regex
+    driver:
+      image_ref: /^cirros/
+      flavor_ref: /512/
+
+  # image_id and flavor_id, which are used verbatim with no lookup at all.
+  # These are the ids the mock Nova assigns to the image and flavor named
+  # above; they are fixed constants in fog-openstack's mock data.
+  - name: image-flavor-id
+    driver:
+      image_ref: null
+      flavor_ref: null
+      image_id: 0e09fbd6-43c5-448a-83e9-0d3d05f9747e
+      flavor_id: '2'
+
+  # A network resolved by name and turned into a nics entry.
+  - name: network-ref
+    driver:
+      network_ref: network_1
+
+  # Takes an already-allocated, unattached address out of a pool and
+  # associates it, then reads it back as the hostname.
+  - name: floating-ip-pool
+    driver:
+      floating_ip_pool: nova
+
+  # A specific address, which short-circuits address resolution entirely.
+  - name: floating-ip
+    driver:
+      floating_ip: 192.168.27.130
+
+  # Server naming: a user-supplied prefix plus a random suffix.
+  - name: server-name-prefix
+    driver:
+      server_name_prefix: kitchen-ci
+
+  # The optional server settings, all of which are resolved by optional_config.
+  - name: server-options
+    driver:
+      availability_zone: nova
+      security_groups:
+        - default
+      metadata:
+        kitchen: integration
+      config_drive: true
+
+  # Inline cloud-config, which the driver renders to user_data itself.
+  - name: cloud-config
+    driver:
+      cloud_config:
+        packages:
+          - htop
+
+  # user_data read from a file on disk.
+  - name: user-data
+    driver:
+      user_data: test/integration/cloud-init.yml

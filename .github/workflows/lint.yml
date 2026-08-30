@@ -7,3 +7,24 @@ name: 'Lint, Unit & Integration Tests'
 jobs:
   lint-unit:
     uses: test-kitchen/.github/.github/workflows/lint-unit.yml@main
+
+  integration:
+    name: 'Integration / Ruby ${{ matrix.ruby }}'
+    runs-on: ubuntu-latest
+    needs: lint-unit
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - '3.1'
+          - '3.4'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      # Drives the driver's real create/destroy code through Test Kitchen
+      # against fog-openstack's mock backend, so it needs no credentials and
+      # no OpenStack deployment. See CONTRIBUTING.md.
+      - run: bundle exec rake integration
