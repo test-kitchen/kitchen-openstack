@@ -74,8 +74,7 @@ module FogDoubles
   # The block is evaluated in the server's own context and its result decides
   # the outcome: truthy means ready, and a block that never goes truthy raises
   # Fog::Errors::TimeoutError. Returning a canned `{ duration: 0 }` instead
-  # meant no example ever executed `get_ip`'s `!addresses.empty?` predicate --
-  # while SimpleCov still counted the line as covered.
+  # meant no example ever executed `get_ip`'s `!addresses.empty?` predicate.
   #
   # @param server [InstanceDouble] the server double to stub
   # @return [void]
