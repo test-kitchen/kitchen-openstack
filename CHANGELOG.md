@@ -9,6 +9,21 @@
 * Docs: document every driver option and split contributor docs ([#246](https://github.com/test-kitchen/kitchen-openstack/pull/246)) ([ee556dae](https://github.com/test-kitchen/kitchen-openstack/commit/ee556dae))
 * Standardize renovate config and remove dependabot ([#247](https://github.com/test-kitchen/kitchen-openstack/pull/247)) ([39ccc29e](https://github.com/test-kitchen/kitchen-openstack/commit/39ccc29e))
 
+## [8.1.0](https://github.com/test-kitchen/kitchen-openstack/compare/v8.0.0...v8.1.0) (2026-08-30)
+
+
+### Features
+
+* implement the driver doctor hook ([#254](https://github.com/test-kitchen/kitchen-openstack/issues/254)) ([43e2d98](https://github.com/test-kitchen/kitchen-openstack/commit/43e2d980c5ac8077118d9cdbb51b198917a51874))
+* implement the driver status hook ([#253](https://github.com/test-kitchen/kitchen-openstack/issues/253)) ([e32a3c8](https://github.com/test-kitchen/kitchen-openstack/commit/e32a3c85aed40ba445ebf3d1e22671de45c5d1b8))
+
+
+### Bug Fixes
+
+* require test-kitchen 3.0 or newer ([#251](https://github.com/test-kitchen/kitchen-openstack/issues/251)) ([e1c95c0](https://github.com/test-kitchen/kitchen-openstack/commit/e1c95c088c5e9cf24510210e72427c79358e7c06))
+* ship the license text in the built gem ([#258](https://github.com/test-kitchen/kitchen-openstack/issues/258)) ([92cdbeb](https://github.com/test-kitchen/kitchen-openstack/commit/92cdbebc373a0b779aff902650dc4132b8a20038))
+* stop leaking servers and stranding instances on partial failures ([#257](https://github.com/test-kitchen/kitchen-openstack/issues/257)) ([67434c1](https://github.com/test-kitchen/kitchen-openstack/commit/67434c190a3ff557dca36cf8eb63ced3bcdc94d1))
+
 ## [8.0.0](https://github.com/test-kitchen/kitchen-openstack/compare/v7.0.1...v8.0.0) (2026-08-23)
 
 
