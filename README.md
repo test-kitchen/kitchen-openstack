@@ -581,4 +581,4 @@ Further reference documentation is at
 
 ## License
 
-Apache 2.0. See [LICENSE.txt](LICENSE.txt).
+Apache 2.0. See [LICENSE](LICENSE).
