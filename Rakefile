@@ -6,6 +6,13 @@ RSpec::Core::RakeTask.new(:unit)
 desc "Run all test suites"
 task test: [:unit]
 
+desc "Run the Test Kitchen integration suites against fog-openstack's mocks"
+task :integration do
+  # test/fog_mock.rb has to be loaded before Test Kitchen instantiates the
+  # driver, hence -r rather than anything inside kitchen.yml.
+  sh "bundle exec ruby -Itest -r fog_mock -S kitchen test"
+end
+
 desc "Run the unit tests with coverage reporting to coverage/"
 task :coverage do
   ENV["COVERAGE"] = "1"

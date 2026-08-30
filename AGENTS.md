@@ -28,12 +28,13 @@ kitchen-openstack is a Test Kitchen driver for OpenStack. It provisions and dest
 
 ```bash
 bundle install
-bundle exec rake            # runs tests + style (default)
-bundle exec rake test       # unit tests only (RSpec)
-bundle exec rake style      # Cookstyle lint
-bundle exec rake quality    # style
-bundle exec rake yard       # render YARD docs to doc/ (not CI-gated)
-bundle exec rake yard_stats # list undocumented methods
+bundle exec rake             # runs tests + style (default)
+bundle exec rake test        # unit tests only (RSpec)
+bundle exec rake integration # Test Kitchen suites against fog-openstack mocks
+bundle exec rake style       # Cookstyle lint
+bundle exec rake quality     # style
+bundle exec rake yard        # render YARD docs to doc/ (not CI-gated)
+bundle exec rake yard_stats  # list undocumented methods
 ```
 
 ## Conventions
@@ -47,4 +48,5 @@ bundle exec rake yard_stats # list undocumented methods
 - `verify_partial_doubles` is on. Fog *model* classes take `instance_double`; Fog *service* objects cannot, because Fog defines their methods dynamically at instantiation
 - Unit tests never sleep, hit the network, or read outside a `Dir.mktmpdir`. The one exemption is `openstack_version_spec.rb`, which reads the gemspec and the Release Please manifest to catch version drift, and skips when they are absent. `ENV` is replaced with an `OS_*`-free hash, and the clouds.yaml specs additionally pin `Dir.pwd`, `Dir.home` and `/etc/openstack`, so neither a developer's OpenStack environment nor their real `clouds.yaml`/`secure.yaml` can leak in
 - SimpleCov reports to `coverage/` with no enforced threshold
+- Integration suites live in `kitchen.yml` and run against fog-openstack's mock backend; `test/fog_mock.rb` must be required before the `kitchen` executable (`ruby -Itest -r fog_mock -S kitchen test`). No credentials or cloud needed
 - Release automation via Release Please — version bumps go in `lib/kitchen/driver/openstack_version.rb`
