@@ -68,10 +68,6 @@ Fog *model* objects use `instance_double`. Fog *service* objects cannot, because
 Fog defines their methods dynamically at instantiation — `spec/support/fog_doubles.rb`
 explains this.
 
-Coverage instrumentation is off by default so a single-file run stays fast. Use
-`bundle exec rake coverage` (or set `COVERAGE=1`) to write a report to
-`coverage/`; CI always collects it. It is informational and never fails the run.
-
 ## Documentation
 
 `lib/` is documented with YARD. `bundle exec rake yard_stats` lists anything

@@ -15,20 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Coverage instrumentation costs more than the suite itself on a single-file
-# run, so it is opt-in locally and always on in CI. Set COVERAGE=1 to get a
-# report from a local run; `rake coverage` does that for you.
-if ENV["CI"] || ENV["COVERAGE"]
-  require "simplecov"
-
-  SimpleCov.start do
-    add_filter "/spec/"
-    add_group "Driver", "lib/kitchen/driver/openstack.rb"
-    add_group "Modules", "lib/kitchen/driver/openstack/"
-    enable_coverage :branch
-  end
-end
-
 require "rspec"
 require "kitchen"
 require "kitchen/driver/openstack"

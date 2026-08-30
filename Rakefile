@@ -13,12 +13,6 @@ task :integration do
   sh "bundle exec ruby -Itest -r fog_mock -S kitchen test"
 end
 
-desc "Run the unit tests with coverage reporting to coverage/"
-task :coverage do
-  ENV["COVERAGE"] = "1"
-  Rake::Task[:unit].invoke
-end
-
 begin
   require "cookstyle"
   desc "Run cookstyle with chefstyle rules"
