@@ -187,10 +187,15 @@ module Kitchen
         # @param collection [Enumerable] the Fog collection to search
         # @param name [String] id, name, or `/regex/`
         # @return [Object, nil] the first match, or nil
+        # @raise [Kitchen::ActionFailed] if the ref looks like a regex but is
+        #   not a valid one
         def find_matching(collection, name)
           name = name.to_s
-          if name.start_with?("/") && name.end_with?("/")
-            regex = Regexp.new(name[1...-1])
+          # A one-character "/" starts and ends with a slash, but the pattern
+          # between the slashes is empty and an empty Regexp matches the first
+          # resource in the collection -- which is never what anyone meant.
+          if name.length > 1 && name.start_with?("/") && name.end_with?("/")
+            regex = compile_ref_regex(name)
             # check for regex name match, skipping unnamed resources; Neutron
             # networks in particular are allowed to have no name
             collection.each { |single| return single if single.name && regex.match?(single.name) }
@@ -202,6 +207,22 @@ module Kitchen
             collection.each { |single| return single if single.name == name }
           end
           nil
+        end
+
+        # Compiles the pattern out of a `/regex/` style ref.
+        #
+        # An unbalanced bracket or a stray quantifier is a typo in kitchen.yml,
+        # not a bug in the driver, so it is reported as configuration the user
+        # can go and fix rather than as a raw RegexpError backtrace from the
+        # middle of a create.
+        #
+        # @param name [String] the ref, slashes included
+        # @return [Regexp] the compiled pattern
+        # @raise [Kitchen::ActionFailed] if the pattern does not compile
+        def compile_ref_regex(name)
+          Regexp.new(name[1...-1])
+        rescue RegexpError => e
+          raise ActionFailed, "Could not parse <#{name}> as a regular expression: #{e.message}"
         end
       end
     end

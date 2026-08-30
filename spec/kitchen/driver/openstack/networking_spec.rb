@@ -128,6 +128,43 @@ RSpec.describe Kitchen::Driver::Openstack::Networking do
             .to raise_error(Kitchen::ActionFailed, "Floating IP pool <swimmers> not found")
         end
       end
+
+      # The list_networks response is guarded above; the create response was
+      # not, so a body without an address handed a nil straight on to
+      # associate_address and failed later with an error about the wrong thing.
+      context "when the allocation response carries no address" do
+        let(:net) do
+          fog_network(
+            list_networks: fog_response(networks_body),
+            create_floating_ip: fog_response("floatingip" => {})
+          )
+        end
+
+        it "fails naming the pool" do
+          expect { driver.send(:attach_ip_from_pool, server, "swimmers") }
+            .to raise_error(Kitchen::ActionFailed, /from <swimmers> but the response carried no address/)
+        end
+
+        it "does not try to attach a nil address" do
+          expect { driver.send(:attach_ip_from_pool, server, "swimmers") }
+            .to raise_error(Kitchen::ActionFailed)
+          expect(server).not_to have_received(:associate_address)
+        end
+      end
+
+      context "when the allocation response has no floatingip key at all" do
+        let(:net) do
+          fog_network(
+            list_networks: fog_response(networks_body),
+            create_floating_ip: fog_response({})
+          )
+        end
+
+        it "fails naming the pool" do
+          expect { driver.send(:attach_ip_from_pool, server, "swimmers") }
+            .to raise_error(Kitchen::ActionFailed, /from <swimmers> but the response carried no address/)
+        end
+      end
     end
 
     it "serializes pool access across threads" do
@@ -415,6 +452,28 @@ RSpec.describe Kitchen::Driver::Openstack::Networking do
 
       expect(driver.send(:filter_ips, [{ "addr" => "1.2.3.4" }])).to eq([])
     end
+
+    # IPAddr raises ArgumentError on anything it cannot parse, which no caller
+    # up the stack translates -- one odd entry used to take out the whole run.
+    context "with an address Nova reported that will not parse" do
+      let(:addresses) { [{ "addr" => "1.2.3.4" }, { "addr" => "not-an-ip" }] }
+
+      it "skips it and keeps the rest" do
+        expect(driver.send(:filter_ips, addresses)).to eq([{ "addr" => "1.2.3.4" }])
+      end
+
+      it "says which address it skipped" do
+        driver.send(:filter_ips, addresses)
+
+        expect(logged_output.string).to include("Ignoring unparsable address <not-an-ip>")
+      end
+    end
+
+    context "with a nil address" do
+      it "skips it" do
+        expect(driver.send(:filter_ips, [{ "addr" => nil }])).to eq([])
+      end
+    end
   end
 
   describe "#parse_ips" do
@@ -477,6 +536,13 @@ RSpec.describe Kitchen::Driver::Openstack::Networking do
 
       expect(result_pub).to eq(%w{1.2.3.4})
       expect(result_pub).not_to be(pub)
+    end
+
+    context "with an address that will not parse" do
+      it "skips it rather than raising out of the middle of a create" do
+        expect(driver.send(:parse_ips, ["1.2.3.4", "not-an-ip"], ["10.0.0.1 "]))
+          .to eq([%w{1.2.3.4}, []])
+      end
     end
   end
 end

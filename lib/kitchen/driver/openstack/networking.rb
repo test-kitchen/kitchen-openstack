@@ -75,7 +75,15 @@ module Kitchen
           end
 
           resp = net.create_floating_ip(networks[0]["id"])
-          ip = resp.body["floatingip"]["floating_ip_address"]
+          ip = resp.body.dig("floatingip", "floating_ip_address")
+          # Without this the nil travels on into associate_address, and the
+          # run fails several steps later with an error that says nothing
+          # about the allocation that actually went wrong.
+          if ip.nil?
+            raise ActionFailed,
+              "Allocated a floating IP from <#{pool}> but the response carried no address"
+          end
+
           info "Created floating IP <#{ip}> from <#{pool}> pool"
           ip
         end
@@ -195,11 +203,8 @@ module Kitchen
         # @param addresses [Array<Hash>] address hashes, each with an `"addr"` key
         # @return [Array<Hash>] the matching subset
         def filter_ips(addresses)
-          if config[:use_ipv6]
-            addresses.select { |i| IPAddr.new(i["addr"]).ipv6? }
-          else
-            addresses.select { |i| IPAddr.new(i["addr"]).ipv4? }
-          end
+          wanted = config[:use_ipv6] ? :ipv6? : :ipv4?
+          addresses.select { |i| ip_family_match?(i["addr"], wanted) }
         end
 
         # Normalizes and filters public/private address lists to the configured
@@ -215,8 +220,29 @@ module Kitchen
           # the caller's list here is the Fog server model's own address data.
           wanted = config[:use_ipv6] ? :ipv6? : :ipv4?
           [Array(pub), Array(priv)].map do |addrs|
-            addrs.select { |i| IPAddr.new(i).public_send(wanted) }
+            addrs.select { |i| ip_family_match?(i, wanted) }
           end
+        end
+
+        # Whether one address from Nova is of the IP family we want.
+        #
+        # IPAddr raises on anything it cannot parse, and that exception is an
+        # ArgumentError -- neither a Fog nor an Excon error, so neither
+        # +create+ nor +destroy+ would turn it into something a user can act
+        # on. A single odd entry in a server's address list used to abort a
+        # destroy before it reached +server.destroy+, stranding the instance,
+        # so an unparsable address is now logged and skipped instead.
+        #
+        # @param addr [String] an address as Nova reported it
+        # @param wanted [Symbol] `:ipv4?` or `:ipv6?`
+        # @return [Boolean] true when the address parses and matches
+        def ip_family_match?(addr, wanted)
+          IPAddr.new(addr.to_s).public_send(wanted)
+        rescue ArgumentError
+          # IPAddr::InvalidAddressError descends from IPAddr::Error, which
+          # descends from ArgumentError; catching the base covers both.
+          warn "Ignoring unparsable address <#{addr}> reported by OpenStack"
+          false
         end
       end
     end

@@ -96,7 +96,11 @@ module Kitchen
               bdm[:volume_size],
               opt
             )
-          vol_id = resp[:body]["volume"]["id"]
+          vol_id = resp[:body].dig("volume", "id") if resp[:body].respond_to?(:dig)
+          # A create that answers 200 with a body we cannot read an id out of
+          # is not something to carry on from: without the id nothing can wait
+          # on the volume, attach it, or delete it again.
+          raise(ActionFailed, "Cinder accepted the volume but returned no id") if vol_id.nil?
 
           wait_for_volume(volume_service, vol_id, creation_timeout, attach_timeout)
 
@@ -145,7 +149,10 @@ module Kitchen
           @logger.debug "Waiting for volume to be ready for #{creation_timeout} seconds"
           vol_model.wait_for(creation_timeout) do
             sleep(1)
-            raise(ActionFailed, "Failed to make volume #{vol_id}") if status.casecmp("error") == 0
+            # Cinder can answer with no status at all for the first moments
+            # after a create; that is "not ready yet", not a reason to raise
+            # NoMethodError out of the middle of the wait.
+            raise(ActionFailed, "Failed to make volume #{vol_id}") if status.to_s.casecmp("error") == 0
 
             ready?
           end
