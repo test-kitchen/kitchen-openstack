@@ -156,14 +156,7 @@ module Kitchen
         end
         info "OpenStack server ID <#{state[:server_id]}> created"
 
-        if config[:floating_ip]
-          attach_ip(server, config[:floating_ip])
-        elsif config[:floating_ip_pool]
-          attach_ip_from_pool(server, config[:floating_ip_pool])
-        end
-        state[:hostname] = get_ip(server)
-        wait_for_server(state)
-        add_ohai_hint(state)
+        finish_create(server, state)
       rescue Fog::Errors::Error, Excon::Errors::Error => e
         raise ActionFailed, e.message
       end
@@ -195,6 +188,8 @@ module Kitchen
         info "OpenStack instance <#{state[:server_id]}> destroyed."
         state.delete(:server_id)
         state.delete(:hostname)
+      rescue Fog::Errors::Error, Excon::Errors::Error => e
+        raise ActionFailed, e.message
       end
 
       # Reports what Nova currently thinks of the server.
@@ -232,6 +227,50 @@ module Kitchen
       end
 
       private
+
+      # Everything +create+ does once the server is up and billing.
+      #
+      # Each step here can fail on its own -- a pool with no free addresses, a
+      # server with no address of the requested family, a transport that never
+      # comes up -- and every one of those leaves a running server behind that
+      # nothing else is going to clean up. Worse, when
+      # +allocate_floating_ip+ is set the run may also be holding a brand new
+      # floating IP, and +destroy+ can only give that back while it can still
+      # read it off the server. So a failure here tears the server down before
+      # re-raising, which is what +wait_for_server+ already did for its own
+      # step alone.
+      #
+      # @param server [Fog::OpenStack::Compute::Server] the server just built
+      # @param state [Hash] mutable instance state; gains `:hostname`
+      # @return [void]
+      # @raise [StandardError] whatever the failing step raised, after cleanup
+      def finish_create(server, state)
+        if config[:floating_ip]
+          attach_ip(server, config[:floating_ip])
+        elsif config[:floating_ip_pool]
+          attach_ip_from_pool(server, config[:floating_ip_pool])
+        end
+        state[:hostname] = get_ip(server)
+        wait_for_server(state)
+        add_ohai_hint(state)
+      rescue StandardError
+        # wait_for_server destroys the server itself and destroy deletes
+        # :server_id, so by the time that step fails there is nothing left to
+        # clean up and no second message worth printing.
+        raise if state[:server_id].nil?
+
+        error "Destroying OpenStack server ID <#{state[:server_id]}> after a failed create."
+        begin
+          destroy(state)
+        rescue StandardError => cleanup_error
+          # The user needs to hear why the create failed, not why the tidying
+          # up afterwards also failed -- but they do need to know a server was
+          # left behind for them to deal with.
+          error "Could not destroy OpenStack server ID <#{state[:server_id]}>: " \
+                "#{cleanup_error.message}. It may still be running."
+        end
+        raise
+      end
 
       # Looks a server up without turning an unreachable cloud into a failure.
       #

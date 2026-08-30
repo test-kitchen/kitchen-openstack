@@ -99,7 +99,11 @@ module Kitchen
           # (though its env loader does sweep up any OS_* name into an implicit
           # cloud), and ENV_VAR_MAP deliberately mirrors the documented set --
           # so for this driver clouds.yaml is the only source.
-          return unless cc[:ssl_verify_peer] == false && !config[:disable_ssl_validation]
+          #
+          # Nil, not falsy: `disable_ssl_validation: false` in kitchen.yml is a
+          # deliberate instruction to keep verifying, and kitchen.yml outranks
+          # clouds.yaml here exactly as it does for every key above.
+          return unless cc[:ssl_verify_peer] == false && config[:disable_ssl_validation].nil?
 
           config[:disable_ssl_validation] = true
         end

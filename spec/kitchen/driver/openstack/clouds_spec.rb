@@ -609,6 +609,32 @@ RSpec.describe Kitchen::Driver::Openstack::Clouds do
         expect(driver[:disable_ssl_validation]).to be_nil
       end
 
+      # kitchen.yml outranks clouds.yaml for every other key, and writing
+      # `disable_ssl_validation: false` is a deliberate instruction to keep
+      # verifying. The guard used to be a plain falsy check, so the explicit
+      # false read the same as "unset" and clouds.yaml overrode it.
+      it "does not override an explicit disable_ssl_validation: false" do
+        cloud = clouds_yaml
+        cloud["clouds"]["mycloud"]["verify"] = false
+        use_clouds_file(cloud, env: { "OS_CLOUD" => "mycloud" })
+        config[:disable_ssl_validation] = false
+
+        driver.send(:apply_clouds_config)
+
+        expect(driver[:disable_ssl_validation]).to be(false)
+      end
+
+      it "leaves an explicit disable_ssl_validation: true alone" do
+        cloud = clouds_yaml
+        cloud["clouds"]["mycloud"]["verify"] = false
+        use_clouds_file(cloud, env: { "OS_CLOUD" => "mycloud" })
+        config[:disable_ssl_validation] = true
+
+        driver.send(:apply_clouds_config)
+
+        expect(driver[:disable_ssl_validation]).to be(true)
+      end
+
       it "carries a cacert from clouds.yaml into ssl_ca_file" do
         cloud = clouds_yaml
         cloud["clouds"]["mycloud"]["cacert"] = "/path/ca.crt"

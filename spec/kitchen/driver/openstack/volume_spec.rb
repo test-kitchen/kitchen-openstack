@@ -113,6 +113,46 @@ RSpec.describe Kitchen::Driver::Openstack::Volume do
       expect(vol_driver).to have_received(:volume).once
     end
 
+    # Without the id there is nothing to wait on, attach, or delete again, so
+    # this has to stop here rather than NoMethodError one line later.
+    context "when the create response carries no volume id" do
+      let(:cinder_service) { cinder(create_response: { body: { "volume" => {} } }) }
+
+      it "fails with a message that names Cinder" do
+        expect { vol_driver.create_volume(config, os) }
+          .to raise_error(Kitchen::ActionFailed, "Cinder accepted the volume but returned no id")
+      end
+    end
+
+    context "when the create response has no volume key at all" do
+      let(:cinder_service) { cinder(create_response: { body: {} }) }
+
+      it "fails with a message that names Cinder" do
+        expect { vol_driver.create_volume(config, os) }
+          .to raise_error(Kitchen::ActionFailed, "Cinder accepted the volume but returned no id")
+      end
+    end
+
+    context "when the create response body is not a hash" do
+      let(:cinder_service) { cinder(create_response: { body: "" }) }
+
+      it "fails with a message that names Cinder" do
+        expect { vol_driver.create_volume(config, os) }
+          .to raise_error(Kitchen::ActionFailed, "Cinder accepted the volume but returned no id")
+      end
+    end
+
+    # Cinder can answer with no status at all in the moments right after a
+    # create. That is "not ready yet", not a reason to raise NoMethodError out
+    # of the middle of the wait.
+    context "when Cinder reports no status yet" do
+      let(:cinder_service) { cinder(volumes: [volume_model(status: nil, ready: true)]) }
+
+      it "treats it as not-an-error and carries on" do
+        expect(vol_driver.create_volume(config, os)).to eq("555")
+      end
+    end
+
     # Regression: `Array#first` silently ignores a block, so the original
     # implementation waited on whichever volume happened to be first in the
     # account rather than the one it had just created. The id from the create

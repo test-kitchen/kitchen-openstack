@@ -239,6 +239,93 @@ RSpec.describe Kitchen::Driver::Openstack do
         expect { driver.create(state) }.to raise_error(Kitchen::InstanceFailure, "nope")
       end
     end
+
+    # Everything in here happens after create_server has returned, so a
+    # failure leaves a booted, billing instance behind. Regression coverage
+    # for a create that used to walk away from one.
+    describe "cleanup once the server is up" do
+      before { allow(driver).to receive(:destroy) }
+
+      it "destroys the server when the floating IP cannot be attached" do
+        config[:floating_ip] = "1.2.3.4"
+        allow(driver).to receive(:attach_ip).and_raise(Kitchen::ActionFailed, "nope")
+
+        expect { driver.create(state) }.to raise_error(Kitchen::ActionFailed, "nope")
+        expect(driver).to have_received(:destroy).with(state)
+      end
+
+      it "destroys the server when the pool holds no free address" do
+        config[:floating_ip_pool] = "swimmers"
+        allow(driver).to receive(:attach_ip_from_pool)
+          .and_raise(Kitchen::ActionFailed, "No available IPs in pool <swimmers>")
+
+        expect { driver.create(state) }.to raise_error(Kitchen::ActionFailed, /No available IPs/)
+        expect(driver).to have_received(:destroy).with(state)
+      end
+
+      it "destroys the server when no usable address can be found" do
+        allow(driver).to receive(:get_ip).and_raise(Kitchen::ActionFailed, "Could not find an IP")
+
+        expect { driver.create(state) }.to raise_error(Kitchen::ActionFailed, "Could not find an IP")
+        expect(driver).to have_received(:destroy).with(state)
+      end
+
+      it "says why it is tearing the server down" do
+        allow(driver).to receive(:get_ip).and_raise(Kitchen::ActionFailed, "Could not find an IP")
+
+        expect { driver.create(state) }.to raise_error(Kitchen::ActionFailed)
+        expect(logged_output.string)
+          .to include("Destroying OpenStack server ID <test123> after a failed create.")
+      end
+
+      it "re-raises rather than swallowing the failure" do
+        allow(driver).to receive(:get_ip).and_raise(Kitchen::ActionFailed, "Could not find an IP")
+
+        expect { driver.create(state) }.to raise_error(Kitchen::ActionFailed)
+      end
+
+      it "leaves a successful create alone" do
+        driver.create(state)
+
+        expect(driver).not_to have_received(:destroy)
+      end
+
+      # wait_for_server tears the server down itself and destroy clears
+      # :server_id, so there is nothing left for this to clean up a second
+      # time and no second message worth printing.
+      it "does not repeat the teardown wait_for_server already did" do
+        allow(driver).to receive(:wait_for_server) do |s|
+          s.delete(:server_id)
+          raise Kitchen::ActionFailed, "not reachable"
+        end
+
+        expect { driver.create(state) }.to raise_error(Kitchen::ActionFailed, "not reachable")
+        expect(driver).not_to have_received(:destroy)
+        expect(logged_output.string).not_to include("after a failed create")
+      end
+
+      context "when the teardown itself fails" do
+        before do
+          allow(driver).to receive(:get_ip).and_raise(Kitchen::ActionFailed, "Could not find an IP")
+          allow(driver).to receive(:destroy).and_raise(Kitchen::ActionFailed, "keystone is down")
+        end
+
+        # The user needs to hear why the create failed, not why the tidying up
+        # afterwards also failed.
+        it "still reports the original failure" do
+          expect { driver.create(state) }
+            .to raise_error(Kitchen::ActionFailed, "Could not find an IP")
+        end
+
+        it "warns that a server may have been left behind" do
+          expect { driver.create(state) }.to raise_error(Kitchen::ActionFailed)
+
+          expect(logged_output.string)
+            .to include("Could not destroy OpenStack server ID <test123>: keystone is down. " \
+                        "It may still be running.")
+        end
+      end
+    end
   end
 
   describe "#finalize_config!" do
@@ -584,6 +671,38 @@ RSpec.describe Kitchen::Driver::Openstack do
 
           expect(net).not_to have_received(:list_floating_ips)
         end
+      end
+
+      context "when the server reports an address that will not parse" do
+        let(:server) { fog_server(public_ip_addresses: ["not-an-ip"], private_ip_addresses: []) }
+
+        # IPAddr raises ArgumentError, which is neither a Fog nor an Excon
+        # error, so this used to abort the destroy before it ever reached
+        # server.destroy and strand the instance.
+        it "still destroys the server" do
+          driver.destroy(state)
+
+          expect(server).to have_received(:destroy)
+        end
+
+        it "says which address it ignored" do
+          driver.destroy(state)
+
+          expect(logged_output.string).to include("Ignoring unparsable address <not-an-ip>")
+        end
+      end
+    end
+
+    context "when the cloud cannot be reached" do
+      before do
+        allow(driver).to receive(:compute)
+          .and_raise(Excon::Errors::SocketError.new(StandardError.new("no route to host")))
+      end
+
+      # create has always translated these; destroy used to hand the user a
+      # raw Excon backtrace instead.
+      it "reports an ActionFailed rather than a raw Excon error" do
+        expect { driver.destroy(state) }.to raise_error(Kitchen::ActionFailed, /no route to host/)
       end
     end
   end

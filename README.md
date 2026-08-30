@@ -512,7 +512,9 @@ clouds:
 
 Either is passed through to the HTTP connection. `verify: false` in
 `clouds.yaml` disables verification entirely, equivalent to setting
-`disable_ssl_validation: true`.
+`disable_ssl_validation: true` — unless you set `disable_ssl_validation`
+yourself, in which case `kitchen.yml` wins as it does everywhere else, and
+`disable_ssl_validation: false` keeps verification on.
 
 ## Troubleshooting
 
@@ -528,6 +530,7 @@ kitchen create --log-level=debug
 | Symptom | Likely cause |
 | --- | --- |
 | `Image not found` / `Flavor not found` | The `_ref` matched nothing. Check `openstack image list`. A `/regex/` needs the surrounding slashes. |
+| `Could not parse <...> as a regular expression` | A `/regex/` ref that does not compile — usually an unbalanced bracket. |
 | `Cannot specify both image_ref and image_id` | Set one, not both. Same for flavor and network. |
 | `Could not find an IP` | The instance has no address of the family you asked for. Check `use_ipv6`, and whether you need a floating IP. |
 | `Server is not attached to network <name>` | `openstack_network_name` does not match any network on the instance. |
@@ -537,6 +540,7 @@ kitchen create --log-level=debug
 | `The security_groups config must be an array` | Use a list, even for a single group. |
 | Hangs at "Waiting for server to be ready" | The instance booted but SSH is unreachable. Check the security group allows port 22, that a floating IP is attached if you need one, and that `transport: username:` matches the image's default user. |
 | Times out reaching `ACTIVE` | Raise `glance_cache_wait_timeout`. First boot of a large image can be slow. |
+| `Cinder accepted the volume but returned no id` | The volume create succeeded but the response was unreadable; check the Cinder endpoint and API microversion. |
 | TLS errors | Set `ssl_ca_file` (or `OS_CACERT`) to your CA bundle. |
 
 The instance is destroyed automatically if it never becomes reachable, so a

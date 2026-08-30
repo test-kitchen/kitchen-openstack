@@ -394,6 +394,25 @@ RSpec.describe Kitchen::Driver::Openstack::ServerHelper do
 
       expect(driver.send(:find_matching, unnamed, "/.*/").id).to eq("222")
     end
+
+    # A lone slash starts and ends with a slash, so it used to be compiled as
+    # the empty pattern -- which matches everything, and quietly booted
+    # whatever image happened to come back first.
+    it "does not treat a lone slash as a match-everything regex" do
+      expect(driver.send(:find_matching, collection, "/")).to be_nil
+    end
+
+    # An unbalanced bracket is a typo in kitchen.yml, and used to surface as a
+    # raw RegexpError from the middle of a create.
+    it "reports an unparsable regex as configuration to fix" do
+      expect { driver.send(:find_matching, collection, "/[/") }
+        .to raise_error(Kitchen::ActionFailed, %r{Could not parse </\[/> as a regular expression})
+    end
+
+    it "does not swallow the reason the pattern would not compile" do
+      expect { driver.send(:find_matching, collection, "/*/") }
+        .to raise_error(Kitchen::ActionFailed, /as a regular expression: /)
+    end
   end
 
   describe "#find_image" do
