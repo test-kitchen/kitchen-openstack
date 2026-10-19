@@ -120,7 +120,17 @@ RSpec.describe Kitchen::Driver::Openstack do
       it "says so" do
         driver.create(state)
 
-        expect(logged_output.string).to include("hello (existing) already exists.")
+        expect(logged_output.string).to include("OpenStack server <existing> already exists.")
+      end
+
+      # The name carries a random suffix, so generating one here would only
+      # log a name the existing server does not have.
+      it "does not generate a server name" do
+        allow(driver).to receive(:config_server_name)
+
+        driver.create(state)
+
+        expect(driver).not_to have_received(:config_server_name)
       end
 
       it "leaves state untouched" do

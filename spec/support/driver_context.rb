@@ -33,6 +33,7 @@ RSpec.shared_context "with a configured driver" do
   let(:instance_name) { "potatoes" }
   let(:transport)     { Kitchen::Transport::Dummy.new }
   let(:platform)      { Kitchen::Platform.new(name: "fake_platform") }
+  let(:suite)         { Kitchen::Suite.new(name: "fake_suite") }
   let(:config)        { {} }
 
   let(:instance) do
@@ -42,6 +43,7 @@ RSpec.shared_context "with a configured driver" do
       transport: transport,
       logger: logger,
       platform: platform,
+      suite: suite,
       to_str: "instance"
     )
   end

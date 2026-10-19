@@ -22,7 +22,6 @@
 # limitations under the License.
 
 require "etc" unless defined?(Etc)
-require "socket" unless defined?(Socket)
 
 module Kitchen
   module Driver
@@ -63,13 +62,14 @@ module Kitchen
         # @return [Integer]
         NAME_RANDOM_LENGTH = 7
 
-        # Character budget for the hostname in a fully generated name.
+        # Character budget for the project (the basename of the Kitchen root,
+        # usually the cookbook) in a fully generated name.
         #
         # Whatever is left once the other three components and the three
         # separators are accounted for.
         #
         # @return [Integer]
-        NAME_HOSTNAME_LENGTH =
+        NAME_PROJECT_LENGTH =
           MAX_SERVER_NAME_LENGTH - NAME_INSTANCE_LENGTH - NAME_USERNAME_LENGTH - NAME_RANDOM_LENGTH - 3
 
         # Sets `config[:server_name]` unless the user already supplied one.
@@ -93,17 +93,34 @@ module Kitchen
 
         # Generates a unique server name of at most 63 characters.
         #
-        #     <instance>-<user>-<host>-<random>
-        #          15       15      23      7    + 3 separators = 63
+        #     <project>-<instance>-<user>-<random>
+        #         23        15        15      7    + 3 separators = 63
+        #
+        # The project leads so that servers from one cookbook sort together and
+        # whoever is cleaning up a shared project can tell where a server came
+        # from. The workstation hostname is recorded in the server metadata
+        # instead (see {ServerHelper#default_metadata}).
+        #
+        # A component that is empty once stripped (a Kitchen root of `/`, a
+        # username with no ASCII word characters) is left out rather than
+        # leaving a stray separator.
         #
         # @return [String] the generated server name
         def default_name
           [
+            kitchen_project.gsub(/\W/, "")[0, NAME_PROJECT_LENGTH],
             instance.name.gsub(/\W/, "")[0, NAME_INSTANCE_LENGTH],
             current_username.gsub(/\W/, "")[0, NAME_USERNAME_LENGTH],
-            Socket.gethostname.gsub(/\W/, "")[0, NAME_HOSTNAME_LENGTH],
             Array.new(NAME_RANDOM_LENGTH) { rand(36).to_s(36) }.join,
-          ].join("-")
+          ].reject(&:empty?).join("-")
+        end
+
+        # Name of the project Test Kitchen is running in: the basename of the
+        # Kitchen root, which for a cookbook is the cookbook's directory.
+        #
+        # @return [String]
+        def kitchen_project
+          File.basename(config[:kitchen_root] || Dir.pwd)
         end
 
         # Best-effort lookup of the name of the user running Test Kitchen.
