@@ -18,11 +18,14 @@ RSpec.describe Kitchen::Driver::Openstack::ServerHelper do
 
   before do
     allow(driver).to receive_messages(compute: compute, network: net_service)
+    # Pinned so the default metadata does not depend on who runs the suite.
+    allow(Etc).to receive(:getpwuid).and_return(Struct.new(:name).new("user"))
+    allow(Socket).to receive(:gethostname).and_return("workstation")
   end
 
   describe "#create_server" do
     let(:config) do
-      { server_name: "hello", image_id: "111", flavor_id: "1" }
+      { server_name: "hello", image_id: "111", flavor_id: "1", kitchen_root: "/src/carrots" }
     end
 
     it "returns whatever Nova created" do
@@ -46,6 +49,8 @@ RSpec.describe Kitchen::Driver::Openstack::ServerHelper do
     end
 
     it "omits optional keys that are not configured" do
+      config[:default_metadata] = false
+
       driver.send(:create_server)
 
       expect(servers).to have_received(:create) do |server_def|
@@ -213,6 +218,101 @@ RSpec.describe Kitchen::Driver::Openstack::ServerHelper do
       end
     end
 
+    describe "metadata" do
+      let(:defaults) do
+        {
+          "kitchen_instance" => "potatoes",
+          "kitchen_suite" => "fake_suite",
+          "kitchen_platform" => "fake_platform",
+          "kitchen_project" => "carrots",
+          "kitchen_user" => "user",
+          "kitchen_host" => "workstation",
+        }
+      end
+
+      def sent_metadata
+        metadata = nil
+        expect(servers).to have_received(:create) { |server_def| metadata = server_def[:metadata] }
+        metadata
+      end
+
+      it "records where the server came from by default" do
+        driver.send(:create_server)
+
+        expect(sent_metadata).to eq(defaults)
+      end
+
+      it "adds the user's metadata to the defaults" do
+        config[:metadata] = { owner: "me" }
+
+        driver.send(:create_server)
+
+        expect(sent_metadata).to eq(defaults.merge("owner" => "me"))
+      end
+
+      # Kitchen symbolizes config keys, so a user's kitchen_user: arrives as a
+      # Symbol and has to replace the String default rather than sit beside it.
+      it "lets the user override a default key" do
+        config[:metadata] = { kitchen_user: "ci" }
+
+        driver.send(:create_server)
+
+        expect(sent_metadata).to eq(defaults.merge("kitchen_user" => "ci"))
+      end
+
+      it "sends the user's values as strings, which is all Nova accepts" do
+        config[:metadata] = { keep: true, build: 42 }
+
+        driver.send(:create_server)
+
+        expect(sent_metadata).to include("keep" => "true", "build" => "42")
+      end
+
+      it "rejects metadata that is not a hash" do
+        config[:metadata] = "owner=me"
+
+        expect { driver.send(:create_server) }
+          .to raise_error(Kitchen::ActionFailed, "The metadata config must be a hash, got String")
+      end
+
+      it "truncates default values to what Nova accepts" do
+        config[:kitchen_root] = "/src/#{"x" * 300}"
+
+        driver.send(:create_server)
+
+        expect(sent_metadata["kitchen_project"].bytesize)
+          .to eq(Kitchen::Driver::Openstack::ServerHelper::MAX_METADATA_VALUE_BYTES)
+      end
+
+      # Nova's limit is 255 bytes, so 255 characters of a multibyte name would
+      # still be rejected.
+      it "truncates by bytes without splitting a character" do
+        config[:kitchen_root] = "/src/#{"é" * 200}"
+
+        driver.send(:create_server)
+
+        expect(sent_metadata["kitchen_project"]).to eq("é" * 127)
+      end
+
+      context "when default_metadata is false" do
+        before { config[:default_metadata] = false }
+
+        it "sends only the user's metadata" do
+          config[:metadata] = { "owner" => "me" }
+
+          driver.send(:create_server)
+
+          expect(sent_metadata).to eq("owner" => "me")
+        end
+
+        it "sends no metadata when the user configured none" do
+          driver.send(:create_server)
+
+          expect(servers).to have_received(:create) { |sd| expect(sd).not_to have_key(:metadata) }
+        end
+      end
+    end
+
     describe "optional settings" do
       it "passes key_name through" do
         config[:key_name] = "my-key"
@@ -227,7 +327,8 @@ RSpec.describe Kitchen::Driver::Openstack::ServerHelper do
 
         driver.send(:create_server)
 
-        expect(servers).to have_received(:create).with(hash_including(metadata: { "owner" => "me" }))
+        expect(servers).to have_received(:create)
+          .with(hash_including(metadata: hash_including("owner" => "me")))
       end
 
       it "passes config_drive through" do

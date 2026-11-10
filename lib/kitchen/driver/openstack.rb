@@ -110,6 +110,7 @@ module Kitchen
       default_config :read_timeout, 60
       default_config :write_timeout, 60
       default_config :metadata, nil
+      default_config :default_metadata, true
 
       # Merges clouds.yaml and `OS_*` values into the config hash.
       #
@@ -134,11 +135,14 @@ module Kitchen
       # @raise [Kitchen::ActionFailed] on any Fog or Excon failure
       # @raise [Kitchen::InstanceFailure] if the server builds to ERROR state
       def create(state)
-        config_server_name
+        # The name is generated with a random suffix, so it only means
+        # something for a server about to be created.
         if state[:server_id]
-          info "#{config[:server_name]} (#{state[:server_id]}) already exists."
+          info "OpenStack server <#{state[:server_id]}> already exists."
           return
         end
+
+        config_server_name
         disable_ssl_validation if config[:disable_ssl_validation]
         server = create_server
         state[:server_id] = server.id

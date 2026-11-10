@@ -290,10 +290,24 @@ Everything below goes under `driver:` in `kitchen.yml`.
 | `key_name` | `nil` | Name of an SSH keypair already uploaded to OpenStack. |
 | `availability_zone` | `nil` | Availability zone to boot into. |
 | `security_groups` | `nil` | List of security group names. **Must be a list**, even for one group. |
-| `metadata` | `nil` | Hash of Nova instance metadata. |
+| `metadata` | `nil` | Hash of Nova instance metadata, added to the defaults below. Your keys win, and values are sent as strings. |
+| `default_metadata` | `true` | Record where the instance came from in its metadata (see below). |
 
 Set exactly one of `image_ref`/`image_id`, and exactly one of
 `flavor_ref`/`flavor_id`. Setting both members of a pair is an error.
+
+Unless `default_metadata` is `false`, every instance is tagged with where it
+came from, so whoever cleans up a shared project can tell who created an
+instance and what for:
+
+| Key | Value |
+| --- | --- |
+| `kitchen_instance` | Test Kitchen instance name, e.g. `default-ubuntu-2404` |
+| `kitchen_suite` | Suite name |
+| `kitchen_platform` | Platform name |
+| `kitchen_project` | Basename of the Kitchen root, usually the cookbook |
+| `kitchen_user` | Local user running Test Kitchen |
+| `kitchen_host` | Hostname of the machine running Test Kitchen, where its state lives |
 
 The `_ref` options accept three forms:
 
@@ -310,8 +324,11 @@ image_ref: /^ubuntu-24\.04/    # regex, first match wins
 | `server_name` | generated | Exact instance name. Overrides everything below. |
 | `server_name_prefix` | `nil` | Prefix, plus a random 8-character suffix. |
 
-With neither set, the name is `<suite-platform>-<user>-<host>-<random>`,
+With neither set, the name is `<project>-<suite-platform>-<user>-<random>`,
+where the project is the basename of the Kitchen root (usually the cookbook),
 truncated to OpenStack's 63-character limit. Non-word characters are stripped.
+The workstation hostname, which earlier releases put in the name, is in the
+`kitchen_host` metadata instead.
 
 ### Networking
 

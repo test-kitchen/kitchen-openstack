@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require "socket" unless defined?(Socket)
+
 module Kitchen
   module Driver
     class Openstack < Kitchen::Driver::Base
@@ -35,8 +37,12 @@ module Kitchen
           key_name
           user_data
           config_drive
-          metadata
         }.freeze
+
+        # Longest metadata value Nova accepts, in bytes.
+        #
+        # @return [Integer]
+        MAX_METADATA_VALUE_BYTES = 255
 
         private
 
@@ -68,6 +74,9 @@ module Kitchen
           OPTIONAL_SERVER_KEYS.each do |c|
             server_def[c] = optional_config(c) if config[c]
           end
+
+          metadata = server_metadata
+          server_def[:metadata] = metadata unless metadata.empty?
 
           if config[:cloud_config]
             raise(ActionFailed, "Cannot specify both cloud_config and user_data") if config[:user_data]
@@ -104,6 +113,43 @@ module Kitchen
             flavor_ref: config[:flavor_id] || find_flavor(config[:flavor_ref]).id,
             availability_zone: config[:availability_zone],
           }
+        end
+
+        # Builds the server metadata: {#default_metadata} unless
+        # `default_metadata` is false, overlaid with the user's `metadata`.
+        #
+        # Keys are stringified because Kitchen symbolizes config keys, so
+        # without this a user's `kitchen_user:` and the default
+        # `"kitchen_user"` would both be sent. Values are stringified because
+        # Nova only accepts strings, and YAML turns `keep: true` into a boolean.
+        #
+        # @return [Hash{String => String}] possibly empty
+        # @raise [Kitchen::ActionFailed] if `metadata` is not a hash
+        def server_metadata
+          user = config[:metadata] || {}
+          raise ActionFailed, "The metadata config must be a hash, got #{user.class}" unless user.is_a?(Hash)
+
+          defaults = config[:default_metadata] ? default_metadata : {}
+          defaults.merge(user.to_h { |k, v| [k.to_s, v.to_s] })
+        end
+
+        # Metadata recording where a server came from, so that whoever cleans
+        # up a shared project can tell who created a server, from which
+        # project and suite, and on which workstation the Kitchen state lives.
+        #
+        # Values are cut to Nova's limit in bytes, not characters, dropping any
+        # multibyte character the cut splits.
+        #
+        # @return [Hash{String => String}]
+        def default_metadata
+          {
+            "kitchen_instance" => instance.name,
+            "kitchen_suite" => instance.suite.name,
+            "kitchen_platform" => instance.platform.name,
+            "kitchen_project" => kitchen_project,
+            "kitchen_user" => current_username,
+            "kitchen_host" => Socket.gethostname,
+          }.transform_values { |v| v.to_s.byteslice(0, MAX_METADATA_VALUE_BYTES).scrub("") }
         end
 
         # Resolves one optional server setting to the value Nova expects.
