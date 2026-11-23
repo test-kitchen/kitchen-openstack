@@ -9,6 +9,17 @@
 * Docs: document every driver option and split contributor docs ([#246](https://github.com/test-kitchen/kitchen-openstack/pull/246)) ([ee556dae](https://github.com/test-kitchen/kitchen-openstack/commit/ee556dae))
 * Standardize renovate config and remove dependabot ([#247](https://github.com/test-kitchen/kitchen-openstack/pull/247)) ([39ccc29e](https://github.com/test-kitchen/kitchen-openstack/commit/39ccc29e))
 
+## [9.0.0](https://github.com/test-kitchen/kitchen-openstack/compare/v8.1.0...v9.0.0) (2026-11-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* generated server names, and the guest hostnames Nova derives from them, now start with the project instead of ending with the workstation hostname.
+
+### Features
+
+* record server origin and lead the name with the project ([#261](https://github.com/test-kitchen/kitchen-openstack/issues/261)) ([5fdae82](https://github.com/test-kitchen/kitchen-openstack/commit/5fdae82fbf1f7483f860a7219972f1a30929c942))
+
 ## [8.1.0](https://github.com/test-kitchen/kitchen-openstack/compare/v8.0.0...v8.1.0) (2026-08-30)
 
 
